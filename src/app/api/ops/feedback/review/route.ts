@@ -18,12 +18,17 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+  try {
+    const body = await request.json();
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
 
-  const review = await recordMessageReview(parsed.data);
-  return NextResponse.json({ ok: true, reviewId: review.id });
+    const review = await recordMessageReview(parsed.data);
+    return NextResponse.json({ ok: true, reviewId: review.id });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

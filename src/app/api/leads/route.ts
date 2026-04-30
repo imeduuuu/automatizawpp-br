@@ -92,50 +92,55 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const parsed = createLeadSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
-
-  const workspaceId = await resolveWorkspaceId(parsed.data.workspaceId);
-  if (!workspaceId) {
-    return NextResponse.json({ error: 'Workspace not found' }, { status: 400 });
-  }
-
-  const lead = await prisma.lead.create({
-    data: {
-      workspaceId,
-      fullName: parsed.data.fullName,
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      company: parsed.data.company,
-      source: parsed.data.source,
-      productInterest: parsed.data.productInterest,
-      status: 'NEW'
+  try {
+    const body = await request.json();
+    const parsed = createLeadSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
-  });
 
-  if (lead.email) {
-    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-      .toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const workspaceId = await resolveWorkspaceId(parsed.data.workspaceId);
+    if (!workspaceId) {
+      return NextResponse.json({ error: 'Workspace not found' }, { status: 400 });
+    }
 
-    const appUrl = process.env.APP_URL ?? 'https://automatizawpp.com';
+    const lead = await prisma.lead.create({
+      data: {
+        workspaceId,
+        fullName: parsed.data.fullName,
+        email: parsed.data.email,
+        phone: parsed.data.phone,
+        company: parsed.data.company,
+        source: parsed.data.source,
+        productInterest: parsed.data.productInterest,
+        status: 'NEW'
+      }
+    });
 
-    // disparo assíncrono, não bloqueia a resposta
-    import('@/lib/mail').then(({ sendSmtpMail }) =>
-      import('@/lib/email-templates').then(({ renderEmailTemplate }) => {
-        const { subject, html, text } = renderEmailTemplate('welcome', {
-          name: lead.fullName ?? 'Cliente',
-          businessName: lead.company ?? lead.fullName ?? 'seu negócio',
-          trialEndsAt,
-          password: '',   // senha já foi definida pelo usuário
-          appUrl,
-        });
-        return sendSmtpMail({ to: lead.email!, subject, html, text });
-      })
-    ).catch(console.error);
+    if (lead.email) {
+      const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+        .toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+      const appUrl = process.env.APP_URL ?? 'https://automatizawpp.com';
+
+      // disparo assíncrono, não bloqueia a resposta
+      import('@/lib/mail').then(({ sendSmtpMail }) =>
+        import('@/lib/email-templates').then(({ renderEmailTemplate }) => {
+          const { subject, html, text } = renderEmailTemplate('welcome', {
+            name: lead.fullName ?? 'Cliente',
+            businessName: lead.company ?? lead.fullName ?? 'seu negócio',
+            trialEndsAt,
+            password: '',   // senha já foi definida pelo usuário
+            appUrl,
+          });
+          return sendSmtpMail({ to: lead.email!, subject, html, text });
+        })
+      ).catch(console.error);
+    }
+
+    return NextResponse.json({ lead }, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  return NextResponse.json({ lead }, { status: 201 });
 }
