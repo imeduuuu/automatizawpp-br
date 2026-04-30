@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { PageLayout } from '@/components/ui/PageLayout';
-import { EMAIL_TEMPLATES, renderEmailTemplate, type EmailTemplateKey } from '@/lib/email-templates';
+import { EMAIL_TEMPLATES, type EmailTemplateKey } from '@/lib/email-templates';
 import { showToast } from '@/lib/ui-toast';
 import { useApi } from '@/components/ui/useApi';
 

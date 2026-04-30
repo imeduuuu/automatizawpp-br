@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { BrandWordmark } from '@/components/ui/BrandWordmark';
-import { useUiCopy, useUiLanguage } from '@/components/ui/UiLanguageProvider';
+import { useUiLanguage } from '@/components/ui/UiLanguageProvider';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { logoutAction } from '@/lib/actions/auth-actions';
 
@@ -112,7 +112,6 @@ function initialsFrom(name: string) {
 
 export function Sidebar({ badges = {}, userName = 'Equipo AutomatizaWPP', role = 'Operador' }: SidebarProps) {
   const pathname = usePathname();
-  const copy = useUiCopy();
   const { language } = useUiLanguage();
 
   const sections: Array<NavItem['section']> = ['Principal', 'Operaciones', 'Cuenta'];

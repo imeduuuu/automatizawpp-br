@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const PUBLIC_PAGE_PATHS = [
+  '/',               // landing page de marketing — acesso público
   '/login',
   '/signup',
   '/register',
@@ -13,6 +14,14 @@ const PUBLIC_PAGE_PATHS = [
   '/blog',
   '/teste-gratis',   // página de trial gratuito — acesso público
   '/pricing',        // página de preços de marketing — acesso público
+  '/privacidade',    // política de privacidade — acesso público
+  '/termos',         // termos de uso — acesso público
+  '/services',       // catálogo de serviços — acesso público
+];
+
+const PUBLIC_PAGE_PREFIXES = [
+  '/blog/',
+  '/services/',
 ];
 
 // API paths that do NOT require a session (have their own auth or are truly public)
@@ -63,7 +72,7 @@ export default function middleware(request: NextRequest) {
   // Page routes
   const isPublicPage = PUBLIC_PAGE_PATHS.includes(pathname) ||
                        isResetPasswordPath(pathname) ||
-                       pathname.startsWith('/blog/');
+                       PUBLIC_PAGE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   // Guard private pages: no cookie → send to login.
   if (!hasCookie && !isPublicPage) {

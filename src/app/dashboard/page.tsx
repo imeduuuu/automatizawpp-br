@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/ui/PageLayout';
 import { useApi } from '@/components/ui/useApi';
@@ -28,7 +27,6 @@ interface Stats {
   agentRuns: number;
 }
 
-const emptyStats: Stats = { totalLeads: 0, newLeads: 0, engaged: 0, qualified: 0, closedWon: 0, conversations: 0, messages: 0, agentRuns: 0 };
 const emptyLeads = { leads: [] as Lead[], total: 0 };
 
 function StatCard({ label, value, color = 'var(--green)' }: { label: string; value: number; color?: string }) {
