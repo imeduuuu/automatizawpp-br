@@ -8,7 +8,7 @@ import { CloserAgent } from '@/lib/agents/closer-agent';
 import { getLeadMemorySummary, updateLeadMemory } from '@/lib/memory/memory-service';
 import { scheduleFollowUp } from '@/lib/followup/sequence-engine';
 import { OutboundDeliveryResult, sendOutboundMessage } from '@/lib/channels/router';
-import { AgentContext } from '@/lib/agents/contracts';
+import { AgentContext, AgentExecutionResult } from '@/lib/agents/contracts';
 
 const leadResponse = new LeadResponseAgent();
 const qualification = new QualificationAgent();
@@ -200,7 +200,7 @@ export async function runSalesOrchestration(input: {
     }
   };
 
-  let specialistResult = orchestration;
+  let specialistResult: AgentExecutionResult = orchestration;
   try {
     if (action === 'QUALIFY' || action === 'RESPOND') {
       specialistResult = await leadResponse.run(agentContext);
