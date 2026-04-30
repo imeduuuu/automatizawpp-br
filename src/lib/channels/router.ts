@@ -142,6 +142,7 @@ async function sendWhatsApp(opts: { to: string; body: string }) {
   return { sent: response.ok };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- _opts mantém a assinatura sendSMS({to, body}) consistente com sendEmail/sendWhatsApp; será consumido quando o provider Twilio/Bird SMS for implementado.
 async function sendSMS(_opts: { to: string; body: string }) {
   // Implement Twilio or Bird SMS
   return { sent: false };

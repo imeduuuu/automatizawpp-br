@@ -1,7 +1,22 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import Link from 'next/link';
 import Script from 'next/script';
+
+// Fontes carregadas via next/font/google (auto-host, sem requests externos)
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+  variable: '--font-jetbrains-mono',
+});
 
 // Metadados SEO para todas as páginas públicas de marketing
 export const metadata: Metadata = {
@@ -51,15 +66,7 @@ export const metadata: Metadata = {
  */
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <>
-      {/* ─── Fontes do Google (preconnect + stylesheet) ─── */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
-        rel="stylesheet"
-      />
-
+    <div className={`${inter.variable} ${jetbrainsMono.variable}`}>
       {/* ─── Schema.org JSON-LD (organização) ─── */}
       <script
         type="application/ld+json"
@@ -106,9 +113,9 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
           --muted: var(--text-soft);
           --surface: #080808;
           --surface2: #0d0d0d;
-          --font-body: 'Inter', system-ui, sans-serif;
-          --font-display: 'Inter', system-ui, sans-serif;
-          --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+          --font-body: var(--font-inter), system-ui, sans-serif;
+          --font-display: var(--font-inter), system-ui, sans-serif;
+          --font-mono: var(--font-jetbrains-mono), 'Courier New', monospace;
         }
 
         /* ─── RESET ─── */
@@ -117,7 +124,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         body {
           background: var(--bg);
           color: var(--text);
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', system-ui, 'Helvetica Neue', sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', var(--font-inter), system-ui, 'Helvetica Neue', sans-serif;
           overflow-x: hidden;
           cursor: default;
           -webkit-font-smoothing: antialiased;
@@ -1205,6 +1212,6 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
           });
         })();
       ` }} />
-    </>
+    </div>
   );
 }

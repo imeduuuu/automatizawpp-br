@@ -51,6 +51,7 @@ export class FollowUpAgent implements SalesAgent {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- _attemptCount faz parte do contrato chamado por followup/runner.ts (passa task.attempt) e será usado quando a lógica diferenciar mensagens por tentativa.
 export async function runFollowUpAgent(leadId: string, _attemptCount: number): Promise<string | null> {
   try {
     const lead = await prisma.lead.findUnique({

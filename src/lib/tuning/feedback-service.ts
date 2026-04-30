@@ -24,6 +24,9 @@ export interface MessageReviewResult {
   id: string;
 }
 
+// Assinatura pública consumida por agents/utils.ts (passa workspaceId, agentName, limit, minScore);
+// parâmetros serão usados quando a query ao banco for implementada.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export async function getAgentFewShotExamples(
   _workspaceId: string,
   _agentName: AgentName,
@@ -34,6 +37,7 @@ export async function getAgentFewShotExamples(
   // For now, return empty array (agents will use fallback policy)
   return [];
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 export async function recordMessageReview(review: MessageReviewInput): Promise<MessageReviewResult> {
   // TODO: Store review in database for agent training
