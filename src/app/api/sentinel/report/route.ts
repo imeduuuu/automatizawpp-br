@@ -1,7 +1,21 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { sentinelJson, sentinelOptions } from '@/lib/sentinel/http';
+
+async function ensureSentinelAccess(request: Request) {
+  const secret = process.env.CRON_SECRET;
+  const supplied =
+    request.headers.get('x-cron-secret') ??
+    request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  if (secret && supplied && supplied === secret) return null;
+
+  const session = await auth();
+  if (session?.user?.id) return null;
+
+  return sentinelJson({ error: 'Unauthorized' }, { status: 401 });
+}
 
 const schema = z.object({
   source: z.string().min(1).default('frontend'),
@@ -13,6 +27,9 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const denied = await ensureSentinelAccess(request);
+  if (denied) return denied;
+
   try {
     const body = await request.json();
     const parsed = schema.safeParse(body);

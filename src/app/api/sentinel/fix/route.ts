@@ -1,3 +1,4 @@
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { diagnoseError } from '@/lib/sentinel/diagnoser';
 import { executeAutoFix } from '@/lib/sentinel/fixer';
@@ -5,6 +6,19 @@ import { sentinelJson, sentinelOptions } from '@/lib/sentinel/http';
 import { scanPanelRoutes } from '@/lib/sentinel/scanner-panel';
 import { scanVapi } from '@/lib/sentinel/scanner-vapi';
 import type { DetectedError } from '@/lib/sentinel/types';
+
+async function ensureSentinelAccess(request: Request) {
+  const secret = process.env.CRON_SECRET;
+  const supplied =
+    request.headers.get('x-cron-secret') ??
+    request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  if (secret && supplied && supplied === secret) return null;
+
+  const session = await auth();
+  if (session?.user?.id) return null;
+
+  return sentinelJson({ error: 'Unauthorized' }, { status: 401 });
+}
 
 async function resolveIfTransient(existing: {
   id: string;
@@ -81,6 +95,9 @@ async function resolveIfTransient(existing: {
 }
 
 export async function POST(request: Request) {
+  const denied = await ensureSentinelAccess(request);
+  if (denied) return denied;
+
   try {
     const body = (await request.json()) as { errorId?: string };
     const errorId = body.errorId?.trim();

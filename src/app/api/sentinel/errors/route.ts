@@ -1,5 +1,19 @@
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { sentinelJson, sentinelOptions } from '@/lib/sentinel/http';
+
+async function ensureSentinelAccess(request: Request) {
+  const secret = process.env.CRON_SECRET;
+  const supplied =
+    request.headers.get('x-cron-secret') ??
+    request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  if (secret && supplied && supplied === secret) return null;
+
+  const session = await auth();
+  if (session?.user?.id) return null;
+
+  return sentinelJson({ error: 'Unauthorized' }, { status: 401 });
+}
 
 function toPositiveLimit(value: string | null, fallback = 50) {
   const parsed = Number(value ?? fallback);
@@ -14,25 +28,33 @@ function toOptionalBoolean(value: string | null) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const source = searchParams.get('source')?.trim() || undefined;
-  const severity = searchParams.get('severity')?.trim() || undefined;
-  const resolved = toOptionalBoolean(searchParams.get('resolved'));
-  const limit = toPositiveLimit(searchParams.get('limit'));
+  const denied = await ensureSentinelAccess(request);
+  if (denied) return denied;
 
-  const where = {
-    ...(source ? { source } : {}),
-    ...(severity ? { severity } : {}),
-    ...(resolved === undefined ? {} : { resolved })
-  };
+  try {
+    const { searchParams } = new URL(request.url);
+    const source = searchParams.get('source')?.trim() || undefined;
+    const severity = searchParams.get('severity')?.trim() || undefined;
+    const resolved = toOptionalBoolean(searchParams.get('resolved'));
+    const limit = toPositiveLimit(searchParams.get('limit'));
 
-  const errors = await prisma.sentinelError.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-    take: limit
-  });
+    const where = {
+      ...(source ? { source } : {}),
+      ...(severity ? { severity } : {}),
+      ...(resolved === undefined ? {} : { resolved })
+    };
 
-  return sentinelJson({ errors, count: errors.length });
+    const errors = await prisma.sentinelError.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit
+    });
+
+    return sentinelJson({ errors, count: errors.length });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return sentinelJson({ error: message }, { status: 500 });
+  }
 }
 
 export async function OPTIONS() {
