@@ -1,14 +1,18 @@
 import OpenAI from 'openai';
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY is not configured');
-}
+let cachedClient: OpenAI | null = null;
 
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 60000,
-  maxRetries: 3,
-});
+export function getOpenAI(): OpenAI {
+  if (cachedClient) return cachedClient;
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+
+  cachedClient = new OpenAI({ apiKey, timeout: 60000, maxRetries: 3 });
+  return cachedClient;
+}
 
 export const MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
 
@@ -17,7 +21,7 @@ export async function callAI(
   userMessage: string,
   maxTokens: number = 2000
 ): Promise<string> {
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: MODEL,
     max_tokens: maxTokens,
     temperature: 0.7,
