@@ -16,7 +16,7 @@ export default function AutomacaoVendasPage() {
   return (
     <>
       <style>{`
-        .page-hero{padding:130px 20px 70px;border-bottom:1px solid var(--line);background:radial-gradient(circle at 50% 0,rgba(0,255,65,.15),transparent 42%)}
+        .page-hero{padding:130px 20px 70px;border-bottom:1px solid var(--border);background:radial-gradient(circle at 50% 0,rgba(0,255,65,.15),transparent 42%)}
         .page-hero h1{font-size:clamp(2.35rem,7vw,5.9rem);line-height:.92;letter-spacing:-.08em;margin-bottom:22px}
         .kicker{color:var(--neon);text-transform:uppercase;letter-spacing:.16em;font-weight:900;font-size:.78rem;margin-bottom:14px}
         .lead{font-size:clamp(1.02rem,2vw,1.25rem);color:var(--muted);max-width:680px}
@@ -24,21 +24,21 @@ export default function AutomacaoVendasPage() {
         .section-sv{padding:92px 20px;position:relative}
         .grid-cards{display:grid;gap:22px;grid-template-columns:repeat(3,1fr)}
         .grid-two{display:grid;gap:22px;grid-template-columns:repeat(2,1fr)}
-        .card-sv{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:24px;padding:26px;transition:.3s;position:relative;overflow:hidden}
+        .card-sv{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));border:1px solid var(--border);border-radius:24px;padding:26px;transition:.3s;position:relative;overflow:hidden}
         .card-sv:hover{transform:translateY(-8px);border-color:rgba(0,255,65,.65);box-shadow:0 0 36px rgba(0,255,65,.16)}
-        .icon-sv{width:48px;height:48px;border:1px solid var(--line);border-radius:16px;display:grid;place-items:center;color:var(--neon);font-size:1.45rem;background:rgba(0,255,65,.06);box-shadow:0 0 18px rgba(0,255,65,.16);margin-bottom:18px}
+        .icon-sv{width:48px;height:48px;border:1px solid var(--border);border-radius:16px;display:grid;place-items:center;color:var(--neon);font-size:1.45rem;background:rgba(0,255,65,.06);box-shadow:0 0 18px rgba(0,255,65,.16);margin-bottom:18px}
         .card-sv h3{font-size:1.2rem;margin-bottom:10px;color:#fff}
         .card-sv p{color:var(--muted)}
-        .pill-sv{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--neon);background:rgba(0,255,65,.06);font-weight:800;font-size:.82rem;margin:6px 6px 0 0}
+        .pill-sv{display:inline-flex;border:1px solid var(--border);border-radius:999px;padding:8px 12px;color:var(--neon);background:rgba(0,255,65,.06);font-weight:800;font-size:.82rem;margin:6px 6px 0 0}
         .section-head{display:flex;justify-content:space-between;gap:22px;align-items:end;margin-bottom:36px}
         .section-head p{color:var(--muted);max-width:560px}
         .section-sv h2{font-size:clamp(2rem,5vw,3.8rem);letter-spacing:-.06em;line-height:1;margin-bottom:16px}
-        .timeline-sv{border-left:1px solid var(--line);padding-left:24px}
+        .timeline-sv{border-left:1px solid var(--border);padding-left:24px}
         .step-sv{position:relative;margin-bottom:26px}
         .step-sv:before{content:"";position:absolute;left:-32px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--neon);box-shadow:0 0 24px rgba(0,255,65,.35)}
         .step-sv h3{font-size:1.1rem;margin-bottom:6px;color:#fff}
         .step-sv p{color:var(--muted)}
-        .cta-sv{border:1px solid var(--line);border-radius:32px;padding:34px;background:linear-gradient(135deg,rgba(0,255,65,.12),rgba(255,255,255,.02));box-shadow:0 0 50px rgba(0,255,65,.11);text-align:center}
+        .cta-sv{border:1px solid var(--border);border-radius:32px;padding:34px;background:linear-gradient(135deg,rgba(0,255,65,.12),rgba(255,255,255,.02));box-shadow:0 0 50px rgba(0,255,65,.11);text-align:center}
         .cta-sv h2{font-size:clamp(1.8rem,4vw,3rem);letter-spacing:-.06em;margin-bottom:12px}
         .cta-sv p{color:var(--muted);margin-bottom:22px}
         .actions-sv{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:22px}

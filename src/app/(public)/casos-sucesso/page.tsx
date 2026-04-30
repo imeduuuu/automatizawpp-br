@@ -16,7 +16,7 @@ export default function CasosSucessoPage() {
   return (
     <>
       <style>{`
-        .page-hero{padding:130px 20px 70px;border-bottom:1px solid var(--line);background:radial-gradient(circle at 50% 0,rgba(0,255,65,.15),transparent 42%)}
+        .page-hero{padding:130px 20px 70px;border-bottom:1px solid var(--border);background:radial-gradient(circle at 50% 0,rgba(0,255,65,.15),transparent 42%)}
         .page-hero h1{font-size:clamp(2.35rem,7vw,5.9rem);line-height:.92;letter-spacing:-.08em;margin-bottom:22px}
         .kicker{color:var(--neon);text-transform:uppercase;letter-spacing:.16em;font-weight:900;font-size:.78rem;margin-bottom:14px}
         .lead{font-size:clamp(1.02rem,2vw,1.25rem);color:var(--muted);max-width:680px}
@@ -24,18 +24,18 @@ export default function CasosSucessoPage() {
         .section-cs{padding:92px 20px;position:relative}
         .grid-cards{display:grid;gap:22px;grid-template-columns:repeat(3,1fr)}
         .grid-two{display:grid;gap:22px;grid-template-columns:repeat(2,1fr)}
-        .card-cs{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:24px;padding:26px;transition:.3s;position:relative;overflow:hidden}
+        .card-cs{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));border:1px solid var(--border);border-radius:24px;padding:26px;transition:.3s;position:relative;overflow:hidden}
         .card-cs:hover{transform:translateY(-8px);border-color:rgba(0,255,65,.65);box-shadow:0 0 36px rgba(0,255,65,.16)}
-        .icon-cs{width:48px;height:48px;border:1px solid var(--line);border-radius:16px;display:grid;place-items:center;font-size:1.45rem;background:rgba(0,255,65,.06);box-shadow:0 0 18px rgba(0,255,65,.16);margin-bottom:18px}
+        .icon-cs{width:48px;height:48px;border:1px solid var(--border);border-radius:16px;display:grid;place-items:center;font-size:1.45rem;background:rgba(0,255,65,.06);box-shadow:0 0 18px rgba(0,255,65,.16);margin-bottom:18px}
         .card-cs h3{font-size:1.2rem;margin-bottom:10px;color:#fff}
         .card-cs p{color:var(--muted);margin-bottom:8px}
         .price-cs{font-size:2.4rem;color:var(--neon);font-weight:900;margin:12px 0;text-shadow:0 0 24px rgba(0,255,65,.35)}
         .section-head{display:flex;justify-content:space-between;gap:22px;align-items:end;margin-bottom:36px}
         .section-cs h2{font-size:clamp(2rem,5vw,3.8rem);letter-spacing:-.06em;line-height:1;margin-bottom:16px}
-        .testimonial-cs{padding:30px;border:1px solid var(--line);border-radius:24px;background:#050505}
+        .testimonial-cs{padding:30px;border:1px solid var(--border);border-radius:24px;background:#050505}
         .quote-cs{font-size:1.18rem;color:#e9e9e9;font-style:italic}
         .person-cs{margin-top:18px;color:var(--neon);font-weight:800}
-        .cta-cs{border:1px solid var(--line);border-radius:32px;padding:34px;background:linear-gradient(135deg,rgba(0,255,65,.12),rgba(255,255,255,.02));box-shadow:0 0 50px rgba(0,255,65,.11);text-align:center}
+        .cta-cs{border:1px solid var(--border);border-radius:32px;padding:34px;background:linear-gradient(135deg,rgba(0,255,65,.12),rgba(255,255,255,.02));box-shadow:0 0 50px rgba(0,255,65,.11);text-align:center}
         .cta-cs h2{font-size:clamp(1.8rem,4vw,3rem);letter-spacing:-.06em;margin-bottom:12px}
         .cta-cs p{color:var(--muted);margin-bottom:22px}
         .btn-neon{display:inline-flex;align-items:center;gap:10px;border-radius:999px;padding:13px 24px;border:1px solid var(--neon);background:var(--neon);color:#001406;font-weight:800;box-shadow:0 0 24px rgba(0,255,65,.35);transition:.3s}
