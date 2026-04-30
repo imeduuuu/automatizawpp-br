@@ -31,6 +31,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/sentinel',       // sentinel scanner — sem auth própria
   '/api/newsletter',     // inscrição newsletter — público
   '/api/diagnostico',    // pedido de diagnóstico gratuito — público
+  '/api/blog',           // geração de posts via cron — protegido por secret próprio
 ];
 
 function isResetPasswordPath(pathname: string) {

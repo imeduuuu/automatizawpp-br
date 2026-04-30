@@ -5,6 +5,7 @@ import { PageLayout } from '@/components/ui/PageLayout';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useApi } from '@/components/ui/useApi';
 import { useUiCopy } from '@/components/ui/UiLanguageProvider';
+import { showToast } from '@/lib/ui-toast';
 
 type MetricsPayload = {
   mrr: {
@@ -73,7 +74,7 @@ export default function SettingsPage() {
             style={{ display: 'grid', gap: 10 }}
             onSubmit={(event) => {
               event.preventDefault();
-              window.alert(copy.settings.savedGeneral);
+              showToast(copy.settings.savedGeneral, 'success');
             }}
           >
             <div>
@@ -99,7 +100,7 @@ export default function SettingsPage() {
             style={{ display: 'grid', gap: 10 }}
             onSubmit={(event) => {
               event.preventDefault();
-              window.alert(copy.settings.savedIntegrations);
+              showToast(copy.settings.savedIntegrations, 'success');
             }}
           >
             <fieldset style={{ border: '1px solid #ccc', padding: '12px', borderRadius: '4px' }}>
@@ -229,7 +230,7 @@ export default function SettingsPage() {
             style={{ display: 'grid', gap: 10 }}
             onSubmit={(event) => {
               event.preventDefault();
-              window.alert(copy.settings.savedNotifications);
+              showToast(copy.settings.savedNotifications, 'success');
             }}
           >
             <div>
@@ -257,7 +258,7 @@ export default function SettingsPage() {
             style={{ display: 'grid', gap: 10 }}
             onSubmit={(event) => {
               event.preventDefault();
-              window.alert(copy.settings.savedAccount);
+              showToast(copy.settings.savedAccount, 'success');
             }}
           >
             <div>

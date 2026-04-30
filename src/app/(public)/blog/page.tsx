@@ -2,8 +2,20 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import postsGerados from './generated-posts.json';
 
-const POSTS = [
+// Tipo para posts (estáticos e gerados)
+interface PostLista {
+  slug: string;
+  emoji: string;
+  tag: string;
+  title: string;
+  excerpt: string;
+  date: string;
+  readTime: string;
+}
+
+const POSTS_ESTATICOS: PostLista[] = [
   {
     slug: 'como-automatizar-whatsapp-pequeno-negocio',
     emoji: '🤖',
@@ -58,6 +70,12 @@ const POSTS = [
     date: '25 Abr 2026',
     readTime: '9 min',
   },
+];
+
+// Mescla: posts gerados primeiro (mais recentes), depois estáticos
+const POSTS: PostLista[] = [
+  ...(postsGerados as PostLista[]),
+  ...POSTS_ESTATICOS,
 ];
 
 export default function BlogPage() {

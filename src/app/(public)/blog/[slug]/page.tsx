@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import postsGerados from '../generated-posts.json';
 
 interface BlogPost {
   title: string;
@@ -11,7 +12,23 @@ interface BlogPost {
   content: string;
 }
 
-const BLOG_POSTS: Record<string, BlogPost> = {
+// Posts gerados por IA indexados por slug
+const postsGeradosMap: Record<string, BlogPost> = Object.fromEntries(
+  (postsGerados as Array<BlogPost & { slug: string; excerpt: string; geradoEm: string }>).map((p) => [
+    p.slug,
+    {
+      title: p.title,
+      description: p.description || p.excerpt,
+      date: p.date,
+      readTime: p.readTime,
+      tag: p.tag,
+      emoji: p.emoji,
+      content: p.content,
+    },
+  ])
+);
+
+const BLOG_POSTS_ESTATICOS: Record<string, BlogPost> = {
   'como-automatizar-whatsapp-pequeno-negocio': {
     title: 'Como Automatizar WhatsApp para Pequeno Negócio — Guia Completo 2026',
     description: '7 passos práticos para implementar automação no WhatsApp sem precisar de programação ou time técnico. Do zero ao primeiro lead em 7 dias.',
@@ -199,6 +216,12 @@ const BLOG_POSTS: Record<string, BlogPost> = {
       <p>Não espere 2027 para começar. As empresas que implementarem automação hoje terão 12 meses de vantagem em dados, aprendizado e otimização sobre a concorrência.</p>
     `,
   },
+};
+
+// Mapa final: posts gerados têm prioridade sobre os estáticos
+const BLOG_POSTS: Record<string, BlogPost> = {
+  ...BLOG_POSTS_ESTATICOS,
+  ...postsGeradosMap,
 };
 
 interface PageProps {
