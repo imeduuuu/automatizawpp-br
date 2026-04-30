@@ -1,13 +1,18 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  throw new Error('ANTHROPIC_API_KEY is not configured');
-}
+let cachedClient: Anthropic | null = null;
 
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  timeout: 60000,
-});
+export function getAnthropic(): Anthropic {
+  if (cachedClient) return cachedClient;
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY is not configured');
+  }
+
+  cachedClient = new Anthropic({ apiKey, timeout: 60000 });
+  return cachedClient;
+}
 
 export const MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
 
@@ -16,7 +21,7 @@ export async function callAI(
   userMessage: string,
   maxTokens: number = 2000
 ): Promise<string> {
-  const response = await anthropic.messages.create({
+  const response = await getAnthropic().messages.create({
     model: MODEL,
     max_tokens: maxTokens,
     system: systemPrompt,
@@ -40,7 +45,6 @@ export async function callAIStructured<T>(
 ): Promise<T> {
   const content = await callAI(systemPrompt, userMessage, maxTokens);
 
-  // Extract JSON from markdown code block or raw content
   const codeBlock = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const clean = codeBlock ? codeBlock[1].trim() : content.trim();
 
