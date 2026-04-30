@@ -1,0 +1,100 @@
+{
+  "id": "sales-os-inbound-bridge-v1",
+  "name": "Sales OS Inbound Bridge",
+  "createdAt": "2026-04-17T20:00:00.000Z",
+  "updatedAt": "2026-04-17T20:00:00.000Z",
+  "active": false,
+  "isArchived": false,
+  "meta": null,
+  "staticData": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [],
+  "versionMetadata": null,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales-os-inbound",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "2f0d9f9c-4d5c-4d11-9a14-87754a4f6451",
+      "name": "Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "webhookId": "sales-os-inbound",
+      "position": [
+        220,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const body = $json.body ?? $json;\nconst clean = (value) => typeof value === 'string' ? value.trim() : value;\n\nreturn [{\n  json: {\n    workspaceId: clean(body.workspaceId) || 'demo_workspace',\n    channel: clean(body.channel) || 'WHATSAPP',\n    message: clean(body.message) || clean(body.text) || 'Nuevo lead inbound',\n    subject: clean(body.subject) || '',\n    threadRef: clean(body.threadRef) || '',\n    messageId: clean(body.messageId) || '',\n    metadata: body.metadata || {},\n    lead: {\n      fullName: clean(body.fullName) || clean(body.nombre) || clean(body.name) || 'Lead inbound',\n      phone: clean(body.phone) || clean(body.telefono) || '',\n      email: clean(body.email) || '',\n      company: clean(body.company) || clean(body.negocio) || '',\n      source: clean(body.source) || clean(body.fuente) || 'n8n',\n      productInterest: clean(body.productInterest) || clean(body.interest) || ''\n    }\n  }\n}];"
+      },
+      "id": "adab8018-8408-4ad4-8f05-f0e9f71febaf",
+      "name": "Normalize Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://sales-os:3000/api/events/inbound",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "b321e5a8-8eb3-42b5-bebf-dc904095ecfd",
+      "name": "Send to Sales OS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        710,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Payload": {
+      "main": [
+        [
+          {
+            "node": "Send to Sales OS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "pinData": {},
+  "versionId": "4ad7ed49-11b2-4e04-ab3a-f0cc4ac4d3fb",
+  "activeVersionId": "4ad7ed49-11b2-4e04-ab3a-f0cc4ac4d3fb"
+}

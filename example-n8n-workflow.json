@@ -1,0 +1,135 @@
+{
+  "name": "Verify Google Meta Tag After Deploy",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://meusite.com.br",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Google-Meta-Verification-Checker/1.0"
+            }
+          ]
+        }
+      },
+      "id": "1b89e6f2-8c3d-4e5f-9a0b-1c2d3e4f5g6h",
+      "name": "Fetch Website HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "expression": "const html = $json.body;\nconst hasMetaTag = html.includes('google-site-verification');\nconst matches = html.match(/<meta[^>]*google-site-verification[^>]*>/i);\nreturn {\n  found: hasMetaTag,\n  metaTag: matches ? matches[0] : null,\n  status: hasMetaTag ? 'SUCCESS' : 'FAILED'\n};"
+      },
+      "id": "2c90f7g3-9d4e-5f6g-0b1c-2d3e4f5g6h7i",
+      "name": "Check Meta Tag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.found }}",
+              "operator": "equals",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "3d01g8h4-0e5f-6g7h-1c2d-3e4f5g6h7i8j",
+      "name": "IF: Meta Tag Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "✓ Google Meta Tag Verification Success",
+        "textOnly": false,
+        "htmlMessage": "{{ \"<h2>Google Meta Tag Verification Successful</h2><p><strong>URL:</strong> \" + $('Fetch Website HTML').json.url + \"</p><p><strong>Meta Tag Found:</strong></p><pre>\" + $json.metaTag + \"</pre><p><strong>Time:</strong> \" + new Date().toLocaleString() + \"</p>\" }}"
+      },
+      "id": "4e12h9i5-1f6g-7h8i-2d3e-4f5g6h7i8j9k",
+      "name": "Send Success Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        850,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "✗ Google Meta Tag Verification FAILED",
+        "textOnly": false,
+        "htmlMessage": "{{ \"<h2>Google Meta Tag NOT Found</h2><p><strong>URL:</strong> \" + $('Fetch Website HTML').json.url + \"</p><p><strong>Status:</strong> FAILED - Meta tag google-site-verification was not found in the HTML.</p><p><strong>Next Steps:</strong></p><ul><li>Check if the deployment was successful</li><li>Wait a few minutes for cache to clear</li><li>Verify the _document.tsx file has the meta tag</li><li>Check for redirect issues</li></ul><p><strong>Time:</strong> \" + new Date().toLocaleString() + \"</p>\" }}"
+      },
+      "id": "5f23i0j6-2g7h-8i9j-3e4f-5g6h7i8j9k0l",
+      "name": "Send Error Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        850,
+        450
+      ]
+    }
+  ],
+  "connections": {
+    "Fetch Website HTML": {
+      "main": [
+        [
+          {
+            "node": "Check Meta Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Meta Tag": {
+      "main": [
+        [
+          {
+            "node": "IF: Meta Tag Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Meta Tag Found": {
+      "main": [
+        [
+          {
+            "node": "Send Success Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

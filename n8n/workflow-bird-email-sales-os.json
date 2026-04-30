@@ -1,0 +1,160 @@
+{
+  "id": "bird-email-sales-os-v1",
+  "name": "Bird Email → Sales OS",
+  "createdAt": "2026-04-29T00:00:00.000Z",
+  "updatedAt": "2026-04-29T00:00:00.000Z",
+  "active": false,
+  "isArchived": false,
+  "meta": null,
+  "staticData": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [],
+  "versionMetadata": null,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bird-email-inbound",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "bird-email-webhook",
+      "name": "Bird Email Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "webhookId": "bird-email-inbound",
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const body = $json.body ?? $json;\nconst clean = (value) => typeof value === 'string' ? value.trim() : value;\n\n// Bird Email payload structure:\n// body.channel.platform = 'email' or 'smtp'\n// body.contact.identifiers[].key = 'emailaddress'\n// body.contact.identifiers[].value = actual email\n// body.conversation.messages[0].body = email body\n// body.conversation.messages[0].direction = 'inbound'\n// body.conversation.subject = email subject\n// body.contact.customFields can have additional lead data\n\nconst contact = body.contact || {};\nconst conversation = body.conversation || {};\nconst firstMessage = conversation.messages?.[0] || {};\n\n// Extract email from contact.identifiers\nlet leadEmail = '';\nif (contact.identifiers && Array.isArray(contact.identifiers)) {\n  const emailId = contact.identifiers.find(id => id.key === 'emailaddress' || id.key === 'email');\n  if (emailId) leadEmail = clean(emailId.value);\n}\n\n// Extract display name\nconst leadName = clean(contact.displayName) || clean(body.sender) || 'Lead from Bird Email';\n\n// Extract message and subject\nconst message = clean(firstMessage.body) || clean(body.message) || 'Email inbound';\nconst subject = clean(conversation.subject) || clean(body.subject) || 'Email';\n\n// Extract conversation/message IDs for threading\nconst messageId = clean(body.messageId) || clean(firstMessage.id) || `bird-${Date.now()}`;\nconst threadRef = clean(body.conversationId) || clean(conversation.id) || '';\nconst birdConversationId = clean(body.conversationId) || '';\n\nreturn [{\n  json: {\n    workspaceId: 'demo_workspace',\n    channel: 'EMAIL',\n    subject,\n    threadRef,\n    messageId,\n    message,\n    metadata: {\n      source: 'BIRD_EMAIL',\n      birdConversationId,\n      birdContactId: clean(contact.id) || '',\n      direction: firstMessage.direction || 'inbound'\n    },\n    lead: {\n      fullName: leadName,\n      email: leadEmail,\n      phone: '',\n      source: 'BIRD_EMAIL'\n    }\n  }\n}];"
+      },
+      "id": "normalize-bird-email",
+      "name": "Normalize Bird Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://sales-os:3000/api/events/inbound",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "send-to-sales-os",
+      "name": "Send to Sales OS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        710,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.delivery.sent}}",
+              "operation": "equals",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-delivery",
+      "name": "Check Delivery Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=YOUR_SLACK_WEBHOOK_OR_LOG_ENDPOINT",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"⚠️ Bird Email → Sales OS: Delivery failed\",\n  \"details\": {\n    \"leadEmail\": \"{{$json.lead.email}}\",\n    \"subject\": \"{{$json.subject}}\",\n    \"action\": \"{{$json.action}}\",\n    \"response\": \"{{$json.response}}\"\n  }\n}"
+      },
+      "id": "log-error",
+      "name": "Log Delivery Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        450
+      ]
+    }
+  ],
+  "connections": {
+    "Bird Email Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Bird Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Bird Email": {
+      "main": [
+        [
+          {
+            "node": "Send to Sales OS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Sales OS": {
+      "main": [
+        [
+          {
+            "node": "Check Delivery Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Delivery Success": {
+      "main": [
+        [
+          {
+            "node": "Log Delivery Error",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "pinData": {},
+  "versionId": "bird-email-v1",
+  "activeVersionId": "bird-email-v1"
+}

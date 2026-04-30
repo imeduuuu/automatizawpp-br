@@ -1,0 +1,96 @@
+================================================================================
+DEPLOY VERCEL - INÍCIO RÁPIDO (automatizawppBR)
+================================================================================
+
+PRIMEIRO DEPLOY EM 5 MINUTOS:
+
+1. Instalar Vercel CLI (uma única vez):
+   $ npm install -g vercel
+   $ vercel login
+
+2. Deploy de teste (preview):
+   $ cd /Users/eduardosilva/Antigravity/automatizawppBR
+   $ vercel deploy
+   → Vai exibir uma URL para testar
+
+3. Deploy em Produção:
+   $ vercel deploy --prod
+   → Seu site estará live!
+
+4. Deploy Automático (GitHub):
+   → Ir a https://vercel.com/dashboard
+   → Conectar repositório GitHub
+   → Adicionar variáveis de ambiente
+   → Pronto! Cada push = deploy automático
+
+================================================================================
+ARQUIVOS DE AJUDA NESTA PASTA:
+================================================================================
+
+1. DEPLOY_VERCEL_GUIA.md
+   - Guia completo e detalhado
+   - Todas as variáveis de ambiente
+   - Troubleshooting com soluções
+
+2. DEPLOY_CHECKLIST.md
+   - Checklist em 7 fases
+   - O que validar antes de cada deploy
+   - Comandos para debug
+
+3. deploy-vercel.sh
+   - Script bash para automatizar
+   - Uso: ./deploy-vercel.sh [--prod]
+
+================================================================================
+COMANDOS MAIS USADOS:
+================================================================================
+
+vercel deploy              # Deploy preview (teste)
+vercel deploy --prod       # Deploy produção
+vercel status              # Ver status do projeto
+vercel logs --tail         # Ver logs de erro em tempo real
+vercel env pull            # Puxar variáveis do Vercel para local
+vercel list                # Ver URL do seu projeto
+vercel whoami              # Verificar autenticação
+
+================================================================================
+VARIÁVEIS OBRIGATÓRIAS NO VERCEL DASHBOARD:
+================================================================================
+
+DATABASE_URL       (PostgreSQL de produção)
+REDIS_URL          (Redis de produção)
+NEXTAUTH_SECRET    (gere com: openssl rand -base64 32)
+NEXTAUTH_URL       (seu domínio, ex: https://seu-projeto.vercel.app)
+APP_URL            (mesmo que NEXTAUTH_URL)
+NEXT_PUBLIC_BASE_URL  (mesmo que NEXTAUTH_URL)
+
+Outras variáveis opcionais: ver DEPLOY_VERCEL_GUIA.md
+
+================================================================================
+SE ALGO DER ERRADO:
+================================================================================
+
+Build erro:
+  $ vercel logs --tail
+  (procure pela mensagem de erro)
+
+Site mostra erro 500:
+  - Verificar DATABASE_URL está acessível
+  - Verificar NEXTAUTH_SECRET foi definido
+  - Verificar NEXTAUTH_URL corresponde ao domínio
+
+Quero reverter deploy:
+  - Ir a https://vercel.com/dashboard
+  - Clicar em "Deployments"
+  - Selecionar deployment anterior
+  - Clicar "Promote to Production"
+
+================================================================================
+DOCUMENTAÇÃO COMPLETA:
+================================================================================
+
+https://vercel.com/docs
+https://vercel.com/docs/deployments/managed-nextjs
+
+================================================================================
+FIM

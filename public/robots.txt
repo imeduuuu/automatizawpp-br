@@ -1,0 +1,22 @@
+# AutomatizaWPP robots.txt
+
+User-agent: *
+Allow: /
+Allow: /automacao-whatsapp
+Allow: /automacao-vendas
+Allow: /automacao-atendimento
+Allow: /casos-sucesso
+Allow: /blog
+Allow: /dashboard.html
+Allow: /api/public/
+
+Disallow: /admin
+Disallow: /settings
+Disallow: /auth
+Disallow: /login
+Disallow: /signup
+Disallow: /reset-password
+Disallow: /api/private
+
+# Sitemap reference
+Sitemap: https://www.automatizawpp.com/sitemap.xml

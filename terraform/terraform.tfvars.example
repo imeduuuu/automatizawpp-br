@@ -1,0 +1,38 @@
+# DigitalOcean API Token
+# Get from: https://cloud.digitalocean.com/account/api/tokens
+do_token = "dop_v1_YOUR_TOKEN_HERE"
+
+# Environment
+environment = "prod"
+
+# Region (nyc3, sfo3, lon1, fra1, etc.)
+region = "nyc3"
+
+# Your domain
+domain = "automatizawpp.com"
+
+# Application scaling
+app_instances     = 2
+app_max_instances = 5
+app_size          = "s-2vcpu-2gb"
+app_cpu_threshold = 70
+
+# Database
+db_size  = "db-s-1vcpu-1gb"
+db_nodes = 1  # 1 for single, 3 for HA cluster
+
+# SSH access
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+allowed_ssh_ips     = ["YOUR_IP/32"]  # Restrict to your IP
+
+# GitHub
+github_repo   = "https://github.com/YOUR_USER/automatizawppBR"
+github_branch = "main"
+
+# API Keys
+anthropic_api_key   = "sk-ant-api03-YOUR_KEY_HERE"
+bird_workspace_id   = "YOUR_BIRD_WORKSPACE_ID"
+
+# Monitoring
+slack_channel    = "#automatizawpp-alerts"
+slack_webhook_url = "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"

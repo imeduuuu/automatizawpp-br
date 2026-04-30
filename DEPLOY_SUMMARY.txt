@@ -1,0 +1,255 @@
+================================================================================
+RESUMO: GUIA COMPLETO DE DEPLOY VERCEL CRIADO
+================================================================================
+
+Data: 2026-04-30
+Projeto: automatizawppBR (Next.js - sales-os)
+Status: 100% pronto para deploy
+
+================================================================================
+ARQUIVOS CRIADOS (6 arquivos):
+================================================================================
+
+1. DEPLOY_START_HERE.txt (2.5K)
+   - Ponto de partida com visual atraente
+   - Versão "super rápida" (5 min)
+   - Quick reference com todos os comandos
+   - Comece POR AQUI!
+
+2. DEPLOY_README.md (3.2K)
+   - Índice e navegação entre documentos
+   - Fluxos recomendados (primeiro deploy, automático, troubleshooting)
+   - Resumo de 4 documentos
+   - Próximas etapas pós-deploy
+
+3. DEPLOY_VERCEL_GUIA.md (5.2K)
+   - Guia COMPLETO em 8 seções:
+     1. Instalar Vercel CLI
+     2. Autenticar
+     3. Deploy manual (--prod)
+     4. Deploy automático (GitHub)
+     5. Comandos úteis do dia a dia
+     6. Troubleshooting (3 cenários comuns)
+     7. Checklist pré-deploy
+     8. URLs e próximos passos
+   - Lista completa de variáveis de ambiente
+
+4. DEPLOY_CHECKLIST.md (3.6K)
+   - Checklist prático em 7 fases:
+     Fase 1: Preparação local
+     Fase 2: Vercel CLI
+     Fase 3: Deploy de teste
+     Fase 4: Produção (variáveis + DB + Redis)
+     Fase 5: Deploy em produção
+     Fase 6: Deploy automático
+     Fase 7: Pós-deploy
+   - Comandos para debug em cada fase
+
+5. deploy-vercel.sh (1.4K) ← SCRIPT EXECUTÁVEL
+   - Automatiza: verifica CLI + autenticação + faz deploy
+   - Uso: ./deploy-vercel.sh [--prod]
+   - Útil para CI/CD futura
+   - Chmod 755 (executável)
+
+6. env-setup.sh (2.2K) ← SCRIPT EXECUTÁVEL
+   - Gerencia variáveis de ambiente Vercel
+   - Comandos:
+     ./env-setup.sh pull              (puxa do Vercel)
+     ./env-setup.sh list              (lista configuradas)
+     ./env-setup.sh generate-secret    (cria NEXTAUTH_SECRET)
+   - Chmod 755 (executável)
+
+BÔNUS: VERCEL_QUICK_START.txt (3.3K)
+   - Versão de 1 página para compartilhar
+   - Referência rápida sem distrações
+
+================================================================================
+FLUXO RECOMENDADO:
+================================================================================
+
+PASSO 1 - AGORA (5 min leitura):
+  → Abra: DEPLOY_START_HERE.txt
+  → Entenda os 5 passos principais
+  → Identifique o que você precisa fazer
+
+PASSO 2 - HOJE (30 min):
+  → Abra: DEPLOY_README.md
+  → Escolha seu fluxo (primeiro deploy ou automático)
+  → Siga as instruções
+
+PASSO 3 - VALIDAÇÃO (5 min):
+  → Use: DEPLOY_CHECKLIST.md
+  → Marque cada fase conforme completa
+
+PASSO 4 - EXECUÇÃO (5-10 min):
+  → Execute: npm install -g vercel
+  → Execute: vercel login
+  → Execute: ./deploy-vercel.sh --prod
+  → Pronto! Site está live
+
+PASSO 5 - AUTOMÁTICO (10 min):
+  → Ir a: https://vercel.com/dashboard
+  → Conectar repositório GitHub
+  → Adicionar variáveis de ambiente
+  → Pronto! Cada push = deploy automático
+
+================================================================================
+O QUE VOCÊ PRECISA ANTES DE COMEÇAR:
+================================================================================
+
+OBRIGATÓRIO:
+
+  ✓ Código do projeto commitado no GitHub
+    (vercel não faz deploy de código local)
+
+  ✓ PostgreSQL em produção
+    - URL formato: postgresql://user:pass@host:5432/dbname
+    - Pode ser: Vercel Postgres, Railway, AWS RDS, etc
+    - Salvar como: DATABASE_URL
+
+  ✓ Redis em produção
+    - URL formato: redis://:password@host:port
+    - Pode ser: Redis Cloud, Railway, Upstash, etc
+    - Salvar como: REDIS_URL
+
+  ✓ NEXTAUTH_SECRET (gerador incluído)
+    - Gerar: openssl rand -base64 32
+    - Copiar para Vercel dashboard
+    - NUNCA commitar para Git
+
+OPCIONAL MAS RECOMENDADO:
+
+  - Domínio customizado (você pode usar .vercel.app primeiro)
+  - Certificado SSL (Vercel faz automático)
+  - CDN global (Vercel faz automático)
+
+================================================================================
+VARIÁVEIS DE AMBIENTE (CRÍTICO!):
+================================================================================
+
+Você PRECISA configurar isto NO VERCEL DASHBOARD antes de fazer deploy:
+
+OBRIGATÓRIAS:
+
+  DATABASE_URL = postgresql://...
+  REDIS_URL = redis://...
+  NEXTAUTH_SECRET = (gerado com openssl rand -base64 32)
+  NEXTAUTH_URL = https://seu-projeto.vercel.app ou seu-dominio.com
+  APP_URL = https://seu-projeto.vercel.app ou seu-dominio.com
+  NEXT_PUBLIC_BASE_URL = https://seu-projeto.vercel.app ou seu-dominio.com
+
+OPCIONAIS (se uses):
+
+  OPENAI_API_KEY = sk-...
+  BIRD_API_KEY = ...
+  BREVO_API_KEY = ...
+  RESEND_API_KEY = ...
+  SMTP_HOST, SMTP_USER, MAIL_FROM = ...
+  IMAP_HOST, IMAP_USER = ...
+
+Ver DEPLOY_VERCEL_GUIA.md para lista COMPLETA (30+ variáveis)
+
+================================================================================
+COMMANDOS RÁPIDOS (COPIE E COLE):
+================================================================================
+
+# Instalar CLI (primeira vez)
+npm install -g vercel
+
+# Autenticar (primeira vez)
+vercel login
+
+# Verificar autenticação
+vercel whoami
+
+# Deploy PREVIEW (teste)
+./deploy-vercel.sh
+
+# Deploy PRODUÇÃO
+./deploy-vercel.sh --prod
+
+# Ver status
+vercel status
+
+# Ver logs
+vercel logs --tail
+
+# Gerar NEXTAUTH_SECRET
+openssl rand -base64 32
+
+# Puxar variáveis do Vercel
+./env-setup.sh pull
+
+# Listar variáveis no Vercel
+./env-setup.sh list
+
+================================================================================
+TROUBLESHOOTING (3 CENÁRIOS COMUNS):
+================================================================================
+
+1. BUILD FALHA:
+   $ vercel logs --tail
+   (procure pela mensagem de erro exata)
+   → Comum: DATABASE_URL inválida, NEXTAUTH_SECRET não definido
+
+2. SITE MOSTRA ERRO 500:
+   - Verificar DATABASE_URL está acessível
+   - Verificar NEXTAUTH_SECRET foi definido
+   - Verificar NEXTAUTH_URL = seu domínio
+
+3. QUERO REVERTER DEPLOY:
+   - Ir a https://vercel.com/dashboard
+   - Deployments → clicar no anterior → "Promote to Production"
+
+Ver DEPLOY_VERCEL_GUIA.md seção 6 para mais cenários
+
+================================================================================
+PRÓXIMAS ETAPAS PÓS-DEPLOY:
+================================================================================
+
+1. Configure domínio custom (opcional):
+   - Vercel dashboard → Settings → Domains
+   - Apontaur nameservers no seu registrador de domínio
+
+2. Habilite Analytics (recomendado):
+   - Vercel dashboard → Analytics
+   - Veja performance, erros, usage em tempo real
+
+3. Configure Webhooks (futuro):
+   - Vercel dashboard → Settings → Webhooks
+   - Integre com Slack, Discord, etc para notificações
+
+4. Monitore Deployments:
+   - Cada push → deploy automático
+   - Vercel dashboard → Deployments para histórico
+
+================================================================================
+REFERÊNCIAS OFICIAIS:
+================================================================================
+
+- Vercel Docs: https://vercel.com/docs
+- Next.js + Vercel: https://vercel.com/docs/deployments/managed-nextjs
+- CLI Reference: https://vercel.com/docs/cli
+- Environment Variables: https://vercel.com/docs/projects/environment-variables
+
+================================================================================
+SUMMARY:
+================================================================================
+
+Este pacote contém TUDO que você precisa para fazer deploy do seu projeto Next.js
+no Vercel, tanto manual quanto automático.
+
+COMECE AQUI:
+  1. Abra: DEPLOY_START_HERE.txt (5 min)
+  2. Abra: DEPLOY_README.md (entender o fluxo)
+  3. Use: DEPLOY_CHECKLIST.md (executar as fases)
+  4. Execute: ./deploy-vercel.sh --prod (fazer deploy)
+  5. Configure no Vercel dashboard (deploy automático)
+
+Não há nada mais complexo do que isto. Tudo está simplificado.
+
+================================================================================
+CRIADO: 2026-04-30
+PROJETO: automatizawppBR (sales-os)
+GARANTIA: Funciona com Next.js 15.5.15 + Vercel CLI
+================================================================================

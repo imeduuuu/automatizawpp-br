@@ -1,0 +1,27 @@
+{
+  "name": "deploy-automatizawpp",
+  "version": "1.0.0",
+  "description": "CLI tool for automated deployment of AutomatizaWPP platform",
+  "type": "module",
+  "bin": {
+    "deploy-automatizawpp": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "lib"
+  ],
+  "scripts": {
+    "test": "node bin/cli.js --help"
+  },
+  "keywords": [
+    "deploy",
+    "automation",
+    "whatsapp",
+    "cli"
+  ],
+  "author": "Eduardo Silva",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

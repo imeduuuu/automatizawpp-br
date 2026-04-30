@@ -1,0 +1,39 @@
+name: Deploy para DigitalOcean
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Deploy no servidor
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            set -e
+            cd /app
+
+            echo "→ Atualizando código..."
+            git pull origin main
+
+            echo "→ Instalando dependências..."
+            npm ci --production=false
+
+            echo "→ Gerando Prisma client..."
+            npx prisma generate
+
+            echo "→ Build da aplicação..."
+            npm run build
+
+            echo "→ Reiniciando servidor..."
+            pm2 restart automatizawpp --update-env || pm2 start npm --name automatizawpp -- start
+
+            echo "✅ Deploy concluído!"
