@@ -61,15 +61,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Pick the first workspace (AutomatizaWPP internal) to seed against
-  const workspace = await prisma.workspace.findFirst({ select: { id: true } });
-  if (!workspace) {
-    return NextResponse.json({ ok: false, error: 'No workspace exists' }, { status: 400 });
-  }
+  try {
+    // Pick the first workspace (AutomatizaWPP internal) to seed against
+    const workspace = await prisma.workspace.findFirst({ select: { id: true } });
+    if (!workspace) {
+      return NextResponse.json({ ok: false, error: 'No workspace exists' }, { status: 400 });
+    }
 
-  const created = { leads: 0, conversations: 0, messages: 0, agentRuns: 0 };
+    const created = { leads: 0, conversations: 0, messages: 0, agentRuns: 0 };
 
-  for (const data of FAKE_LEADS) {
+    for (const data of FAKE_LEADS) {
     const existing = await prisma.lead.findFirst({
       where: { workspaceId: workspace.id, email: data.email },
       select: { id: true },
@@ -147,10 +148,14 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({
-    ok: true,
-    workspace: workspace.id,
-    created,
-    note: 'Synthetic training data seeded. Agents now have leads + conversations + runs.',
-  });
+    return NextResponse.json({
+      ok: true,
+      workspace: workspace.id,
+      created,
+      note: 'Synthetic training data seeded. Agents now have leads + conversations + runs.',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
 }

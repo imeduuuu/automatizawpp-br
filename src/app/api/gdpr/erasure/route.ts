@@ -35,24 +35,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'Forbidden — admin only' }, { status: 403 });
   }
 
-  const body = await request.json();
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: 'Dados inválidos' }, { status: 400 });
-  }
+  try {
+    const body = await request.json();
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ ok: false, error: 'Dados inválidos' }, { status: 400 });
+    }
 
-  const lead = await prisma.lead.findFirst({
-    where: parsed.data.leadId
-      ? { id: parsed.data.leadId }
-      : { email: { equals: parsed.data.email!.toLowerCase().trim(), mode: 'insensitive' } },
-    select: { id: true, workspaceId: true, email: true },
-  });
+    const lead = await prisma.lead.findFirst({
+      where: parsed.data.leadId
+        ? { id: parsed.data.leadId }
+        : { email: { equals: parsed.data.email!.toLowerCase().trim(), mode: 'insensitive' } },
+      select: { id: true, workspaceId: true, email: true },
+    });
 
-  if (!lead) {
-    return NextResponse.json({ ok: false, error: 'Lead não encontrado' }, { status: 404 });
-  }
+    if (!lead) {
+      return NextResponse.json({ ok: false, error: 'Lead não encontrado' }, { status: 404 });
+    }
 
-  const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
     const messagesDeleted = await tx.message.deleteMany({ where: { leadId: lead.id } });
 
     const transcriptsDeleted = await tx.callTranscript.deleteMany({
@@ -85,13 +86,17 @@ export async function POST(request: Request) {
       },
     });
 
-    return {
-      messagesDeleted: messagesDeleted.count,
-      transcriptsDeleted: transcriptsDeleted.count,
-      memoryDeleted: memoryDeleted.count,
-      emailEventsDeleted: emailEventsDeleted.count,
-    };
-  });
+      return {
+        messagesDeleted: messagesDeleted.count,
+        transcriptsDeleted: transcriptsDeleted.count,
+        memoryDeleted: memoryDeleted.count,
+        emailEventsDeleted: emailEventsDeleted.count,
+      };
+    });
 
-  return NextResponse.json({ ok: true, leadId: lead.id, ...result });
+    return NextResponse.json({ ok: true, leadId: lead.id, ...result });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
 }

@@ -27,28 +27,33 @@ function buildActions(weighted: number) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const workspaceId = await resolveWorkspaceId(searchParams.get('workspaceId'));
-  if (!workspaceId) {
-    return NextResponse.json({ error: 'Workspace not found' }, { status: 400 });
+  try {
+    const { searchParams } = new URL(request.url);
+    const workspaceId = await resolveWorkspaceId(searchParams.get('workspaceId'));
+    if (!workspaceId) {
+      return NextResponse.json({ error: 'Workspace not found' }, { status: 400 });
+    }
+
+    const week = Number(searchParams.get('week') ?? '1');
+
+    const metrics7d = await computeEfficiency(workspaceId, 7);
+    const actions = buildActions(metrics7d.weightedEfficiency);
+
+    return NextResponse.json({
+      workspaceId,
+      week,
+      target: 85,
+      metrics7d,
+      status: metrics7d.weightedEfficiency >= 85 ? 'on-track' : 'needs-tuning',
+      actions,
+      checkpoints: [
+        'Daily: response quality + compliance incidents',
+        'Twice-weekly: orchestrator routing review',
+        'Weekly: promote/kill prompt variants and publish changelog'
+      ]
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const week = Number(searchParams.get('week') ?? '1');
-
-  const metrics7d = await computeEfficiency(workspaceId, 7);
-  const actions = buildActions(metrics7d.weightedEfficiency);
-
-  return NextResponse.json({
-    workspaceId,
-    week,
-    target: 85,
-    metrics7d,
-    status: metrics7d.weightedEfficiency >= 85 ? 'on-track' : 'needs-tuning',
-    actions,
-    checkpoints: [
-      'Daily: response quality + compliance incidents',
-      'Twice-weekly: orchestrator routing review',
-      'Weekly: promote/kill prompt variants and publish changelog'
-    ]
-  });
 }

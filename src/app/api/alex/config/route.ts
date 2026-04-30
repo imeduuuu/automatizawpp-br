@@ -40,23 +40,28 @@ export async function GET() {
     return jsonResponse({ error: 'VAPI_API_KEY is not configured' }, { status: 500 });
   }
 
-  const response = await fetch(`https://api.vapi.ai/assistant/${assistantId}`, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-    cache: 'no-store'
-  });
+  try {
+    const response = await fetch(`https://api.vapi.ai/assistant/${assistantId}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: 'no-store'
+    });
 
-  const text = await response.text();
-  const payload = text ? JSON.parse(text) : {};
-  if (!response.ok) {
-    return jsonResponse({ error: payload }, { status: response.status });
+    const text = await response.text();
+    const payload = text ? JSON.parse(text) : {};
+    if (!response.ok) {
+      return jsonResponse({ error: payload }, { status: response.status });
+    }
+
+    return jsonResponse({
+      assistantId,
+      phoneNumberId,
+      testPhone,
+      assistant: sanitizeAssistantPayload(payload)
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return jsonResponse({ error: message }, { status: 500 });
   }
-
-  return jsonResponse({
-    assistantId,
-    phoneNumberId,
-    testPhone,
-    assistant: sanitizeAssistantPayload(payload)
-  });
 }
 
 export async function POST(request: Request) {
@@ -70,23 +75,28 @@ export async function POST(request: Request) {
     return jsonResponse({ error: 'VAPI_API_KEY is not configured' }, { status: 500 });
   }
 
-  const body = (await request.json()) as { assistant?: Record<string, unknown> };
-  const assistant = sanitizeAssistantPayload(body.assistant || {});
+  try {
+    const body = (await request.json()) as { assistant?: Record<string, unknown> };
+    const assistant = sanitizeAssistantPayload(body.assistant || {});
 
-  const response = await fetch(`https://api.vapi.ai/assistant/${assistantId}`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(assistant)
-  });
+    const response = await fetch(`https://api.vapi.ai/assistant/${assistantId}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(assistant)
+    });
 
-  const text = await response.text();
-  const payload = text ? JSON.parse(text) : {};
-  if (!response.ok) {
-    return jsonResponse({ error: payload }, { status: response.status });
+    const text = await response.text();
+    const payload = text ? JSON.parse(text) : {};
+    if (!response.ok) {
+      return jsonResponse({ error: payload }, { status: response.status });
+    }
+
+    return jsonResponse({ ok: true, assistant: sanitizeAssistantPayload(payload) });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return jsonResponse({ error: message }, { status: 500 });
   }
-
-  return jsonResponse({ ok: true, assistant: sanitizeAssistantPayload(payload) });
 }

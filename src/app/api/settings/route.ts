@@ -51,20 +51,25 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
-  const [workspace, settings] = await Promise.all([
-    prisma.workspace.findUnique({
-      where: { id: session.user.workspaceId },
-      select: { name: true }
-    }),
-    prisma.setting.findMany({
-      where: { workspaceId: session.user.workspaceId }
-    })
-  ]);
+  try {
+    const [workspace, settings] = await Promise.all([
+      prisma.workspace.findUnique({
+        where: { id: session.user.workspaceId },
+        select: { name: true }
+      }),
+      prisma.setting.findMany({
+        where: { workspaceId: session.user.workspaceId }
+      })
+    ]);
 
-  return NextResponse.json({
-    workspaceName: workspace?.name ?? DEFAULT_SETTINGS.workspaceName,
-    ...toSettingsObject(settings)
-  });
+    return NextResponse.json({
+      workspaceName: workspace?.name ?? DEFAULT_SETTINGS.workspaceName,
+      ...toSettingsObject(settings)
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -73,45 +78,50 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
-  const body = (await request.json()) as Partial<Record<string, string>>;
+  try {
+    const body = (await request.json()) as Partial<Record<string, string>>;
 
-  const workspaceName = body.workspaceName?.trim() || DEFAULT_SETTINGS.workspaceName;
-  const updates = [
-    { key: SETTINGS_KEYS.language, value: body.language?.trim() || DEFAULT_SETTINGS.language },
-    { key: SETTINGS_KEYS.brevoWebhookUrl, value: body.brevoWebhookUrl?.trim() || DEFAULT_SETTINGS.brevoWebhookUrl },
-    { key: SETTINGS_KEYS.emailDomain, value: body.emailDomain?.trim() || DEFAULT_SETTINGS.emailDomain },
-    { key: SETTINGS_KEYS.emailDkimSelector, value: body.emailDkimSelector?.trim() || DEFAULT_SETTINGS.emailDkimSelector },
-    { key: SETTINGS_KEYS.callAlerts, value: body.callAlerts?.trim() || DEFAULT_SETTINGS.callAlerts },
-    { key: SETTINGS_KEYS.followUpAlerts, value: body.followUpAlerts?.trim() || DEFAULT_SETTINGS.followUpAlerts },
-    { key: SETTINGS_KEYS.accountName, value: body.accountName?.trim() || DEFAULT_SETTINGS.accountName },
-    { key: SETTINGS_KEYS.accountEmail, value: body.accountEmail?.trim() || DEFAULT_SETTINGS.accountEmail },
-    { key: SETTINGS_KEYS.accountCompany, value: body.accountCompany?.trim() || DEFAULT_SETTINGS.accountCompany },
-    { key: SETTINGS_KEYS.accountPhone, value: body.accountPhone?.trim() || DEFAULT_SETTINGS.accountPhone }
-  ];
+    const workspaceName = body.workspaceName?.trim() || DEFAULT_SETTINGS.workspaceName;
+    const updates = [
+      { key: SETTINGS_KEYS.language, value: body.language?.trim() || DEFAULT_SETTINGS.language },
+      { key: SETTINGS_KEYS.brevoWebhookUrl, value: body.brevoWebhookUrl?.trim() || DEFAULT_SETTINGS.brevoWebhookUrl },
+      { key: SETTINGS_KEYS.emailDomain, value: body.emailDomain?.trim() || DEFAULT_SETTINGS.emailDomain },
+      { key: SETTINGS_KEYS.emailDkimSelector, value: body.emailDkimSelector?.trim() || DEFAULT_SETTINGS.emailDkimSelector },
+      { key: SETTINGS_KEYS.callAlerts, value: body.callAlerts?.trim() || DEFAULT_SETTINGS.callAlerts },
+      { key: SETTINGS_KEYS.followUpAlerts, value: body.followUpAlerts?.trim() || DEFAULT_SETTINGS.followUpAlerts },
+      { key: SETTINGS_KEYS.accountName, value: body.accountName?.trim() || DEFAULT_SETTINGS.accountName },
+      { key: SETTINGS_KEYS.accountEmail, value: body.accountEmail?.trim() || DEFAULT_SETTINGS.accountEmail },
+      { key: SETTINGS_KEYS.accountCompany, value: body.accountCompany?.trim() || DEFAULT_SETTINGS.accountCompany },
+      { key: SETTINGS_KEYS.accountPhone, value: body.accountPhone?.trim() || DEFAULT_SETTINGS.accountPhone }
+    ];
 
-  await prisma.$transaction([
-    prisma.workspace.update({
-      where: { id: session.user.workspaceId },
-      data: { name: workspaceName }
-    }),
-    ...updates.map((entry) =>
-      prisma.setting.upsert({
-        where: {
-          workspaceId_key: {
+    await prisma.$transaction([
+      prisma.workspace.update({
+        where: { id: session.user.workspaceId },
+        data: { name: workspaceName }
+      }),
+      ...updates.map((entry) =>
+        prisma.setting.upsert({
+          where: {
+            workspaceId_key: {
+              workspaceId: session.user.workspaceId,
+              key: entry.key
+            }
+          },
+          update: { value: entry.value },
+          create: {
             workspaceId: session.user.workspaceId,
-            key: entry.key
+            key: entry.key,
+            value: entry.value,
+            secure: false
           }
-        },
-        update: { value: entry.value },
-        create: {
-          workspaceId: session.user.workspaceId,
-          key: entry.key,
-          value: entry.value,
-          secure: false
-        }
-      })
-    )
-  ]);
+        })
+      )
+    ]);
 
-  return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
