@@ -1,0 +1,146 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                   DEPLOY VERCEL - COMECE AQUI                               ║
+║                   automatizawppBR (Next.js)                                  ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+VERSÃO MAIS RÁPIDA (5 minutos):
+
+  1. npm install -g vercel
+  2. vercel login
+  3. cd /Users/eduardosilva/Antigravity/automatizawppBR
+  4. vercel deploy --prod
+  5. Pronto! Seu site está em: https://seu-projeto.vercel.app
+
+═══════════════════════════════════════════════════════════════════════════════
+
+MAS PRIMEIRO... VOCÊ PRECISA DE:
+
+  ✓ Código commitado no GitHub
+  ✓ PostgreSQL em produção (DATABASE_URL)
+  ✓ Redis em produção (REDIS_URL)
+  ✓ Gerar NEXTAUTH_SECRET: openssl rand -base64 32
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ARQUIVOS NESTA PASTA:
+
+  📄 DEPLOY_README.md
+     └─ Índice e fluxo recomendado (leia isto se não sabe por onde começar)
+
+  📄 VERCEL_QUICK_START.txt
+     └─ Resumo em 1 página (visual rápido)
+
+  📄 DEPLOY_VERCEL_GUIA.md
+     └─ Guia completo com 8 seções (tudo sobre deploy)
+
+  📄 DEPLOY_CHECKLIST.md
+     └─ Checklist em 7 fases (não esqueça nada)
+
+  🔧 deploy-vercel.sh
+     └─ Script bash: ./deploy-vercel.sh [--prod]
+
+  🔧 env-setup.sh
+     └─ Gerenciar variáveis: ./env-setup.sh [pull|list|generate-secret]
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PRÓXIMAS AÇÕES:
+
+  HOJE (30 min):
+
+    1. Abra: DEPLOY_README.md
+       └─ Entenda o fluxo completo
+
+    2. Prepare produção:
+       └─ PostgreSQL e Redis em produção
+       └─ Gere NEXTAUTH_SECRET
+       └─ Anote DATABASE_URL e REDIS_URL
+
+    3. Execute:
+       $ npm install -g vercel
+       $ vercel login
+       $ cd /Users/eduardosilva/Antigravity/automatizawppBR
+       $ vercel deploy --prod
+
+  DEPOIS (5 min):
+
+    4. Configure Deploy Automático:
+       └─ Ir a https://vercel.com/dashboard
+       └─ Conectar repositório GitHub
+       └─ Adicionar variáveis de ambiente
+       └─ Pronto! Cada push = deploy automático
+
+═══════════════════════════════════════════════════════════════════════════════
+
+VARIÁVEIS ESSENCIAIS:
+
+  Você PRECISA adicionar ISTO no Vercel dashboard (Settings → Environment Variables):
+
+  DATABASE_URL     = postgresql://...  (seu banco em produção)
+  REDIS_URL        = redis://...       (seu Redis em produção)
+  NEXTAUTH_SECRET  = (gere novo)       (use: openssl rand -base64 32)
+  NEXTAUTH_URL     = https://seu-dominio.com  (seu domínio ou .vercel.app)
+  APP_URL          = https://seu-dominio.com  (mesmo que NEXTAUTH_URL)
+  NEXT_PUBLIC_BASE_URL = https://seu-dominio.com  (mesmo)
+
+  Sem isto, seu site NÃO funciona em produção!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+QUICK REFERENCE (copie e execute):
+
+  Instalar Vercel:
+    $ npm install -g vercel
+
+  Autenticar (primeira vez):
+    $ vercel login
+
+  Verificar autenticação:
+    $ vercel whoami
+
+  Deploy PREVIEW (teste):
+    $ ./deploy-vercel.sh
+
+  Deploy PRODUÇÃO:
+    $ ./deploy-vercel.sh --prod
+
+  Ver status:
+    $ vercel status
+
+  Ver logs de erro:
+    $ vercel logs --tail
+
+  Gerar NEXTAUTH_SECRET:
+    $ openssl rand -base64 32
+
+  Puxar variáveis do Vercel:
+    $ ./env-setup.sh pull
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PROBLEMAS?
+
+  "Build failed"
+    → vercel logs --tail (ver erro exato)
+
+  "Site mostra erro 500"
+    → Verificar DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL
+
+  "Quero reverter deploy"
+    → Ir a https://vercel.com/dashboard
+    → Deployments → clicar no anterior → "Promote to Production"
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PRÓXIMO PASSO:
+
+  Abra: DEPLOY_README.md (para entender o fluxo completo)
+  ou
+  Execute: npm install -g vercel && vercel login
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Criado em: 2026-04-30
+Projeto: automatizawppBR (sales-os)

@@ -1,0 +1,158 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║    AUTOMAÇÃO GITHUB → DEPLOY → VERIFY META TAG → NOTIFY                   ║
+║    Versão 1.0 | 30 de Abril de 2026                                       ║
+║                                                                            ║
+║    ✓ TEMPLATE PRONTO PARA IMPORTAR                                        ║
+║    ✓ DOCUMENTAÇÃO COMPLETA                                                ║
+║    ✓ SCRIPT DE TESTE AUTOMATIZADO                                         ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+COMECE AQUI:
+
+1. LEIA ESTE ARQUIVO (2 min)
+2. ABRA: 00_COMECE_AQUI_WORKFLOW.txt (10 passos simples)
+3. SIGA: QUICK_IMPORT_GUIDE.md (setup rápido 15 min)
+4. TESTE: ./test-workflow.sh (validação automática)
+5. IMPLEMENTE: SETUP_GITHUB_DEPLOY_WORKFLOW.md (n8n)
+                ou
+               SETUP_MAKE_WORKFLOW.md (Make.com)
+
+────────────────────────────────────────────────────────────────────────────
+
+ARQUIVOS CRIADOS:
+
+✓ github-deploy-n8n-workflow.json
+  → Template JSON pronto para importar no n8n
+  → 13 nós pré-configurados
+  → Suporta variáveis de ambiente
+
+✓ SETUP_GITHUB_DEPLOY_WORKFLOW.md
+  → Guia detalhado n8n (Passo 1-9)
+  → Configuração GitHub Webhook
+  → Deploy automation
+  → Troubleshooting
+
+✓ SETUP_MAKE_WORKFLOW.md
+  → Alternativa visual Make.com
+  → Passo a passo arrastar e soltar
+  → Configuração credenciais Make
+
+✓ QUICK_IMPORT_GUIDE.md
+  → Guia rápido 15 minutos
+  → 3 opções de importação
+  → Teste end-to-end
+  → Troubleshooting resumido
+
+✓ WORKFLOW_INDEX.md
+  → Índice e referência completa
+  → Diagrama visual do fluxo
+  → Checklist pré-implementação
+  → Próximas melhorias
+
+✓ 00_COMECE_AQUI_WORKFLOW.txt
+  → 10 passos numerados
+  → Checkboxes de progresso
+  → Tempo estimado por passo
+  → Exemplos prontos
+
+✓ test-workflow.sh
+  → Script teste automatizado
+  → 7 testes diferentes
+  → Diagnóstico de problemas
+  → Feedback com cores
+
+✓ RESUMO_CRIADO.txt
+  → Resumo executivo
+  → O que foi criado
+  → Próximas ações
+
+────────────────────────────────────────────────────────────────────────────
+
+FLUXO AUTOMATIZADO:
+
+  GitHub Push (main)
+         ↓
+  n8n/Make Webhook
+         ↓
+  Deploy no DigitalOcean
+         ↓
+  Espera 30 segundos
+         ↓
+  Verifica Meta Tag Google no Site
+         ↓
+  Notifica Slack + Email (Sucesso ou Erro)
+
+────────────────────────────────────────────────────────────────────────────
+
+TEMPO TOTAL: 30-45 minutos
+
+Setup:    15-20 min
+Testes:   10-15 min
+Primeira execução: 5 min
+
+────────────────────────────────────────────────────────────────────────────
+
+ESCOLHA SEU CAMINHO:
+
+╔─ RÁPIDO (15 min)  ─────────────────────────────────────────────────────╗
+║                                                                          ║
+║ 1. Leia: 00_COMECE_AQUI_WORKFLOW.txt                                    ║
+║ 2. Siga: QUICK_IMPORT_GUIDE.md                                          ║
+║ 3. Execute: ./test-workflow.sh                                          ║
+║                                                                          ║
+║ → Bom para: Familiarizar-se rapidamente                                 ║
+╚──────────────────────────────────────────────────────────────────────────╝
+
+╔─ DETALHADO (45 min)  ──────────────────────────────────────────────────╗
+║                                                                          ║
+║ 1. Escolha: n8n ou Make.com                                             ║
+║ 2. Siga: SETUP_GITHUB_DEPLOY_WORKFLOW.md (n8n)                          ║
+║    ou    SETUP_MAKE_WORKFLOW.md (Make)                                  ║
+║ 3. Configure cada passo em ordem                                        ║
+║ 4. Teste com curl + push real                                           ║
+║                                                                          ║
+║ → Bom para: Entender completamente o processo                           ║
+╚──────────────────────────────────────────────────────────────────────────╝
+
+╔─ REFERÊNCIA (On-demand)  ──────────────────────────────────────────────╗
+║                                                                          ║
+║ 1. WORKFLOW_INDEX.md → Visão geral e diagramas                          ║
+║ 2. RESUMO_CRIADO.txt → O que foi criado e próximas ações                ║
+║ 3. Troubleshooting → Procure em cada arquivo                            ║
+║                                                                          ║
+║ → Bom para: Consultar quando precisar                                   ║
+╚──────────────────────────────────────────────────────────────────────────╝
+
+────────────────────────────────────────────────────────────────────────────
+
+REQUISITOS MÍNIMOS:
+
+✓ GitHub (repositório com branch main)
+✓ n8n rodando OU conta Make.com
+✓ DigitalOcean (ou servidor com app)
+✓ Gmail (com 2FA + App Password)
+✓ Slack (com permissão externa)
+✓ Meta tag Google no seu site (_document.tsx)
+
+────────────────────────────────────────────────────────────────────────────
+
+COMECE AGORA:
+
+1. Feche este arquivo
+2. Abra: 00_COMECE_AQUI_WORKFLOW.txt
+3. Siga os 10 passos simples
+
+────────────────────────────────────────────────────────────────────────────
+
+PRECISA DE AJUDA?
+
+Email: eduardsmonteiro@gmail.com
+Status: Production Ready ✓
+Versão: 1.0
+
+────────────────────────────────────────────────────────────────────────────
+
+BOA SORTE!
+

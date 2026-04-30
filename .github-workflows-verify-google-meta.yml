@@ -1,0 +1,102 @@
+name: Verify Google Meta Tag After Deploy
+
+on:
+  # Disparar após deploy bem-sucedido
+  deployment_status:
+    if: github.event.deployment_status.state == 'success'
+  
+  # Ou manualmente
+  workflow_dispatch:
+    inputs:
+      deploy_url:
+        description: 'URL do site a verificar'
+        required: true
+        default: 'https://meusite.com.br'
+      google_code:
+        description: 'Código Google (opcional)'
+        required: false
+
+jobs:
+  verify-google-meta:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Verify Google Meta Tag
+        run: |
+          # Usar URL do workflow_dispatch ou do deployment
+          URL="${{ github.event.inputs.deploy_url }}"
+          GOOGLE_CODE="${{ github.event.inputs.google_code }}"
+          
+          if [ -z "$URL" ]; then
+            URL="${{ github.event.deployment_status.environment_url }}"
+          fi
+          
+          echo "Verificando: $URL"
+          
+          # Executar verificação
+          node verify-google-meta-tag.js "$URL" "$GOOGLE_CODE"
+
+      - name: Notify on Success
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✓ Google Meta Tag verificado com sucesso!'
+            })
+
+      - name: Notify on Failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✗ Erro ao verificar Google Meta Tag. Verifique o log do workflow.'
+            })
+
+  # Job alternativo com script shell
+  verify-with-curl:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Verify using curl
+        run: |
+          URL="https://meusite.com.br"
+          GOOGLE_CODE="seu-codigo-aqui"
+          
+          echo "Fazendo requisição..."
+          RESPONSE=$(curl -s "$URL")
+          
+          if echo "$RESPONSE" | grep -q "google-site-verification"; then
+            echo "✓ Meta tag encontrada!"
+            
+            if [ -n "$GOOGLE_CODE" ]; then
+              if echo "$RESPONSE" | grep -q "$GOOGLE_CODE"; then
+                echo "✓ Código validado com sucesso!"
+                exit 0
+              else
+                echo "✗ Código não corresponde"
+                exit 1
+              fi
+            fi
+          else
+            echo "✗ Meta tag não encontrada"
+            exit 1
+          fi

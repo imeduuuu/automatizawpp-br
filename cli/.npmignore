@@ -1,0 +1,21 @@
+# Development files
+test-deploy.sh
+*.test.js
+.git
+.gitignore
+.env
+.env.*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (optional, you may want to include)
+# SETUP.md
+# INSTALL.md

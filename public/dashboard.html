@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — AutomatizaWPP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #060606;
+  --surface: #0d0d0d;
+  --surface2: #111;
+  --surface3: #161616;
+  --green: #25D366;
+  --green-dim: rgba(37,211,102,0.08);
+  --white: #f0ede8;
+  --muted: rgba(240,237,232,0.62);
+  --muted2: rgba(240,237,232,0.35);
+  --muted3: rgba(240,237,232,0.15);
+  --border: rgba(240,237,232,0.07);
+  --border2: rgba(240,237,232,0.12);
+  --red: #e53e3e;
+  --amber: #c9a84c;
+  --blue: #4a9eff;
+  --font: 'Manrope', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--white); font-family: var(--font); -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  background: var(--bg);
+  z-index: 100;
+}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--white);
+  text-decoration: none;
+  padding: 0 24px 28px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.sidebar-logo span { color: var(--green); }
+.nav-section {
+  font-size: 9px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted3);
+  padding: 0 24px;
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--muted);
+  text-decoration: none;
+  transition: all .18s;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { color: var(--white); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--green); background: var(--green-dim); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+}
+.sidebar-version {
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted3);
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+  margin-left: 220px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOPBAR */
+.topbar {
+  padding: 20px 36px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  background: rgba(6,6,6,0.95);
+  backdrop-filter: blur(12px);
+  z-index: 50;
+}
+.topbar-title {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: .01em;
+  color: var(--white);
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.status-dot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: var(--green);
+}
+.dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .5; transform: scale(.8); }
+}
+.date-badge {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--muted2);
+  letter-spacing: .04em;
+}
+
+/* CONTENT */
+.content {
+  padding: 36px;
+  flex: 1;
+}
+
+/* SECTION TITLE */
+.section-label {
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 20px;
+}
+
+/* KPI GRID */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  margin-bottom: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.kpi {
+  background: var(--surface);
+  padding: 28px 24px;
+  transition: background .2s;
+  cursor: default;
+}
+.kpi:hover { background: var(--surface2); }
+.kpi-label {
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 12px;
+}
+.kpi-value {
+  font-size: 40px;
+  font-weight: 200;
+  letter-spacing: -.03em;
+  line-height: 1;
+  color: var(--white);
+  margin-bottom: 8px;
+  transition: color .2s;
+}
+.kpi:hover .kpi-value { color: var(--green); }
+.kpi-delta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 300;
+}
+.kpi-delta.up { color: var(--green); }
+.kpi-delta.down { color: var(--red); }
+.kpi-delta.neutral { color: var(--muted2); }
+
+/* CHARTS ROW */
+.charts-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  margin-bottom: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.chart-card {
+  background: var(--surface);
+  padding: 28px;
+}
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.chart-title {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--white);
+  letter-spacing: .01em;
+}
+.chart-sub {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--muted2);
+  margin-top: 2px;
+}
+.chart-legend {
+  display: flex;
+  gap: 16px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--muted);
+}
+.legend-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* BAR CHART */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 140px;
+  padding-bottom: 24px;
+  position: relative;
+}
+.bar-chart::after {
+  content: '';
+  position: absolute;
+  bottom: 24px; left: 0; right: 0;
+  height: 1px;
+  background: var(--border);
+}
+.bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+.bars {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  flex: 1;
+  width: 100%;
+  justify-content: center;
+}
+.bar {
+  width: 10px;
+  border-radius: 1px 1px 0 0;
+  transition: opacity .2s;
+  cursor: default;
+}
+.bar:hover { opacity: .8; }
+.bar-label {
+  font-size: 9px;
+  letter-spacing: .06em;
+  color: var(--muted2);
+  text-transform: uppercase;
+}
+
+/* DONUT */
+.donut-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 20px;
+}
+.donut-center {
+  position: relative;
+  width: 120px; height: 120px;
+}
+.donut-center svg { transform: rotate(-90deg); }
+.donut-label {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  text-align: center;
+}
+.donut-num {
+  font-size: 22px;
+  font-weight: 200;
+  letter-spacing: -.02em;
+  color: var(--white);
+  line-height: 1;
+}
+.donut-sub {
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-top: 2px;
+}
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.donut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 300;
+}
+.donut-item-left { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.donut-item-val { color: var(--white); font-weight: 400; }
+
+/* TABLE ROW */
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  margin-bottom: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.table-card {
+  background: var(--surface);
+  padding: 28px;
+}
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.table-title { font-size: 13px; font-weight: 400; color: var(--white); }
+.table-action {
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--green);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  transition: opacity .2s;
+}
+.table-action:hover { opacity: .7; }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 0 0 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+}
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+  cursor: default;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+tbody td {
+  padding: 12px 0;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--muted);
+  vertical-align: middle;
+}
+tbody td:first-child { color: var(--white); font-weight: 400; }
+
+.badge {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-weight: 400;
+}
+.badge-green { background: rgba(37,211,102,0.1); color: var(--green); }
+.badge-amber { background: rgba(201,168,76,0.1); color: var(--amber); }
+.badge-red { background: rgba(229,62,62,0.1); color: var(--red); }
+.badge-blue { background: rgba(74,158,255,0.1); color: var(--blue); }
+.badge-gray { background: rgba(240,237,232,0.06); color: var(--muted2); }
+
+/* ALEX ACTIVITY */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-item:hover { background: rgba(255,255,255,0.02); }
+.activity-icon {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.activity-icon.call { background: rgba(37,211,102,0.1); }
+.activity-icon.email { background: rgba(74,158,255,0.1); }
+.activity-icon.lead { background: rgba(201,168,76,0.1); }
+.activity-icon svg { width: 13px; height: 13px; }
+.activity-text {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.activity-text strong { color: var(--white); font-weight: 400; }
+.activity-time {
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: var(--muted2);
+  flex-shrink: 0;
+}
+
+@media(max-width:1100px){
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .charts-row { grid-template-columns: 1fr; }
+  .table-row { grid-template-columns: 1fr; }
+}
+@media(max-width:768px){
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 20px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+<link rel="stylesheet" href="/web-design-system.css"/>
+
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="AutomatizaWPP — Tu WhatsApp trabaja 24h">
+<meta property="og:description" content="Automatiza tu WhatsApp con IA. 14 días gratis.">
+<meta property="og:url" content="https://botflow.es">
+<meta property="og:image" content="https://botflow.es/og-image.png">
+<link rel="canonical" href="https://botflow.es">
+
+
+<!-- AutomatizaWPP Analytics -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  // gtag('config', 'G-XXXXXXXX');
+</script>
+
+</head>
+<body class="bf-ds">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="/" class="sidebar-logo">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L0 24l6.306-1.504A11.955 11.955 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.933 0-3.742-.518-5.292-1.423l-.378-.224-3.946.94.976-3.85-.247-.396A9.956 9.956 0 012 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z"/></svg>
+    Bot<span>Flow</span>
+  </a>
+
+  <span class="nav-section">General</span>
+  <a class="nav-item active" href="/dashboard.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </a>
+  <a class="nav-item" href="/leads.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Leads
+  </a>
+  <a class="nav-item" href="/conversaciones.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Conversaciones
+  </a>
+  <a class="nav-item" href="/llamadas.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.7 11.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l.94-.93a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    Llamadas
+  </a>
+  <a class="nav-item" href="/sentinel">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l7 3v6c0 4.5-2.9 7.9-7 9-4.1-1.1-7-4.5-7-9V6l7-3Z"/><path d="m9.5 12 1.7 1.7L14.8 10"/></svg>
+    Sentinel
+  </a>
+
+  <span class="nav-section">Negocio</span>
+  <a class="nav-item" href="/seguimientos.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Seguimientos
+  </a>
+  <a class="nav-item" href="/sentinel">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l7 3v6c0 4.5-2.9 7.9-7 9-4.1-1.1-7-4.5-7-9V6l7-3Z"/><path d="m9.5 12 1.7 1.7L14.8 10"/></svg>
+    Sentinel
+  </a>
+  <a class="nav-item" href="/configurar.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-.33-1 1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1-.33H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1-.33 1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 .33 1 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.25.3.45.65.6 1 .1.32.16.66.16 1s-.06.68-.16 1a1.65 1.65 0 0 0-.6 1z"/></svg>
+    Configurar
+  </a>
+
+  <span class="nav-section">Cuenta</span>
+  <a class="nav-item" href="/">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Ir al sitio web
+  </a>
+
+  <div class="sidebar-bottom">
+    <div class="sidebar-version">AutomatizaWPP v1.0 · Admin</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <span class="topbar-title">Resumen general</span>
+    <div class="topbar-right">
+      <div class="status-dot"><div class="dot"></div>Sistema activo</div>
+      <span class="date-badge" id="fecha"></span>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- KPIs -->
+    <p class="section-label">Métricas clave</p>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Leads este mes</div>
+        <div class="kpi-value" id="kpi-leads">0</div>
+        <div class="kpi-delta up">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+          +12% vs mes anterior
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Clientes activos</div>
+        <div class="kpi-value" id="kpi-clientes">0</div>
+        <div class="kpi-delta up">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+          +3 este mes
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">MRR</div>
+        <div class="kpi-value" id="kpi-mrr">0€</div>
+        <div class="kpi-delta up">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+          +897€ este mes
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Tasa conversión</div>
+        <div class="kpi-value" id="kpi-conv">0%</div>
+        <div class="kpi-delta neutral">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Sin cambios
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Leads por mes</div>
+            <div class="chart-sub">Últimos 6 meses</div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Leads</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Conversiones</div>
+          </div>
+        </div>
+        <div class="bar-chart" id="bar-chart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Estado leads</div>
+            <div class="chart-sub">Distribución actual</div>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut-center">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="48" fill="none" stroke="var(--border2)" stroke-width="12"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="var(--green)" stroke-width="12" stroke-dasharray="120 182" stroke-linecap="round"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="var(--amber)" stroke-width="12" stroke-dasharray="60 242" stroke-dashoffset="-120" stroke-linecap="round"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="var(--blue)" stroke-width="12" stroke-dasharray="40 262" stroke-dashoffset="-180" stroke-linecap="round"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="var(--muted3)" stroke-width="12" stroke-dasharray="82 220" stroke-dashoffset="-220" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-label">
+              <div class="donut-num" id="donut-total">0</div>
+              <div class="donut-sub">Total</div>
+            </div>
+          </div>
+          <div class="donut-legend">
+            <div class="donut-item">
+              <div class="donut-item-left"><div class="legend-dot" style="background:var(--green)"></div>Clientes</div>
+              <div class="donut-item-val" id="d-clientes">0</div>
+            </div>
+            <div class="donut-item">
+              <div class="donut-item-left"><div class="legend-dot" style="background:var(--amber)"></div>En prueba</div>
+              <div class="donut-item-val" id="d-prueba">0</div>
+            </div>
+            <div class="donut-item">
+              <div class="donut-item-left"><div class="legend-dot" style="background:var(--blue)"></div>Interesados</div>
+              <div class="donut-item-val" id="d-inter">0</div>
+            </div>
+            <div class="donut-item">
+              <div class="donut-item-left"><div class="legend-dot" style="background:var(--muted3)"></div>Fríos</div>
+              <div class="donut-item-val" id="d-frios">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLES -->
+    <div class="table-row">
+
+      <!-- LEADS RECIENTES -->
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Leads recientes</div>
+          <button class="table-action">Ver todos →</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Negocio</th>
+              <th>Sector</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="leads-table">
+            <tr><td colspan="4" style="color:var(--muted2);text-align:center;padding:20px 0">Cargando leads...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ACTIVIDAD ALEX -->
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Actividad reciente</div>
+          <button class="table-action">Ver todo →</button>
+        </div>
+        <div class="activity-list" id="activity-list">
+          <div class="activity-item">
+            <div class="activity-icon call"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.7 11.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l.94-.93a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+            <div class="activity-text">Alex llamó a <strong>Peluquería Ana</strong> — contestó, interesada</div>
+            <div class="activity-time">Hace 12min</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon lead"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+            <div class="activity-text">Nuevo lead <strong>Restaurante El Patio</strong> vía formulario web</div>
+            <div class="activity-time">Hace 34min</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon email"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+            <div class="activity-text">Email seguimiento día 5 enviado a <strong>Inmobiliaria Costa</strong></div>
+            <div class="activity-time">Hace 1h</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon call"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.7 11.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l.94-.93a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+            <div class="activity-text">Alex llamó a <strong>Clínica Dental Roca</strong> — no contestó, reintento en 4h</div>
+            <div class="activity-time">Hace 2h</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon lead"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+            <div class="activity-text"><strong>Bar Montserrat</strong> inició prueba gratuita de 14 días</div>
+            <div class="activity-time">Hace 3h</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CLIENTES ACTIVOS -->
+    <p class="section-label">Clientes activos</p>
+    <div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--surface)">
+      <table style="margin-bottom:0">
+        <thead>
+          <tr style="background:var(--surface2)">
+            <th style="padding:14px 20px">Negocio</th>
+            <th style="padding:14px 20px">Plan</th>
+            <th style="padding:14px 20px">MRR</th>
+            <th style="padding:14px 20px">Desde</th>
+            <th style="padding:14px 20px">Estado</th>
+            <th style="padding:14px 20px">Renovación</th>
+          </tr>
+        </thead>
+        <tbody id="clientes-table">
+          <tr><td colspan="6" style="color:var(--muted2);text-align:center;padding:24px">Cargando clientes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SALES_OS_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+  ? 'https://botflow.es'
+  : '';
+const METRICS_ENDPOINT = `${SALES_OS_BASE}/api/public/leads`;
+
+const now = new Date();
+document.getElementById('fecha').textContent = now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+
+function safeNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function toRelativeTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  const diffMs = Date.now() - date.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'Ahora';
+  if (mins < 60) return `Hace ${mins}min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `Hace ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `Hace ${days}d`;
+}
+
+function formatActivityLabel(item) {
+  if (item?.result) {
+    const map = {
+      NO_ANSWER: 'Sin respuesta',
+      VOICEMAIL: 'Buzon',
+      QUALIFIED: 'Calificado',
+      NOT_INTERESTED: 'No interesado',
+      CALLBACK_REQUESTED: 'Pidio callback',
+      WRONG_NUMBER: 'Numero incorrecto'
+    };
+    return map[item.result] || item.result;
+  }
+
+  if (item?.type) {
+    const map = {
+      SENT: 'Email enviado',
+      OPENED: 'Email abierto',
+      CLICKED: 'Email clicado',
+      BOUNCED: 'Email rebotado'
+    };
+    return map[item.type] || item.type;
+  }
+
+  return 'Actividad';
+}
+
+function badgeForLabel(label) {
+  if (label === 'Calificado') return 'badge-green';
+  if (label === 'Email abierto' || label === 'Email clicado') return 'badge-blue';
+  if (label === 'No interesado' || label === 'Numero incorrecto' || label === 'Email rebotado') return 'badge-red';
+  if (label === 'Sin respuesta' || label === 'Buzon' || label === 'Pidio callback') return 'badge-amber';
+  return 'badge-gray';
+}
+
+function animateNum(el, target, prefix = '', suffix = '') {
+  const finalValue = safeNumber(target);
+  let current = 0;
+  const step = Math.max(1, Math.ceil(finalValue / 32));
+  const interval = setInterval(() => {
+    current = Math.min(current + step, finalValue);
+    el.textContent = prefix + current.toLocaleString('es-ES') + suffix;
+    if (current >= finalValue) clearInterval(interval);
+  }, 24);
+}
+
+function renderDonut(segments) {
+  const circles = document.querySelectorAll('.donut-center svg circle');
+  if (circles.length < 5) return;
+
+  const total = Math.max(1, segments.reduce((sum, n) => sum + n, 0));
+  const radius = 48;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  segments.forEach((value, index) => {
+    const len = (Math.max(0, value) / total) * circumference;
+    circles[index + 1].setAttribute('stroke-dasharray', `${len} ${Math.max(0, circumference - len)}`);
+    circles[index + 1].setAttribute('stroke-dashoffset', `${-offset}`);
+    offset += len;
+  });
+}
+
+function renderBars(funnel) {
+  const bars = [
+    { m: 'NEW', leads: safeNumber(funnel.new), conv: safeNumber(funnel.callScheduled) + safeNumber(funnel.callAttempted) },
+    { m: 'CALL', leads: safeNumber(funnel.callScheduled) + safeNumber(funnel.callAttempted), conv: safeNumber(funnel.qualified) },
+    { m: 'QUAL', leads: safeNumber(funnel.qualified), conv: safeNumber(funnel.proposalSent) },
+    { m: 'PROP', leads: safeNumber(funnel.proposalSent), conv: safeNumber(funnel.followUp) },
+    { m: 'F-UP', leads: safeNumber(funnel.followUp), conv: safeNumber(funnel.closedWon) },
+    { m: 'WON', leads: safeNumber(funnel.closedWon), conv: safeNumber(funnel.closedLost) }
+  ];
+
+  const maxValue = Math.max(1, ...bars.map((b) => Math.max(b.leads, b.conv)));
+  const chart = document.getElementById('bar-chart');
+  chart.innerHTML = bars
+    .map(
+      (b) => `
+      <div class="bar-group">
+        <div class="bars">
+          <div class="bar" style="height:${Math.round((b.leads / maxValue) * 100)}%;background:var(--green);opacity:.78" title="${b.leads} en etapa"></div>
+          <div class="bar" style="height:${Math.round((b.conv / maxValue) * 100)}%;background:var(--blue);opacity:.78" title="${b.conv} siguiente paso"></div>
+        </div>
+        <div class="bar-label">${b.m}</div>
+      </div>
+    `
+    )
+    .join('');
+}
+
+function renderLeadsTable(recentActivity) {
+  const table = document.getElementById('leads-table');
+  const rows = recentActivity.slice(0, 5);
+
+  if (!rows.length) {
+    table.innerHTML = '<tr><td colspan="4" style="color:var(--muted2);text-align:center;padding:20px 0">Sin actividad reciente</td></tr>';
+    return;
+  }
+
+  table.innerHTML = rows
+    .map((item) => {
+      const leadName = escapeHtml(item?.lead?.name || 'Lead sin nombre');
+      const source = item?.result ? 'Llamada' : 'Email';
+      const label = formatActivityLabel(item);
+      const badge = badgeForLabel(label);
+      const when = toRelativeTime(item?.createdAt);
+      return `
+        <tr>
+          <td>${leadName}</td>
+          <td style="color:var(--muted2)">${source}</td>
+          <td><span class="badge ${badge}">${escapeHtml(label)}</span></td>
+          <td style="color:var(--muted2)">${when}</td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
+function renderClientsTable(mrrByPlan) {
+  const table = document.getElementById('clientes-table');
+  const planBadge = { STARTER: 'badge-gray', PRO: 'badge-blue', SCALE: 'badge-green' };
+
+  if (!mrrByPlan.length) {
+    table.innerHTML = '<tr><td colspan="6" style="color:var(--muted2);text-align:center;padding:24px">Sin suscripciones activas</td></tr>';
+    return;
+  }
+
+  table.innerHTML = mrrByPlan
+    .map((entry) => {
+      const plan = entry?.plan || 'STARTER';
+      const amount = Math.round(safeNumber(entry?._sum?.mrr));
+      return `
+        <tr>
+          <td style="padding:14px 20px">Plan ${escapeHtml(plan)}</td>
+          <td style="padding:14px 20px"><span class="badge ${planBadge[plan] || 'badge-gray'}">${escapeHtml(plan)}</span></td>
+          <td style="padding:14px 20px;color:var(--green);font-weight:400">${amount.toLocaleString('es-ES')}€</td>
+          <td style="padding:14px 20px;color:var(--muted2)">-</td>
+          <td style="padding:14px 20px"><span class="badge badge-green">Activo</span></td>
+          <td style="padding:14px 20px;color:var(--muted2)">-</td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
+function renderActivity(recentActivity) {
+  const list = document.getElementById('activity-list');
+  const rows = recentActivity.slice(0, 5);
+
+  if (!rows.length) {
+    list.innerHTML = '<div class="activity-item"><div class="activity-text">Sin actividad reciente</div><div class="activity-time">--</div></div>';
+    return;
+  }
+
+  const callIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.7 11.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.61 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l.94-.93a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  const emailIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+
+  list.innerHTML = rows
+    .map((item) => {
+      const isCall = Boolean(item?.result);
+      const iconClass = isCall ? 'call' : 'email';
+      const icon = isCall ? callIcon : emailIcon;
+      const name = escapeHtml(item?.lead?.name || 'Lead sin nombre');
+      const label = escapeHtml(formatActivityLabel(item).toLowerCase());
+      const text = isCall
+        ? `Alex llamó a <strong>${name}</strong> — ${label}`
+        : `${label} para <strong>${name}</strong>`;
+
+      return `
+        <div class="activity-item">
+          <div class="activity-icon ${iconClass}">${icon}</div>
+          <div class="activity-text">${text}</div>
+          <div class="activity-time">${toRelativeTime(item?.createdAt)}</div>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+async function loadMetrics() {
+  const response = await fetch(METRICS_ENDPOINT);
+  if (!response.ok) {
+    throw new Error(`No se pudo cargar ${METRICS_ENDPOINT}`);
+  }
+  return response.json();
+}
+
+async function initDashboard() {
+  try {
+    const payload = await loadMetrics();
+    const funnel = payload?.funnel || {};
+    const rates = payload?.conversionRates || {};
+    const mrr = payload?.mrr || {};
+    const byPlan = Array.isArray(mrr.byPlan) ? mrr.byPlan : [];
+    const recentActivity = Array.isArray(payload?.recentActivity) ? payload.recentActivity : [];
+
+    const total =
+      safeNumber(funnel.new) +
+      safeNumber(funnel.callScheduled) +
+      safeNumber(funnel.callAttempted) +
+      safeNumber(funnel.qualified) +
+      safeNumber(funnel.proposalSent) +
+      safeNumber(funnel.followUp) +
+      safeNumber(funnel.closedWon) +
+      safeNumber(funnel.closedLost) +
+      safeNumber(funnel.cold);
+
+    const clientes = safeNumber(funnel.closedWon);
+    const prueba = safeNumber(funnel.proposalSent) + safeNumber(funnel.followUp);
+    const interesados = safeNumber(funnel.qualified) + safeNumber(funnel.callScheduled) + safeNumber(funnel.callAttempted);
+    let frios = safeNumber(funnel.new) + safeNumber(funnel.closedLost) + safeNumber(funnel.cold);
+    const tracked = clientes + prueba + interesados + frios;
+    if (tracked < total) frios += total - tracked;
+
+    animateNum(document.getElementById('kpi-leads'), total);
+    animateNum(document.getElementById('kpi-clientes'), clientes);
+    animateNum(document.getElementById('kpi-mrr'), Math.round(safeNumber(mrr.total)), '', '€');
+    document.getElementById('kpi-conv').textContent = `${safeNumber(rates.overall).toFixed(1)}%`;
+
+    document.getElementById('donut-total').textContent = String(total);
+    document.getElementById('d-clientes').textContent = String(clientes);
+    document.getElementById('d-prueba').textContent = String(prueba);
+    document.getElementById('d-inter').textContent = String(interesados);
+    document.getElementById('d-frios').textContent = String(frios);
+
+    renderDonut([clientes, prueba, interesados, frios]);
+    renderBars(funnel);
+    renderLeadsTable(recentActivity);
+    renderClientsTable(byPlan);
+    renderActivity(recentActivity);
+  } catch (error) {
+    console.error('Dashboard metrics error:', error);
+  }
+}
+
+initDashboard();
+</script>
+  <script src="/cookie-banner.js"></script>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "workspaceId": "demo_workspace",
+  "capturedAt": "2026-04-17T21:23:00Z",
+  "windowDays": 7,
+  "target": 85,
+  "response": {
+    "responseQuality": 70,
+    "nextBestActionAccuracy": 65.75,
+    "complianceScore": 100,
+    "stageProgression": 25,
+    "followUpEffectiveness": 65,
+    "weightedEfficiency": 67.65
+  },
+  "status": "needs-tuning",
+  "notes": [
+    "Baseline captured before optimization cycle.",
+    "Main gaps are stage progression and follow-up effectiveness.",
+    "Quiet-hours safeguard working and preventing after-hours outreach."
+  ]
+}

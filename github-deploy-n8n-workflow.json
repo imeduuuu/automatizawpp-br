@@ -1,0 +1,395 @@
+{
+  "name": "GitHub Push → Deploy → Verify Meta Tag → Notify",
+  "description": "Full automation: GitHub webhook > Deploy (DigitalOcean) > Check meta tag > Slack/Email notification",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "github-deploy",
+        "httpMethod": "POST",
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "parameters": [
+            {
+              "name": "X-GitHub-Event",
+              "value": "push"
+            }
+          ]
+        }
+      },
+      "id": "webhook-github",
+      "name": "GitHub Webhook (Push)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        100,
+        300
+      ],
+      "webhookId": "{{ $env.GITHUB_WEBHOOK_ID }}"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.ref }}",
+              "operator": "contains",
+              "value2": "refs/heads/main"
+            }
+          ]
+        }
+      },
+      "id": "filter-main-branch",
+      "name": "Only on 'main' branch?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DO_DEPLOY_WEBHOOK_URL }}",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.DO_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "bodyParametersUi": "json",
+        "bodyJson": {
+          "branch": "main",
+          "action": "deploy",
+          "repository": "={{ $json.repository.full_name }}",
+          "commit": "={{ $json.after }}"
+        }
+      },
+      "id": "trigger-deploy",
+      "name": "Trigger Deploy on DigitalOcean",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "waitTillDate": "={{ new Date(Date.now() + 30000).toISOString() }}"
+      },
+      "id": "wait-for-deploy",
+      "name": "Wait 30 sec for Deploy",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SITE_URL }}",
+        "method": "GET",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Meta-Tag-Checker/1.0"
+            }
+          ]
+        }
+      },
+      "id": "fetch-website",
+      "name": "Fetch Website HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "expression": "const html = $json.body || '';\nconst googleMetaFound = html.includes('google-site-verification');\nconst googleMatch = html.match(/<meta[^>]*google-site-verification[^>]*>/i);\nconst ogTitle = html.match(/<meta[^>]*property=['\\\"]og:title['\\\"][^>]*>/i);\nconst ogImage = html.match(/<meta[^>]*property=['\\\"]og:image['\\\"][^>]*>/i);\nconst ogDescription = html.match(/<meta[^>]*property=['\\\"]og:description['\\\"][^>]*>/i);\n\nreturn {\n  googleMetaFound: googleMetaFound,\n  googleMetaTag: googleMatch ? googleMatch[0] : null,\n  ogTitleTag: ogTitle ? ogTitle[0] : null,\n  ogImageTag: ogImage ? ogImage[0] : null,\n  ogDescriptionTag: ogDescription ? ogDescription[0] : null,\n  allMetaTagsFound: googleMetaFound,\n  checkTime: new Date().toISOString(),\n  url: '={{ $env.SITE_URL }}'\n};"
+      },
+      "id": "check-meta-tags",
+      "name": "Check Meta Tags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.googleMetaFound }}",
+              "operator": "equals",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "meta-tag-success",
+      "name": "Meta Tag Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "channelId": "={{ $env.SLACK_CHANNEL_ID }}",
+        "text": "",
+        "attachments": [
+          {
+            "color": "#36a64f",
+            "title": "✅ Deploy Successful - Meta Tag Verified",
+            "title_link": "={{ $env.SITE_URL }}",
+            "text": "GitHub push has been deployed and verified successfully.",
+            "fields": [
+              {
+                "title": "Repository",
+                "value": "={{ $json.repository.full_name }}",
+                "short": true
+              },
+              {
+                "title": "Branch",
+                "value": "main",
+                "short": true
+              },
+              {
+                "title": "Commit",
+                "value": "={{ $json.after.substring(0, 7) }}",
+                "short": true
+              },
+              {
+                "title": "Author",
+                "value": "={{ $json.pusher.name }}",
+                "short": true
+              },
+              {
+                "title": "Google Meta Tag",
+                "value": "Found ✓",
+                "short": true
+              },
+              {
+                "title": "Time",
+                "value": "={{ new Date().toLocaleString() }}",
+                "short": true
+              }
+            ],
+            "image_url": "{{ $json.repository.owner.avatar_url }}"
+          }
+        ]
+      },
+      "id": "slack-success",
+      "name": "Send Slack (Success)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "to": "={{ $env.NOTIFICATION_EMAIL }}",
+        "subject": "✅ Deploy Successful - Meta Tag Verified",
+        "textOnly": false,
+        "htmlMessage": "{{ \"<h2>Deploy Successful!</h2><p>Your site has been deployed and the meta tag is verified.</p><h3>Details:</h3><ul><li><strong>Repository:</strong> \" + $json.repository.full_name + \"</li><li><strong>Branch:</strong> main</li><li><strong>Commit:</strong> \" + $json.after.substring(0, 7) + \"</li><li><strong>Author:</strong> \" + $json.pusher.name + \"</li><li><strong>Google Meta Tag:</strong> ✓ Found</li><li><strong>URL:</strong> \" + $env.SITE_URL + \"</li><li><strong>Time:</strong> \" + new Date().toLocaleString() + \"</li></ul><p><a href='\" + $env.SITE_URL + \"'>Visit Site</a></p>\" }}"
+      },
+      "id": "email-success",
+      "name": "Send Email (Success)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "channelId": "={{ $env.SLACK_CHANNEL_ID }}",
+        "text": "",
+        "attachments": [
+          {
+            "color": "#ff0000",
+            "title": "❌ Deploy Failed - Meta Tag NOT Found",
+            "title_link": "={{ $env.SITE_URL }}",
+            "text": "The deploy completed but the Google meta tag verification was not found on the site.",
+            "fields": [
+              {
+                "title": "Repository",
+                "value": "={{ $json.repository.full_name }}",
+                "short": true
+              },
+              {
+                "title": "Branch",
+                "value": "main",
+                "short": true
+              },
+              {
+                "title": "Commit",
+                "value": "={{ $json.after.substring(0, 7) }}",
+                "short": true
+              },
+              {
+                "title": "Google Meta Tag",
+                "value": "NOT Found ✗",
+                "short": true
+              },
+              {
+                "title": "Action Required",
+                "value": "Check deployment logs",
+                "short": true
+              },
+              {
+                "title": "Time",
+                "value": "={{ new Date().toLocaleString() }}",
+                "short": true
+              }
+            ]
+          }
+        ]
+      },
+      "id": "slack-failure",
+      "name": "Send Slack (Failure)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "to": "={{ $env.NOTIFICATION_EMAIL }}",
+        "subject": "❌ Deploy Failed - Meta Tag NOT Found",
+        "textOnly": false,
+        "htmlMessage": "{{ \"<h2>Deploy Issue - Meta Tag Missing</h2><p>The deployment completed but the Google site verification meta tag was not found.</p><h3>Details:</h3><ul><li><strong>Repository:</strong> \" + $json.repository.full_name + \"</li><li><strong>Branch:</strong> main</li><li><strong>Commit:</strong> \" + $json.after.substring(0, 7) + \"</li><li><strong>Author:</strong> \" + $json.pusher.name + \"</li><li><strong>Meta Tag Status:</strong> NOT FOUND ✗</li><li><strong>URL:</strong> \" + $env.SITE_URL + \"</li><li><strong>Time:</strong> \" + new Date().toLocaleString() + \"</li></ul><h3>Troubleshooting:</h3><ol><li>Check if the deployment was successful</li><li>Wait a few minutes and check again (cache)</li><li>Verify _document.tsx has the meta tag in the head</li><li>Check for redirect issues on the site</li><li>View full logs: \" + $env.DEPLOY_LOGS_URL + \"</li></ol>\" }}"
+      },
+      "id": "email-failure",
+      "name": "Send Email (Failure)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        750
+      ]
+    }
+  ],
+  "connections": {
+    "webhook-github": {
+      "main": [
+        [
+          {
+            "node": "filter-main-branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter-main-branch": {
+      "main": [
+        [
+          {
+            "node": "trigger-deploy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trigger-deploy": {
+      "main": [
+        [
+          {
+            "node": "wait-for-deploy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait-for-deploy": {
+      "main": [
+        [
+          {
+            "node": "fetch-website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch-website": {
+      "main": [
+        [
+          {
+            "node": "check-meta-tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-meta-tags": {
+      "main": [
+        [
+          {
+            "node": "meta-tag-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "meta-tag-success": {
+      "main": [
+        [
+          {
+            "node": "slack-success",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "email-success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "slack-failure",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "email-failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

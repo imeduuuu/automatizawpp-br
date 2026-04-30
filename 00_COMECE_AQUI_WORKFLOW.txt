@@ -1,0 +1,279 @@
+================================================================================
+  AUTOMAÇÃO: GitHub Push → Deploy → Verify Meta Tag → Notify
+================================================================================
+
+Bem-vindo! Este é seu guia passo a passo para ativar automação completa de
+deployment com verificação de meta tag e notificações.
+
+TEMPO TOTAL: ~30 minutos
+
+================================================================================
+PASSO 1: ENTENDER O FLUXO (2 min)
+================================================================================
+
+GitHub Push → n8n/Make Webhook
+           → Deploy no DigitalOcean
+           → Espera 30 segundos
+           → Verifica Meta Tag Google
+           → Envia Slack + Email
+
+Sucesso: notificação verde
+Erro: notificação vermelha com troubleshooting
+
+================================================================================
+PASSO 2: ESCOLHER PLATAFORMA (1 min)
+================================================================================
+
+[ ] n8n       → Você tem servidor rodando, quer controle total
+[ ] Make.com  → Quer interface visual, SaaS sem gerenciar servidor
+
+Escolhi: _______________
+
+Se n8n:   → Leia SETUP_GITHUB_DEPLOY_WORKFLOW.md
+Se Make:  → Leia SETUP_MAKE_WORKFLOW.md
+
+================================================================================
+PASSO 3: PREPARAR VARIÁVEIS (.env) (5 min)
+================================================================================
+
+Adicione ao seu .env:
+
+SITE_URL=https://seu-site.com.br
+NOTIFICATION_EMAIL=seu-email@gmail.com
+DO_DEPLOY_WEBHOOK_URL=https://seu-droplet.com/api/deploy
+DO_API_TOKEN=seu-token-digitalocean
+
+Salve ✓
+
+================================================================================
+PASSO 4: PREPARAR SITE (3 min)
+================================================================================
+
+Verifique que seu site tem a meta tag Google no _document.tsx:
+
+    <head>
+      <meta 
+        name="google-site-verification" 
+        content="seu-codigo-aqui" 
+      />
+    </head>
+
+Se não tem, copie a meta tag do Google Search Console:
+https://search.google.com/search-console
+
+Deploy a mudança antes de continuar.
+
+Verificado ✓
+
+================================================================================
+PASSO 5: GITHUB WEBHOOK (5 min)
+================================================================================
+
+1. Vá para seu repositório no GitHub
+2. Settings → Webhooks → Add webhook
+3. Configure:
+   - Payload URL: https://seu-n8n.com/webhook/github-deploy
+   - Content type: application/json
+   - Event: Just the push event
+   - Active: ✓
+
+4. Clique "Add webhook"
+
+Webhook criado ✓
+
+================================================================================
+PASSO 6: IMPORTAR WORKFLOW (5 min)
+================================================================================
+
+OPÇÃO A - n8n Web Interface (Mais fácil):
+
+1. Abra https://seu-n8n.com
+2. Clique em "Workflows"
+3. Clique em "+ Workflow" ou "Import"
+4. Clique em "Import from file" ou "Import from URL"
+5. Cole o conteúdo de github-deploy-n8n-workflow.json
+6. Clique em "Import"
+7. Configure credenciais:
+   - Slack: Crie webhook em Slack → Apps → Incoming Webhooks
+   - Email: Use Gmail com App Password
+
+OPÇÃO B - n8n via API:
+
+curl -X POST https://seu-n8n.com/api/v1/workflows \
+  -H "X-N8N-API-KEY: seu-token" \
+  -H "Content-Type: application/json" \
+  -d @github-deploy-n8n-workflow.json
+
+OPÇÃO C - Make.com (Arrastar e soltar):
+
+1. Make.com → Create new scenario
+2. Siga instruções de SETUP_MAKE_WORKFLOW.md
+3. Crie cada módulo visualmente
+
+Workflow importado ✓
+
+================================================================================
+PASSO 7: CONFIGURAR CREDENCIAIS (5 min)
+================================================================================
+
+No n8n/Make, configure:
+
+SLACK:
+- Tipo: Webhook
+- URL: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXX
+- Obtenha em: Slack → Apps → Incoming Webhooks
+
+EMAIL:
+- Host: smtp.gmail.com
+- Port: 587
+- Email: seu-email@gmail.com
+- Password: Gere em https://myaccount.google.com/apppasswords (App Password)
+
+Credenciais configuradas ✓
+
+================================================================================
+PASSO 8: TESTAR WEBHOOK (3 min)
+================================================================================
+
+Execute:
+
+curl -X POST https://seu-n8n.com/webhook/github-deploy \
+  -H "Content-Type: application/json" \
+  -H "X-GitHub-Event: push" \
+  -d '{
+    "ref": "refs/heads/main",
+    "after": "abc1234567890def",
+    "repository": {
+      "full_name": "seu-usuario/seu-repo",
+      "owner": {"avatar_url": "https://avatars.githubusercontent.com/u/123?v=4"}
+    },
+    "pusher": {"name": "Test User"}
+  }'
+
+Se retornar "200 OK" → Webhook funciona!
+
+Webhook testado ✓
+
+================================================================================
+PASSO 9: TESTE END-TO-END (5 min)
+================================================================================
+
+Execute no seu terminal:
+
+./test-workflow.sh
+
+O script vai verificar:
+✓ Webhook acessível
+✓ Site acessível
+✓ Meta tag existe
+✓ Workflow dispara
+✓ Performance
+
+Se tudo passar, você está pronto!
+
+Testes passaram ✓
+
+================================================================================
+PASSO 10: PRIMEIRA EXECUÇÃO REAL (1 min)
+================================================================================
+
+Faça um commit e push real:
+
+git add .
+git commit -m "Test workflow deployment"
+git push origin main
+
+GitHub envia webhook → n8n/Make dispara → Deploy é acionado → Meta tag é
+verificada → Slack + Email são enviados
+
+Monitore em:
+- n8n: Workflows → [Nome] → Executions
+- Make: History
+- Slack: Procure mensagem de deploy
+- Email: Procure notificação
+
+Execução real completa ✓
+
+================================================================================
+PRÓXIMAS MELHORIAS (Opcional)
+================================================================================
+
+Depois que funcionar, você pode adicionar:
+
+1. Verificações adicionais:
+   - Status HTTP 200
+   - Performance < 2s
+   - SSL válido
+
+2. Notificações extras:
+   - Discord webhook
+   - Telegram bot
+   - SMS (Twilio)
+
+3. Logging:
+   - Google Sheets
+   - PostgreSQL
+   - CloudWatch
+
+4. Automações avançadas:
+   - Rollback automático em erro
+   - Aprovação manual antes de deploy
+   - Performance monitoring
+
+Veja documentação completa em:
+- WORKFLOW_INDEX.md
+- SETUP_GITHUB_DEPLOY_WORKFLOW.md (n8n)
+- SETUP_MAKE_WORKFLOW.md (Make)
+
+================================================================================
+TROUBLESHOOTING RÁPIDO
+================================================================================
+
+❌ Webhook não dispara:
+   GitHub Settings → Webhooks → Veja Recent Deliveries
+
+❌ Deploy não executa:
+   Teste curl em seu endpoint de deploy
+   Verifique token de autenticação
+
+❌ Meta tag não encontrada:
+   curl seu-site.com | grep google-site-verification
+   Verifique _document.tsx
+
+❌ Slack não notifica:
+   Slack → Apps → Incoming Webhooks → Teste webhook
+
+❌ Email não chega:
+   Gmail → https://myaccount.google.com/apppasswords
+   Gere nova App Password
+
+================================================================================
+RECURSOS
+================================================================================
+
+Documentação completa: WORKFLOW_INDEX.md
+Guia rápido: QUICK_IMPORT_GUIDE.md
+n8n detalhado: SETUP_GITHUB_DEPLOY_WORKFLOW.md
+Make.com detalhado: SETUP_MAKE_WORKFLOW.md
+Script teste: test-workflow.sh
+JSON template: github-deploy-n8n-workflow.json
+
+================================================================================
+CONTATO E SUPORTE
+================================================================================
+
+Email: eduardsmonteiro@gmail.com
+GitHub: seu-usuario
+Discord/Slack: Chamar para debug
+
+Qualquer dúvida, verifique a documentação completa ou fale comigo!
+
+================================================================================
+STATUS: ✓ PRONTO PARA PRODUÇÃO
+DATA: 30 de Abril de 2026
+VERSÃO: 1.0
+================================================================================
+
+Sucesso no setup!
+Qualquer dúvida, leia os arquivos detalhados.
+

@@ -1,0 +1,76 @@
+{
+  "id": "sales-os-followups-cron-v1",
+  "name": "Sales OS Follow-Ups Runner",
+  "createdAt": "2026-04-17T20:00:00.000Z",
+  "updatedAt": "2026-04-17T20:00:00.000Z",
+  "active": false,
+  "isArchived": false,
+  "meta": null,
+  "staticData": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [],
+  "versionMetadata": null,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "eb9a6a72-2e1f-4da8-9f13-1d35d2072d3b",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://sales-os:3000/api/followups/run",
+        "sendBody": false,
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "ca5f4f3d-7e3d-4478-a938-363de8f538df",
+      "name": "Run Follow-Ups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Run Follow-Ups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "pinData": {},
+  "versionId": "2d87f95e-f815-4be3-8990-1ffda8b88d34",
+  "activeVersionId": "2d87f95e-f815-4be3-8990-1ffda8b88d34"
+}

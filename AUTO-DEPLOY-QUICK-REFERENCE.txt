@@ -1,0 +1,310 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    AUTO-DEPLOY QUICK REFERENCE                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+INSTALAÇÃO & USO BÁSICO
+=======================
+
+1. Copiar o script (opcional, já está na pasta do projeto):
+   cp auto-deploy.sh /seu/projeto/
+
+2. Tornar executável (já está feito):
+   chmod +x auto-deploy.sh
+
+3. Executar (auto-detecta plataforma):
+   ./auto-deploy.sh
+
+4. Especificar plataforma (opcional):
+   ./auto-deploy.sh --platform=vercel
+   ./auto-deploy.sh --platform=firebase
+   ./auto-deploy.sh --platform=github-pages
+   ./auto-deploy.sh --platform=docker
+   ./auto-deploy.sh --platform=digitalocean
+
+
+NOTIFICAÇÕES
+============
+
+Email:
+   ./auto-deploy.sh --notify-email=seu.email@example.com
+
+Slack:
+   ./auto-deploy.sh --notify-slack=https://hooks.slack.com/services/...
+
+Webhook customizado:
+   ./auto-deploy.sh --notify-webhook=https://seu-servidor.com/deploy-webhook
+
+
+PLATAFORMAS SUPORTADAS
+======================
+
+VERCEL (recomendado para Next.js/SPA)
+─────────────────────────────────────
+Arquivos necessários:
+  • vercel.json (automatizado ou manual)
+  • package.json com "build" script
+
+Configuração:
+  export VERCEL_TOKEN=seu_token_aqui
+  ./auto-deploy.sh --notify-email=seu@email.com
+
+Obter token:
+  vercel login
+  vercel tokens create
+
+
+GITHUB PAGES (recomendado para sites estáticos)
+──────────────────────────────────────────────
+Arquivos necessários:
+  • Repositório git com remote origin
+  • Diretório: dist/, build/ ou out/
+  • package.json com "build" script
+
+Execução:
+  ./auto-deploy.sh --platform=github-pages
+
+Resultado:
+  https://seu-usuario.github.io/seu-repositorio
+
+
+FIREBASE (recomendado para serverless/backend)
+──────────────────────────────────────────────
+Arquivos necessários:
+  • .firebaserc
+  • firebase.json
+  • functions/ ou hosting/
+
+Configuração:
+  firebase login
+  firebase init
+  export FIREBASE_TOKEN=$(firebase login:ci)
+  ./auto-deploy.sh --platform=firebase
+
+
+DIGITALOCEAN APP PLATFORM (aplicações full-stack)
+─────────────────────────────────────────────────
+Arquivos necessários:
+  • app.yaml (especificação da aplicação)
+  • Dockerfile (para build)
+
+Instalação:
+  brew install doctl  (macOS)
+  apt install doctl   (Linux)
+
+Configuração:
+  doctl auth init     (insira seu API token)
+  export DIGITALOCEAN_ACCESS_TOKEN=seu_token
+  ./auto-deploy.sh --platform=digitalocean
+
+
+DOCKER (local ou VPS)
+─────────────────────
+Arquivos necessários:
+  • Dockerfile
+  • docker-compose.prod.yml (opcional)
+
+Execução:
+  ./auto-deploy.sh --platform=docker
+
+Resultado:
+  Imagem Docker construída: automatizawpp-app:latest
+  Serviços iniciados via docker-compose (se configurado)
+
+
+DETECÇÃO AUTOMÁTICA DE PLATAFORMA
+==================================
+
+O script detecta (por ordem de prioridade):
+
+1. Vercel (se vercel.json existe + CLI ou token)
+2. Firebase (se .firebaserc existe + CLI ou token)
+3. GitHub Pages (se repo git com origin em github.com)
+4. DigitalOcean (se doctl instalado + token)
+5. Docker (se Dockerfile existe + Docker instalado)
+
+Se múltiplas plataformas detectadas:
+  → Usa a primeira da prioridade
+  → Pode forçar com: --platform=X
+
+
+VARIÁVEIS DE AMBIENTE
+====================
+
+Para cada plataforma, defina:
+
+VERCEL:
+  export VERCEL_TOKEN=...
+  export VERCEL_ORG_ID=... (opcional)
+  export VERCEL_PROJECT_ID=... (opcional)
+
+FIREBASE:
+  export FIREBASE_TOKEN=...
+
+DIGITALOCEAN:
+  export DIGITALOCEAN_ACCESS_TOKEN=...
+
+GitHub:
+  Automático se usar git (sem necessidade de token)
+
+SLACK/WEBHOOK:
+  Passa como argumento (não em env var)
+  --notify-slack=URL
+  --notify-webhook=URL
+
+
+ESTRUTURA DE SAÍDA
+==================
+
+Sucesso:
+╔════════════════════════════════════════════════════════════╗
+║                   ✅ DEPLOY COMPLETADO                    ║
+╚════════════════════════════════════════════════════════════╝
+
+Resumo:
+  Plataforma: vercel
+  Build: ✓ Sucesso
+  Deploy: ✓ Sucesso
+  Health Check: ✓ Passou
+  URL: https://app.vercel.app
+
+Log: /tmp/auto-deploy-1234567890.log
+
+
+TROUBLESHOOTING
+===============
+
+Problema: "Nenhuma plataforma disponível detectada"
+Solução:
+  • Verifique vercel.json, .firebaserc, Dockerfile
+  • Verifique se CLI está instalado (vercel, firebase, docker)
+  • Verifique se tokens estão em variáveis de ambiente
+
+Problema: "Build falhou"
+Solução:
+  • npm run build funciona localmente?
+  • Depurar: npm run build --verbose
+  • Ver log completo: cat /tmp/auto-deploy-*.log
+
+Problema: "Deploy falhou"
+Solução:
+  • Tente plataforma manualmente: vercel deploy, firebase deploy
+  • Ver log completo: cat /tmp/auto-deploy-*.log
+  • Verifique credenciais/tokens
+
+Problema: "Health check falhou"
+Solução:
+  • Não cancela o deploy (apenas aviso)
+  • Verifica endpoints: /health, /api/health, /status, /ping
+  • Implementar um desses endpoints na sua app
+  • Ou ignorar se health check não for necessário
+
+
+LOGS
+====
+
+Local:
+  /tmp/auto-deploy-<timestamp>.log
+
+Exemplo:
+  cat /tmp/auto-deploy-1719734521.log
+
+Ver em tempo real:
+  tail -f /tmp/auto-deploy-*.log
+
+GitHub Actions (artifacts):
+  GitHub → Actions → Deploy Run → Artifacts
+
+
+CI/CD INTEGRATION
+=================
+
+GitHub Actions:
+  1. Criar .github/workflows/deploy.yml
+  2. Adicionar secrets (Settings → Secrets)
+  3. Push to main
+  4. Deploy automático em cada push
+
+GitLab CI:
+  1. Criar .gitlab-ci.yml
+  2. Adicionar variables (Settings → CI/CD → Variables)
+  3. Deploy automático em cada commit
+
+Outras plataformas:
+  Mesmo padrão: definir env vars → rodar ./auto-deploy.sh
+
+
+PERFORMANCE
+===========
+
+Build: 30s - 2min
+Deploy Vercel: 10-30s
+Deploy Firebase: 1-3min
+Deploy Docker: 2-5min
+Health check: 5-50s
+
+Total típico: 1-5 minutos
+
+
+SEGURANÇA
+=========
+
+✓ Nunca commite tokens em .env
+✓ Use variáveis de ambiente
+✓ Use secrets em CI/CD
+✓ Tokens não aparecem em logs
+✓ Use HTTPS para webhooks
+✓ Limite acesso aos logs
+
+
+EXEMPLOS PRONTOS
+================
+
+Ver exemplos interativos:
+  bash AUTO-DEPLOY-EXAMPLES.sh
+
+Opções:
+  1. Vercel + email
+  2. GitHub Pages
+  3. Firebase + Slack
+  4. DigitalOcean
+  5. Docker
+  6. GitHub Actions CI/CD
+  7. Setup completo
+
+
+DOCUMENTAÇÃO COMPLETA
+====================
+
+Ler arquivo:
+  AUTO-DEPLOY-README.md
+
+Tópicos:
+  • Instalação detalhada
+  • Plataformas (setup completo)
+  • Health checks
+  • Webhooks payload
+  • Customizações
+  • Troubleshooting avançado
+
+
+TESTES
+======
+
+Testar script:
+  bash test-auto-deploy.sh
+
+Resultado esperado:
+  ✓ All tests passed!
+
+
+DÚVIDAS? NEXT STEPS
+===================
+
+1. Ler AUTO-DEPLOY-README.md (documentação completa)
+2. Rodar exemplos: bash AUTO-DEPLOY-EXAMPLES.sh
+3. Testar: bash test-auto-deploy.sh
+4. Deploy de verdade: ./auto-deploy.sh --notify-email=seu@email.com
+
+═══════════════════════════════════════════════════════════════════════════════
+Auto-Deploy Script v1.0 — Ready to use! Bom deploy!
+═══════════════════════════════════════════════════════════════════════════════
