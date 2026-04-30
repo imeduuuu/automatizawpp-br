@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { useApi } from '@/components/ui/useApi';
 import { useUiCopy } from '@/components/ui/UiLanguageProvider';
+import { showToast } from '@/lib/ui-toast';
 import type { LeadStatus } from '@/lib/types';
 
 type FollowUpsPayload = {
@@ -55,7 +56,7 @@ export default function FollowUpsPage() {
       if (!response.ok) throw new Error(copy.followUps.escalateFailed);
       setEscalated((current) => ({ ...current, [leadId]: true }));
     } catch {
-      window.alert(copy.followUps.escalateFailed);
+      showToast(copy.followUps.escalateFailed, 'error');
     } finally {
       setPendingLead(null);
     }

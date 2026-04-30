@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useApi } from '@/components/ui/useApi';
 import { useUiCopy } from '@/components/ui/UiLanguageProvider';
+import { showToast } from '@/lib/ui-toast';
 import type { LeadStatus } from '@/lib/types';
 
 type LeadDetailPayload = {
@@ -86,7 +87,7 @@ export default function LeadDetailPage() {
       if (!response.ok) throw new Error(copy.leadActions.escalateFailed);
       window.location.reload();
     } catch {
-      window.alert(copy.leadActions.escalateFailed);
+      showToast(copy.leadActions.escalateFailed, 'error');
     } finally {
       setEscalating(false);
     }
@@ -100,7 +101,7 @@ export default function LeadDetailPage() {
       if (!response.ok) throw new Error(copy.leadActions.markColdFailed);
       window.location.reload();
     } catch {
-      window.alert(copy.leadActions.markColdFailed);
+      showToast(copy.leadActions.markColdFailed, 'error');
     } finally {
       setColding(false);
     }
@@ -109,7 +110,7 @@ export default function LeadDetailPage() {
   async function handleCallNow() {
     if (!lead) return;
     if (!lead.phone) {
-      window.alert(copy.leadActions.noPhone);
+      showToast(copy.leadActions.noPhone, 'error');
       return;
     }
 
@@ -129,9 +130,9 @@ export default function LeadDetailPage() {
         throw new Error(copy.leadActions.callFailed);
       }
 
-      window.alert(copy.leadActions.callQueued);
+      showToast(copy.leadActions.callQueued, 'success');
     } catch {
-      window.alert(copy.leadActions.callFailed);
+      showToast(copy.leadActions.callFailed, 'error');
     }
   }
 

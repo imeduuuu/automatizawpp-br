@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/ui/PageLayout';
 import { useUiCopy } from '@/components/ui/UiLanguageProvider';
+import { showToast } from '@/lib/ui-toast';
 
 export default function AccountSecurityPage() {
   const copy = useUiCopy();
@@ -19,10 +20,10 @@ export default function AccountSecurityPage() {
           onSubmit={(event) => {
             event.preventDefault();
             if (nextPassword !== confirmPassword) {
-              window.alert(copy.account.passwordMismatch);
+              showToast(copy.account.passwordMismatch, 'error');
               return;
             }
-            window.alert(copy.account.passwordSaved);
+            showToast(copy.account.passwordSaved, 'success');
           }}
         >
           <div>

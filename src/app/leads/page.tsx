@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { useApi } from '@/components/ui/useApi';
 import { useUiCopy } from '@/components/ui/UiLanguageProvider';
+import { showToast } from '@/lib/ui-toast';
 import type { LeadStatus } from '@/lib/types';
 
 type LeadsPayload = {
@@ -85,7 +86,7 @@ export default function LeadsPage() {
 
       window.location.reload();
     } catch {
-      window.alert(copy.leads.errorCreate);
+      showToast(copy.leads.errorCreate, 'error');
     }
   }
 
