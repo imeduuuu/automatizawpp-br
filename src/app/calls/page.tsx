@@ -8,6 +8,7 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useApi } from '@/components/ui/useApi';
 import { useUiCopy } from '@/components/ui/UiLanguageProvider';
+import { showToast } from '@/lib/ui-toast';
 import type { LeadStatus } from '@/lib/types';
 
 type CallsPayload = {
@@ -95,7 +96,7 @@ export default function CallsPage() {
 
       window.location.reload();
     } catch {
-      window.alert(copy.calls.errorCreate);
+      showToast(copy.calls.errorCreate, 'error');
     }
   }
 

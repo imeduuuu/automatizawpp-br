@@ -7,6 +7,7 @@ import { DataTable, type DataTableColumn } from '@/components/ui/DataTable';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { useApi } from '@/components/ui/useApi';
+import { showToast } from '@/lib/ui-toast';
 import type { LeadStatus } from '@/lib/types';
 
 type ContatosPayload = {
@@ -86,7 +87,7 @@ export default function ContatosPage() {
       if (!res.ok) throw new Error('Erro ao criar contato');
       window.location.reload();
     } catch {
-      window.alert('Não foi possível criar o contato. Tente novamente.');
+      showToast('Não foi possível criar o contato. Tente novamente.', 'error');
     }
   }
 
