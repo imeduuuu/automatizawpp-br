@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/sentinel/scan-now",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
