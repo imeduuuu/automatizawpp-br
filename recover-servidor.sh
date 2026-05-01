@@ -3,8 +3,21 @@
 # Script de recuperação/setup idempotente do servidor.
 # Pode ser rodado múltiplas vezes sem problema.
 #
-# Uso direto via curl:
-#   curl -fsSL https://raw.githubusercontent.com/imeduuuu/automatizawpp-br/main/recover-servidor.sh | bash
+# ⚠️  REPOSITÓRIO PRIVADO — use uma das opções abaixo:
+#
+# Opção 1 — com GitHub CLI autenticado no servidor:
+#   gh auth login
+#   gh api repos/imeduuuu/automatizawpp-br/contents/recover-servidor.sh \
+#     --jq '.content' | base64 -d | bash
+#
+# Opção 2 — com Personal Access Token (substituir GH_TOKEN):
+#   curl -fsSL \
+#     -H "Authorization: token GH_TOKEN" \
+#     https://raw.githubusercontent.com/imeduuuu/automatizawpp-br/main/recover-servidor.sh | bash
+#
+# Opção 3 — copiar o script manualmente para o servidor e rodar:
+#   scp recover-servidor.sh root@143.198.46.37:/tmp/
+#   ssh root@143.198.46.37 "bash /tmp/recover-servidor.sh"
 
 set -euo pipefail
 
