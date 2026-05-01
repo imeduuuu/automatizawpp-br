@@ -19,7 +19,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
           }
         },
         messages: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'asc' },
           take: 120,
           select: {
             id: true,

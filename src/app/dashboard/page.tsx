@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/ui/PageLayout';
 import { useApi } from '@/components/ui/useApi';
@@ -17,18 +16,39 @@ interface Lead {
   createdAt: string;
 }
 
-interface Stats {
-  totalLeads: number;
-  newLeads: number;
-  engaged: number;
-  qualified: number;
-  closedWon: number;
-  conversations: number;
-  messages: number;
-  agentRuns: number;
+interface MetricsResponse {
+  funnel: {
+    new: number;
+    callScheduled: number;
+    callAttempted: number;
+    qualified: number;
+    proposalSent: number;
+    followUp: number;
+    closedWon: number;
+    closedLost: number;
+    cold: number;
+  };
+  conversionRates: {
+    newToCall: number;
+    callToQualified: number;
+    qualifiedToClose: number;
+    overall: number;
+  };
+  mrr: { total: number; byPlan: unknown[] };
+  recentActivity: unknown[];
 }
 
-const emptyStats: Stats = { totalLeads: 0, newLeads: 0, engaged: 0, qualified: 0, closedWon: 0, conversations: 0, messages: 0, agentRuns: 0 };
+interface EfficiencyResponse {
+  weightedEfficiency: number;
+}
+
+const emptyMetrics: MetricsResponse = {
+  funnel: { new: 0, callScheduled: 0, callAttempted: 0, qualified: 0, proposalSent: 0, followUp: 0, closedWon: 0, closedLost: 0, cold: 0 },
+  conversionRates: { newToCall: 0, callToQualified: 0, qualifiedToClose: 0, overall: 0 },
+  mrr: { total: 0, byPlan: [] },
+  recentActivity: [],
+};
+const emptyEfficiency: EfficiencyResponse = { weightedEfficiency: 0 };
 const emptyLeads = { leads: [] as Lead[], total: 0 };
 
 function StatCard({ label, value, color = 'var(--green)' }: { label: string; value: number; color?: string }) {
@@ -68,21 +88,27 @@ function statusLabel(status: string) {
   return map[status] ?? status;
 }
 
+function StatCardPercent({ label, value, color = 'var(--green)' }: { label: string; value: number; color?: string }) {
+  return (
+    <div className="ds-card" style={{ padding: '20px 24px', flex: 1, minWidth: 140 }}>
+      <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color }}>{value}%</p>
+      <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</p>
+    </div>
+  );
+}
+
 function DashboardContent() {
   const router = useRouter();
   const leadsApi = useApi<{ leads: Lead[]; total: number }>('/api/leads', emptyLeads);
-  const metricsApi = useApi<{ metrics?: Record<string, number> }>('/api/metrics', {});
+  const metricsApi = useApi<MetricsResponse>('/api/metrics', emptyMetrics);
+  const efficiencyApi = useApi<EfficiencyResponse>('/api/ops/efficiency?days=7', emptyEfficiency);
 
-  const stats: Stats = {
-    totalLeads: leadsApi.data.total ?? leadsApi.data.leads.length,
-    newLeads: leadsApi.data.leads.filter(l => l.status === 'NEW').length,
-    engaged: leadsApi.data.leads.filter(l => l.status === 'ENGAGED').length,
-    qualified: leadsApi.data.leads.filter(l => l.status === 'QUALIFIED' || l.status === 'PROPOSAL_SENT' || l.status === 'NEGOTIATING').length,
-    closedWon: leadsApi.data.leads.filter(l => l.status === 'CLOSED_WON').length,
-    conversations: (metricsApi.data.metrics?.conversations as number) ?? 0,
-    messages: (metricsApi.data.metrics?.messages as number) ?? 0,
-    agentRuns: (metricsApi.data.metrics?.agentRuns as number) ?? 0,
-  };
+  const totalLeads = leadsApi.data.total ?? leadsApi.data.leads.length;
+  const newLeads = leadsApi.data.leads.filter(l => l.status === 'NEW').length;
+  const qualified = leadsApi.data.leads.filter(l => l.status === 'QUALIFIED' || l.status === 'PROPOSAL_SENT' || l.status === 'NEGOTIATING').length;
+  const closedWon = leadsApi.data.leads.filter(l => l.status === 'CLOSED_WON').length;
+  const conversaoGeral = metricsApi.data.conversionRates.overall;
+  const eficienciaIA = efficiencyApi.data.weightedEfficiency;
 
   const recentLeads = [...leadsApi.data.leads]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -90,13 +116,13 @@ function DashboardContent() {
 
   return (
     <PageLayout title="Dashboard">
-      {/* Stats row */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
-        <StatCard label="Total de Contatos" value={stats.totalLeads} />
-        <StatCard label="Novos" value={stats.newLeads} color="var(--muted)" />
-        <StatCard label="Engajados" value={stats.engaged} />
-        <StatCard label="Qualificados" value={stats.qualified} color="#3b82f6" />
-        <StatCard label="Ganhos" value={stats.closedWon} color="#22c55e" />
+        <StatCard label="Total de Contatos" value={totalLeads} />
+        <StatCard label="Novos" value={newLeads} color="var(--muted)" />
+        <StatCard label="Qualificados" value={qualified} color="#3b82f6" />
+        <StatCard label="Ganhos" value={closedWon} color="#22c55e" />
+        <StatCardPercent label="Conversao Geral" value={conversaoGeral} color="#f59e0b" />
+        <StatCardPercent label="Eficiencia IA" value={eficienciaIA} color="#8b5cf6" />
       </div>
 
       {/* Recent leads */}

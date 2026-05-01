@@ -10,6 +10,25 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    if (body.leadId && body.conversationId && typeof body.message === 'string' && body.channel) {
+      const channel = (body.channel as string).toUpperCase() as 'EMAIL' | 'WHATSAPP' | 'SMS' | 'VOICE' | 'WEB_CHAT';
+      await prisma.message.create({
+        data: {
+          leadId: body.leadId,
+          conversationId: body.conversationId,
+          channel,
+          direction: 'OUTBOUND',
+          body: body.message,
+          metadata: { source: 'manual_reply' },
+        },
+      });
+      await prisma.conversation.update({
+        where: { id: body.conversationId },
+        data: { updatedAt: new Date(), lastMessageAt: new Date() },
+      });
+      return NextResponse.json({ success: true, leadId: body.leadId, action: 'MANUAL_REPLY' });
+    }
+
     // Normalize payload from n8n/external providers
     const normalized = normalizeBirdEvent(body, process.env.BIRD_WORKSPACE_ID || 'default');
     if (!normalized) {

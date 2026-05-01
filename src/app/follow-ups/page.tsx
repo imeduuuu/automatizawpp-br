@@ -4,16 +4,15 @@ import { useState } from 'react';
 import { PageLayout } from '@/components/ui/PageLayout';
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { StatusPill } from '@/components/ui/StatusPill';
 import { useApi } from '@/components/ui/useApi';
 import { useUiCopy } from '@/components/ui/UiLanguageProvider';
 import { showToast } from '@/lib/ui-toast';
-import type { LeadStatus } from '@/lib/types';
 
 type FollowUpsPayload = {
   followUps: Array<{
     id: string;
     status: string;
+    channel: string;
     reason: string;
     scheduledFor: string;
     createdAt: string;
@@ -30,17 +29,40 @@ type FollowUpsPayload = {
 
 const emptyPayload: FollowUpsPayload = { followUps: [] };
 
+type StatusConfig = { background: string; color: string; label: string };
+
+const STATUS_CONFIG: Record<string, StatusConfig> = {
+  QUEUED:    { background: 'var(--ds-neutral, #6b7280)', color: '#fff', label: 'Aguardando' },
+  SENT:      { background: 'var(--ds-blue, #3b82f6)',    color: '#fff', label: 'Enviado' },
+  COMPLETED: { background: 'var(--ds-green, #22c55e)',   color: '#fff', label: 'Concluído' },
+  CANCELLED: { background: 'var(--ds-red, #ef4444)',     color: '#fff', label: 'Cancelado' },
+  SKIPPED:   { background: 'var(--ds-yellow, #eab308)',  color: '#000', label: 'Ignorado' },
+};
+
+function FollowUpStatusPill({ status }: { status: string }) {
+  const cfg = STATUS_CONFIG[status] ?? { background: '#9ca3af', color: '#fff', label: status };
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        borderRadius: 5,
+        padding: '3px 8px',
+        fontSize: 10,
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        background: cfg.background,
+        color: cfg.color
+      }}
+    >
+      {cfg.label}
+    </span>
+  );
+}
+
 function leadName(lead: FollowUpsPayload['followUps'][number]['lead']) {
   if (!lead) return 'Lead sem nome';
   if (lead.fullName?.trim()) return lead.fullName;
   return [lead.firstName, lead.lastName].filter(Boolean).join(' ') || 'Lead sem nome';
-}
-
-function followUpStatusAsLeadStatus(status: string): LeadStatus {
-  if (status === 'COMPLETED') return 'CLOSED_WON';
-  if (status === 'CANCELLED') return 'COLD';
-  if (status === 'SENT') return 'FOLLOW_UP';
-  return 'CALL_ATTEMPTED';
 }
 
 export default function FollowUpsPage() {
@@ -48,6 +70,24 @@ export default function FollowUpsPage() {
   const followUpsApi = useApi<FollowUpsPayload>('/api/followups', emptyPayload);
   const [escalated, setEscalated] = useState<Record<string, true>>({});
   const [pendingLead, setPendingLead] = useState<string | null>(null);
+  const [runningNow, setRunningNow] = useState(false);
+
+  async function handleRunNow() {
+    try {
+      setRunningNow(true);
+      const response = await fetch('/api/followups/run', { method: 'POST' });
+      if (!response.ok) throw new Error(copy.followUps.runFailed);
+      const result = await response.json() as { executed?: number; successful?: number; failed?: number };
+      const executed = result.executed ?? 0;
+      const successful = result.successful ?? 0;
+      const failed = result.failed ?? 0;
+      showToast(`${copy.followUps.runSuccess}: ${executed} executados, ${successful} com sucesso, ${failed} com falha`, 'success');
+    } catch {
+      showToast(copy.followUps.runFailed, 'error');
+    } finally {
+      setRunningNow(false);
+    }
+  }
 
   async function handleEscalate(leadId: string) {
     try {
@@ -65,6 +105,7 @@ export default function FollowUpsPage() {
   const columns: DataTableColumn[] = [
     { key: 'lead', label: copy.followUps.colLead },
     { key: 'status', label: copy.followUps.colStatus },
+    { key: 'canal', label: copy.followUps.colChannel },
     { key: 'ultima', label: copy.followUps.colLastAction },
     { key: 'proxima', label: copy.followUps.colNextAction },
     { key: 'accion', label: copy.followUps.colAction }
@@ -77,7 +118,8 @@ export default function FollowUpsPage() {
     return {
       id: item.id,
       lead: leadName(item.lead),
-      status: <StatusPill status={followUpStatusAsLeadStatus(item.status)} />,
+      status: <FollowUpStatusPill status={item.status} />,
+      canal: item.channel ?? '-',
       ultima: item.lead?.lastContactAt ? new Date(item.lead.lastContactAt).toLocaleString('pt-BR') : '-',
       proxima: new Date(item.scheduledFor).toLocaleString('pt-BR'),
       accion: isHuman ? (
@@ -110,8 +152,21 @@ export default function FollowUpsPage() {
     };
   });
 
+  const pendingCount = followUpsApi.data.followUps.filter((f) => f.status === 'QUEUED').length;
+
   return (
-    <PageLayout title={copy.followUps.title} badges={{ followUps: followUpsApi.data.followUps.length }}>
+    <PageLayout title={copy.followUps.title} badges={{ followUps: pendingCount }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+        <button
+          type="button"
+          className="ds-button ds-button-primary"
+          onClick={handleRunNow}
+          disabled={runningNow}
+        >
+          {runningNow ? copy.followUps.running : copy.followUps.runNow}
+        </button>
+      </div>
+
       {followUpsApi.error ? <div className="ds-card ds-muted">{copy.common.error}: {followUpsApi.error}</div> : null}
 
       <section className="ds-card">

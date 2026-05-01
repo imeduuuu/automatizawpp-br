@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PageLayout } from '@/components/ui/PageLayout';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useApi } from '@/components/ui/useApi';
@@ -9,6 +9,7 @@ import { useUiCopy } from '@/components/ui/UiLanguageProvider';
 type ConversationListPayload = {
   conversations: Array<{
     id: string;
+    leadId: string;
     updatedAt: string;
     lead: {
       fullName?: string | null;
@@ -60,8 +61,6 @@ function initials(name: string) {
   return chunks.map((part) => part[0]?.toUpperCase() ?? '').join('');
 }
 
-const DIRECAO: Record<string, string> = { INBOUND: 'Recebida', OUTBOUND: 'Enviada' };
-
 function formatTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '-';
@@ -72,6 +71,10 @@ export default function ConversationsPage() {
   const copy = useUiCopy();
   const listApi = useApi<ConversationListPayload>('/api/conversations', emptyList);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [resposta, setResposta] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [erroEnvio, setErroEnvio] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!selectedId && listApi.data.conversations[0]?.id) {
@@ -79,12 +82,70 @@ export default function ConversationsPage() {
     }
   }, [selectedId, listApi.data.conversations]);
 
-  const detailApi = useApi<ConversationDetailPayload>(selectedId ? `/api/conversations/${selectedId}` : '/api/conversations/invalid', emptyDetail);
+  const [detailKey, setDetailKey] = useState(0);
+  const detailUrl = selectedId
+    ? `/api/conversations/${selectedId}?_=${detailKey}`
+    : '/api/conversations/invalid';
+  const detailApi = useApi<ConversationDetailPayload>(detailUrl, emptyDetail);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [detailApi.data.conversation?.messages]);
+
+  const conversaSelecionada = useMemo(
+    () => listApi.data.conversations.find((c) => c.id === selectedId) ?? null,
+    [listApi.data.conversations, selectedId]
+  );
+
+  const handleSelecionar = useCallback((id: string) => {
+    setSelectedId(id);
+    setResposta('');
+    setErroEnvio(null);
+    setDetailKey((k) => k + 1);
+  }, []);
+
+  const handleEnviar = useCallback(async () => {
+    if (!resposta.trim() || !selectedId || !conversaSelecionada) return;
+    setEnviando(true);
+    setErroEnvio(null);
+    try {
+      const res = await fetch('/api/events/inbound', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspaceId: 'auto',
+          leadId: conversaSelecionada.leadId,
+          conversationId: selectedId,
+          channel: 'EMAIL',
+          message: resposta.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? 'Erro ao enviar');
+      }
+      setResposta('');
+      setDetailKey((k) => k + 1);
+    } catch (err) {
+      setErroEnvio(err instanceof Error ? err.message : 'Erro ao enviar');
+    } finally {
+      setEnviando(false);
+    }
+  }, [resposta, selectedId, conversaSelecionada]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        handleEnviar();
+      }
+    },
+    [handleEnviar]
+  );
 
   const badges = useMemo(
-    () => ({
-      conversations: listApi.data.conversations.length
-    }),
+    () => ({ conversations: listApi.data.conversations.length }),
     [listApi.data.conversations.length]
   );
 
@@ -116,7 +177,7 @@ export default function ConversationsPage() {
                     type="button"
                     key={conversation.id}
                     className="ds-button"
-                    onClick={() => setSelectedId(conversation.id)}
+                    onClick={() => handleSelecionar(conversation.id)}
                     style={{
                       textAlign: 'left',
                       borderColor: active ? 'var(--green)' : 'var(--border)',
@@ -147,7 +208,7 @@ export default function ConversationsPage() {
           </div>
         </section>
 
-        <section className="ds-card">
+        <section className="ds-card" style={{ display: 'flex', flexDirection: 'column' }}>
           <h2 className="ds-title">{copy.conversations.detailTitle}</h2>
           {detailApi.loading ? (
             <div className="ds-grid" style={{ marginTop: 10 }}>
@@ -167,16 +228,102 @@ export default function ConversationsPage() {
                   {detailApi.data.conversation.lead?.company ?? '-'} · {detailApi.data.conversation.lead?.email ?? '-'}
                 </p>
               </div>
-              <div style={{ display: 'grid', gap: 8 }}>
-                {detailApi.data.conversation.messages.map((message) => (
-                  <div key={message.id} className="ds-card" style={{ padding: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                      <strong>{DIRECAO[message.direction] ?? message.direction}</strong>
-                      <span className="ds-muted">{new Date(message.createdAt).toLocaleString('pt-BR')}</span>
+
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  paddingBottom: 8,
+                  maxHeight: 420,
+                }}
+              >
+                {detailApi.data.conversation.messages.map((message) => {
+                  const isOutbound = message.direction === 'OUTBOUND';
+                  return (
+                    <div
+                      key={message.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: isOutbound ? 'flex-end' : 'flex-start',
+                      }}
+                    >
+                      <div
+                        style={{
+                          maxWidth: '72%',
+                          padding: '8px 12px',
+                          borderRadius: 10,
+                          background: isOutbound ? 'var(--green-light)' : 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          color: isOutbound ? 'var(--green)' : 'var(--text)',
+                        }}
+                      >
+                        <p style={{ margin: 0, fontSize: 14, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {message.body}
+                        </p>
+                        <span
+                          className="ds-muted"
+                          style={{ fontSize: 11, display: 'block', marginTop: 4, textAlign: isOutbound ? 'right' : 'left' }}
+                        >
+                          {new Date(message.createdAt).toLocaleString('pt-BR')}
+                        </span>
+                      </div>
                     </div>
-                    <p style={{ margin: '4px 0 0' }}>{message.body}</p>
-                  </div>
-                ))}
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                {erroEnvio ? (
+                  <p className="ds-muted" style={{ marginBottom: 8, color: 'var(--red, #e53e3e)', fontSize: 13 }}>
+                    {erroEnvio}
+                  </p>
+                ) : null}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                  <textarea
+                    value={resposta}
+                    onChange={(e) => setResposta(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Escrever resposta..."
+                    rows={3}
+                    disabled={enviando}
+                    style={{
+                      flex: 1,
+                      resize: 'vertical',
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      border: '1px solid var(--border)',
+                      background: 'var(--surface)',
+                      color: 'var(--text)',
+                      fontSize: 14,
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="ds-button"
+                    onClick={handleEnviar}
+                    disabled={enviando || !resposta.trim()}
+                    style={{
+                      minWidth: 90,
+                      height: 40,
+                      background: 'var(--green)',
+                      color: '#fff',
+                      borderColor: 'var(--green)',
+                      fontWeight: 600,
+                      fontSize: 14,
+                      opacity: enviando || !resposta.trim() ? 0.6 : 1,
+                    }}
+                  >
+                    {enviando ? 'Enviando...' : 'Enviar'}
+                  </button>
+                </div>
+                <p className="ds-muted" style={{ marginTop: 4, fontSize: 11 }}>
+                  Ctrl+Enter para enviar
+                </p>
               </div>
             </>
           )}

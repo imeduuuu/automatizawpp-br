@@ -160,10 +160,18 @@ type CallsListCopy = {
   colNumber: string;
   colOutcome: string;
   colDuration: string;
+  colSummary: string;
   colDate: string;
   totalCalls: string;
   callsToday: string;
+  avgDuration: string;
   errorCreate: string;
+  modalTitle: string;
+  modalLeadId: string;
+  modalPhone: string;
+  modalObjective: string;
+  modalCancel: string;
+  modalConfirm: string;
 };
 
 type CallDetailCopy = {
@@ -182,10 +190,15 @@ type FollowUpsCopy = {
   title: string;
   colLead: string;
   colStatus: string;
+  colChannel: string;
   colLastAction: string;
   colNextAction: string;
   colAction: string;
   escalateFailed: string;
+  runNow: string;
+  running: string;
+  runSuccess: string;
+  runFailed: string;
 };
 
 type SequencesCopy = {
@@ -537,10 +550,18 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
       colNumber: 'Número',
       colOutcome: 'Resultado',
       colDuration: 'Duração',
+      colSummary: 'Resumo',
       colDate: 'Data',
       totalCalls: 'Total de ligações',
       callsToday: 'Ligações hoje',
-      errorCreate: 'Não foi possível criar a ligação.'
+      avgDuration: 'Duração média',
+      errorCreate: 'Não foi possível criar a ligação.',
+      modalTitle: 'Nova ligação',
+      modalLeadId: 'ID do lead',
+      modalPhone: 'Telefone (E.164)',
+      modalObjective: 'Objetivo',
+      modalCancel: 'Cancelar',
+      modalConfirm: 'Iniciar ligação'
     },
     callDetail: {
       title: 'Detalhe da ligação',
@@ -557,10 +578,15 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
       title: 'Acompanhamentos',
       colLead: 'Lead',
       colStatus: 'Status',
+      colChannel: 'Canal',
       colLastAction: 'Última ação',
       colNextAction: 'Próxima ação',
       colAction: 'Ação',
-      escalateFailed: 'Não foi possível escalar o lead'
+      escalateFailed: 'Não foi possível escalar o lead',
+      runNow: 'Executar agora',
+      running: 'Executando...',
+      runSuccess: 'Execução concluída',
+      runFailed: 'Falha na execução'
     },
     sequences: {
       title: 'Sequências',
@@ -879,10 +905,18 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
       colNumber: 'Número',
       colOutcome: 'Resultado',
       colDuration: 'Duración',
+      colSummary: 'Resumen',
       colDate: 'Fecha',
       totalCalls: 'Total llamadas',
       callsToday: 'Llamadas hoy',
-      errorCreate: 'No fue posible crear la llamada.'
+      avgDuration: 'Duración media',
+      errorCreate: 'No fue posible crear la llamada.',
+      modalTitle: 'Nueva llamada',
+      modalLeadId: 'ID del lead',
+      modalPhone: 'Teléfono (E.164)',
+      modalObjective: 'Objetivo',
+      modalCancel: 'Cancelar',
+      modalConfirm: 'Iniciar llamada'
     },
     callDetail: {
       title: 'Detalle de la llamada',
@@ -899,10 +933,15 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
       title: 'Seguimientos',
       colLead: 'Lead',
       colStatus: 'Estado',
+      colChannel: 'Canal',
       colLastAction: 'Última acción',
       colNextAction: 'Próxima acción',
       colAction: 'Acción',
-      escalateFailed: 'No fue posible escalar lead'
+      escalateFailed: 'No fue posible escalar lead',
+      runNow: 'Ejecutar ahora',
+      running: 'Ejecutando...',
+      runSuccess: 'Ejecución completada',
+      runFailed: 'Error en la ejecución'
     },
     sequences: {
       title: 'Secuencias',
@@ -1221,10 +1260,18 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
       colNumber: 'Número',
       colOutcome: 'Resultat',
       colDuration: 'Durada',
+      colSummary: 'Resum',
       colDate: 'Data',
       totalCalls: 'Total trucades',
       callsToday: 'Trucades avui',
-      errorCreate: 'No ha estat possible crear la trucada.'
+      avgDuration: 'Durada mitjana',
+      errorCreate: 'No ha estat possible crear la trucada.',
+      modalTitle: 'Nova trucada',
+      modalLeadId: 'ID del lead',
+      modalPhone: 'Telèfon (E.164)',
+      modalObjective: 'Objectiu',
+      modalCancel: 'Cancel·lar',
+      modalConfirm: 'Iniciar trucada'
     },
     callDetail: {
       title: 'Detall de la trucada',
@@ -1241,10 +1288,15 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
       title: 'Seguiments',
       colLead: 'Lead',
       colStatus: 'Estat',
+      colChannel: 'Canal',
       colLastAction: 'Última acció',
       colNextAction: 'Pròxima acció',
       colAction: 'Acció',
-      escalateFailed: 'No ha estat possible escalar el lead'
+      escalateFailed: 'No ha estat possible escalar el lead',
+      runNow: 'Executar ara',
+      running: 'Executant...',
+      runSuccess: 'Execució completada',
+      runFailed: 'Error en l\'execució'
     },
     sequences: {
       title: 'Seqüències',
@@ -1563,10 +1615,18 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
       colNumber: 'Number',
       colOutcome: 'Outcome',
       colDuration: 'Duration',
+      colSummary: 'Summary',
       colDate: 'Date',
       totalCalls: 'Total calls',
       callsToday: 'Calls today',
-      errorCreate: 'Could not create call.'
+      avgDuration: 'Avg duration',
+      errorCreate: 'Could not create call.',
+      modalTitle: 'New call',
+      modalLeadId: 'Lead ID',
+      modalPhone: 'Phone (E.164)',
+      modalObjective: 'Objective',
+      modalCancel: 'Cancel',
+      modalConfirm: 'Start call'
     },
     callDetail: {
       title: 'Call detail',
@@ -1583,10 +1643,15 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
       title: 'Follow-ups',
       colLead: 'Lead',
       colStatus: 'Status',
+      colChannel: 'Channel',
       colLastAction: 'Last action',
       colNextAction: 'Next action',
       colAction: 'Action',
-      escalateFailed: 'Could not escalate lead'
+      escalateFailed: 'Could not escalate lead',
+      runNow: 'Run now',
+      running: 'Running...',
+      runSuccess: 'Execution completed',
+      runFailed: 'Execution failed'
     },
     sequences: {
       title: 'Sequences',

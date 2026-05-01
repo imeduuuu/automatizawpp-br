@@ -11,7 +11,13 @@ export async function GET(request: Request) {
       where: workspaceId ? { lead: { workspaceId } } : undefined,
       orderBy: { scheduledFor: 'asc' },
       take: 150,
-      include: {
+      select: {
+        id: true,
+        status: true,
+        channel: true,
+        reason: true,
+        scheduledFor: true,
+        createdAt: true,
         lead: {
           select: {
             id: true,
