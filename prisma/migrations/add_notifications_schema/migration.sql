@@ -75,7 +75,7 @@ CREATE TABLE "NotificationPreference" (
 );
 
 -- CreateTable
-CREATE TABLE "NotificationTemplate" (
+CREATE TABLE "NotificationTemplateConfig" (
   "id" TEXT NOT NULL PRIMARY KEY,
   "workspaceId" TEXT NOT NULL,
   "templateType" "NotificationTemplate" NOT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE "NotificationTemplate" (
   "variables" TEXT[] DEFAULT ARRAY[]::TEXT[],
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT "NotificationTemplate_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace" ("id") ON DELETE CASCADE
+  CONSTRAINT "NotificationTemplateConfig_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace" ("id") ON DELETE CASCADE
 );
 
 -- CreateIndex
@@ -101,4 +101,4 @@ CREATE INDEX "Notification_status_createdAt_idx" ON "Notification"("status", "cr
 CREATE INDEX "NotificationPreference_workspaceId_userId_idx" ON "NotificationPreference"("workspaceId", "userId");
 CREATE INDEX "NotificationPreference_userId_channel_idx" ON "NotificationPreference"("userId", "channel");
 
-CREATE INDEX "NotificationTemplate_workspaceId_templateType_idx" ON "NotificationTemplate"("workspaceId", "templateType");
+CREATE INDEX "NotificationTemplateConfig_workspaceId_templateType_idx" ON "NotificationTemplateConfig"("workspaceId", "templateType");
