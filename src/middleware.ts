@@ -37,7 +37,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/diagnostico',    // pedido de diagnóstico gratuito — público
   '/api/growth',         // growth automation — público
   '/api/blog',           // geração de posts via cron — protegido por secret próprio
-  '/api/monitoring/check', // cron health checks — protegido por secret
+  '/api/monitoring', // monitoring endpoints — health checks sem auth, outros com secret
   '/api/monitoring/snapshot', // cron metrics snapshot — protegido por secret
 ];
 
