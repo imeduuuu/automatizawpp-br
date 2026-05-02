@@ -5,17 +5,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
-import { getAccessToken } from '@/lib/auth/session';
 import { verifyAccessToken } from '@/lib/auth/auth-core';
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get('auth.access-token')?.value;
-    const refreshToken = cookieStore.get('auth.refresh-token')?.value;
+    // Obtener tokens del request (del header o de cookies)
+    const accessToken = request.cookies.get('auth.access-token')?.value;
+    const refreshToken = request.cookies.get('auth.refresh-token')?.value;
 
     // Obtener payload del token para auditoría
     if (accessToken) {
@@ -35,11 +33,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Limpiar cookies
-    cookieStore.delete('auth.access-token');
-    cookieStore.delete('auth.refresh-token');
+    // Crear response y limpiar cookies
+    const response = NextResponse.json({ ok: true }, { status: 200 });
+    response.cookies.delete('auth.access-token');
+    response.cookies.delete('auth.refresh-token');
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return response;
   } catch (error) {
     console.error('[Auth Logout]', error);
     return NextResponse.json(

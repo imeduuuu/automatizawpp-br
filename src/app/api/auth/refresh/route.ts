@@ -6,16 +6,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { refreshAccessToken } from '@/lib/auth/auth-core';
-import { setSessionCookies } from '@/lib/auth/session';
+import { getSessionCookieOptions } from '@/lib/auth/session';
 import { verifyAccessToken } from '@/lib/auth/auth-core';
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get('auth.access-token')?.value;
-    const refreshToken = cookieStore.get('auth.refresh-token')?.value;
+    const accessToken = request.cookies.get('auth.access-token')?.value;
+    const refreshToken = request.cookies.get('auth.refresh-token')?.value;
 
     if (!accessToken || !refreshToken) {
       return NextResponse.json(
@@ -59,16 +57,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Setear nuevas cookies
-    await setSessionCookies(tokens.accessToken, tokens.refreshToken);
-
-    return NextResponse.json(
+    // Crear response con nuevas cookies
+    const response = NextResponse.json(
       {
         ok: true,
         expiresIn: tokens.expiresIn
       },
       { status: 200 }
     );
+
+    // Setear cookies httpOnly en el response
+    const cookieOptions = getSessionCookieOptions();
+    response.cookies.set(
+      cookieOptions.accessToken.name,
+      tokens.accessToken,
+      cookieOptions.accessToken.options
+    );
+    response.cookies.set(
+      cookieOptions.refreshToken.name,
+      tokens.refreshToken,
+      cookieOptions.refreshToken.options
+    );
+
+    return response;
   } catch (error) {
     console.error('[Auth Refresh]', error);
     return NextResponse.json(

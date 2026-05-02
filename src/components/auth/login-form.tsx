@@ -1,9 +1,7 @@
 'use client';
 
-import { useActionState, useState } from 'react';
-import { loginAction } from '@/lib/actions/auth-actions';
-import { initialActionState } from '@/lib/actions/types';
-import { SubmitButton } from '@/components/forms/submit-button';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
@@ -91,12 +89,47 @@ const submitButtonStyle: React.CSSProperties = {
 };
 
 export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
-  const [state, action] = useActionState(loginAction, initialActionState);
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || 'Email ou senha incorretos.');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
+      setTimeout(() => {
+        window.location.href = callbackUrl || '/dashboard';
+      }, 100);
+    } catch (err) {
+      console.error('[LoginForm]', err);
+      setError('Erro ao entrar. Tente novamente.');
+      setLoading(false);
+    }
+  };
 
   return (
-    <form action={action} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
-      <input type="hidden" name="callbackUrl" value={callbackUrl || '/dashboard'} />
+    <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
 
       {/* Email */}
       <div>
@@ -115,7 +148,6 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
             placeholder="seu@empresa.com"
           />
         </div>
-        {state.fieldErrors?.email?.length ? <p style={errorStyle}>{state.fieldErrors.email[0]}</p> : null}
       </div>
 
       {/* Password */}
@@ -143,20 +175,19 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
             {showPassword ? '👁️' : '👁️‍🗨️'}
           </span>
         </div>
-        {state.fieldErrors?.password?.length ? <p style={errorStyle}>{state.fieldErrors.password[0]}</p> : null}
       </div>
 
       {/* Error Message */}
-      {state.status !== 'idle' && state.message && state.status === 'error' ? (
+      {error ? (
         <div style={errorMessageStyle}>
           <span>⚠️</span>
-          {state.message}
+          {error}
         </div>
       ) : null}
 
       {/* Submit Button */}
-      <button type="submit" style={submitButtonStyle}>
-        Entrar <span>→</span>
+      <button type="submit" style={submitButtonStyle} disabled={loading}>
+        {loading ? 'Entrando...' : 'Entrar'} <span>→</span>
       </button>
     </form>
   );

@@ -14,7 +14,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { verifyPassword, isValidBcryptHash } from '@/lib/auth/password';
 import { generateAccessToken, generateRefreshToken } from '@/lib/auth/auth-core';
-import { setSessionCookies } from '@/lib/auth/session';
+import { getSessionCookieOptions } from '@/lib/auth/session';
 import { logAuditEvent } from '@/lib/audit';
 
 const loginSchema = z.object({
@@ -162,9 +162,6 @@ export async function POST(request: NextRequest) {
 
     const refreshToken = await generateRefreshToken(user.id);
 
-    // Setear cookies httpOnly
-    await setSessionCookies(accessToken, refreshToken);
-
     // Registrar evento de login
     await logAuditEvent({
       event: 'AUTH_LOGIN',
@@ -173,7 +170,8 @@ export async function POST(request: NextRequest) {
       metadata: { ip: request.headers.get('x-forwarded-for') || 'unknown' }
     });
 
-    return NextResponse.json(
+    // Crear response con cookies
+    const response = NextResponse.json(
       {
         ok: true,
         user: {
@@ -186,6 +184,21 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+
+    // Setear cookies httpOnly en el response
+    const cookieOptions = getSessionCookieOptions();
+    response.cookies.set(
+      cookieOptions.accessToken.name,
+      accessToken,
+      cookieOptions.accessToken.options
+    );
+    response.cookies.set(
+      cookieOptions.refreshToken.name,
+      refreshToken,
+      cookieOptions.refreshToken.options
+    );
+
+    return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Auth Login]', message);

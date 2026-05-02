@@ -84,10 +84,6 @@ export async function loginAction(_previousState: ActionState = initialActionSta
         message: error.error || 'Email ou senha incorretos.'
       };
     }
-
-    // Éxito: redirigir
-    const callbackUrlFinal = callbackUrl || '/dashboard';
-    redirect(callbackUrlFinal);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[LoginAction]', message);
@@ -96,6 +92,10 @@ export async function loginAction(_previousState: ActionState = initialActionSta
       message: 'Erro ao entrar. Tente novamente.'
     };
   }
+
+  // Éxito: redirigir FUERA del try-catch
+  const callbackUrlFinal = callbackUrl || '/dashboard';
+  redirect(callbackUrlFinal);
 }
 
 export async function signupAction(_previousState: ActionState = initialActionState, formData: FormData): Promise<ActionState> {

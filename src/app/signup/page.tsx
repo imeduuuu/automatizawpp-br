@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { auth } from '@/auth';
+import { getSession } from '@/lib/auth/session';
 import { AuthPageShell } from '@/components/auth/auth-page-shell';
 import { SignupForm } from '@/components/auth/signup-form';
 
 export default async function SignupPage() {
-  const session = await auth();
-  if (session?.user?.id) {
+  const session = await getSession();
+  if (session?.userId) {
     redirect('/dashboard');
   }
 

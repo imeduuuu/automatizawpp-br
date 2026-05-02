@@ -48,6 +48,32 @@ export async function getSession(): Promise<AuthPayload | null> {
 
 /**
  * Establecer cookies de sesión después de login exitoso
+ * Nota: Esta función ahora retorna las opciones para que el Route Handler las asigne
+ */
+export function getSessionCookieOptions(): {
+  accessToken: { name: string; options: any };
+  refreshToken: { name: string; options: any };
+} {
+  return {
+    accessToken: {
+      name: ACCESS_TOKEN_COOKIE,
+      options: {
+        ...COOKIE_OPTIONS,
+        maxAge: 15 * 60 // 15 minutos
+      }
+    },
+    refreshToken: {
+      name: REFRESH_TOKEN_COOKIE,
+      options: {
+        ...COOKIE_OPTIONS,
+        maxAge: 7 * 24 * 60 * 60 // 7 días
+      }
+    }
+  };
+}
+
+/**
+ * Alternativa: Usar en Server Components/Actions
  */
 export async function setSessionCookies(accessToken: string, refreshToken: string): Promise<void> {
   const cookieStore = await cookies();
