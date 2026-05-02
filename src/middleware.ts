@@ -26,6 +26,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/gdpr/purge',     // cron secret
   '/api/events/inbound', // inbound events from external providers
   '/api/test',           // testing endpoints
+  '/api/debug',          // debug endpoints — para diagnóstico
   '/api/public',         // public dashboard endpoints (with token auth)
   '/api/forms',          // public form submissions
   '/api/leads',          // lead creation from public forms
