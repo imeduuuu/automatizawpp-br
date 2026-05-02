@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 
@@ -6,17 +6,17 @@ const updateContactSchema = z.object({
   fullName: z.string().min(2).optional(),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  company: z.string().optional(),
-  notes: z.string().optional()
+  company: z.string().optional()
 });
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const contact = await prisma.lead.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         fullName: true,
@@ -24,7 +24,6 @@ export async function GET(
         phone: true,
         company: true,
         status: true,
-        notes: true,
         lastContactAt: true,
         createdAt: true,
         updatedAt: true
@@ -50,9 +49,10 @@ export async function GET(
 }
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const parsed = updateContactSchema.safeParse(body);
@@ -61,7 +61,7 @@ export async function PATCH(
     }
 
     const contact = await prisma.lead.update({
-      where: { id: params.id },
+      where: { id },
       data: parsed.data
     });
 
@@ -80,12 +80,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     await prisma.lead.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ success: true });

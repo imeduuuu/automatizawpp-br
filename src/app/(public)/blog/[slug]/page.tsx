@@ -245,10 +245,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export function generateStaticParams() {
-  return Object.keys(BLOG_POSTS).map((slug) => ({ slug }));
-}
-
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
   const post = BLOG_POSTS[slug];

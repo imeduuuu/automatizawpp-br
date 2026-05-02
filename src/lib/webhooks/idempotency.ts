@@ -99,3 +99,5 @@ export function resetIdempotencyStore(): void {
   processedEvents.clear();
   console.log('[idempotency] Store reset (testing only)');
 }
+
+export const markWebhookEventFailed = markWebhookEventAsFailed;

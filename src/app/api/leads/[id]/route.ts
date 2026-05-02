@@ -1,87 +1,54 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { resolveWorkspaceId } from '@/lib/workspace';
+import { auth } from '@/auth';
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { params } = context;
+  const { id } = await params;
+
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const workspaceId = await resolveWorkspaceId(searchParams.get('workspaceId'));
-
-    const lead = await prisma.lead.findFirst({
-      where: workspaceId ? { id, workspaceId } : { id },
-      select: {
-        id: true,
-        fullName: true,
-        firstName: true,
-        lastName: true,
-        company: true,
-        phone: true,
-        email: true,
-        status: true,
-        leadScoreValue: true,
-        qualificationScore: true,
-        assignedTo: true,
-        nextAction: true,
-        nextActionAt: true,
-        lastContactAt: true,
-        lastCallAt: true,
-        lastEmailAt: true
-      }
+    const lead = await prisma.lead.findUnique({
+      where: { id }
     });
 
     if (!lead) {
       return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
 
-    const [callAttempts, emailEvents, callRecords] = await Promise.all([
-      prisma.callAttempt.findMany({
-        where: { leadId: id },
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          attemptNumber: true,
-          result: true,
-          duration: true,
-          notes: true,
-          createdAt: true
-        }
-      }),
-      prisma.emailEvent.findMany({
-        where: { leadId: id },
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          type: true,
-          emailTemplate: true,
-          createdAt: true
-        }
-      }),
-      prisma.callRecord.findMany({
-        where: { leadId: id },
-        orderBy: { createdAt: 'desc' },
-        take: 8,
-        select: {
-          id: true,
-          status: true,
-          summary: true,
-          durationSec: true,
-          createdAt: true
-        }
-      })
-    ]);
+    return NextResponse.json({ lead });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
 
-    const fullName = lead.fullName ?? ([lead.firstName, lead.lastName].filter(Boolean).join(' ') || 'Lead sem nome');
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { params } = context;
+  const { id } = await params;
 
-    return NextResponse.json({
-      lead: {
-        ...lead,
-        fullName
-      },
-      callAttempts,
-      emailEvents,
-      callRecords
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const updated = await prisma.lead.update({
+      where: { id },
+      data: body
     });
+    return NextResponse.json({ lead: updated });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });

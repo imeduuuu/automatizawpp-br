@@ -8,16 +8,14 @@ const createContactSchema = z.object({
   fullName: z.string().min(2),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  company: z.string().optional(),
-  notes: z.string().optional()
+  company: z.string().optional()
 });
 
 const updateContactSchema = z.object({
   fullName: z.string().min(2).optional(),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  company: z.string().optional(),
-  notes: z.string().optional()
+  company: z.string().optional()
 });
 
 export async function GET(request: Request) {
@@ -99,7 +97,6 @@ export async function POST(request: Request) {
         email: parsed.data.email,
         phone: parsed.data.phone,
         company: parsed.data.company,
-        notes: parsed.data.notes,
         status: 'NEW'
       }
     });

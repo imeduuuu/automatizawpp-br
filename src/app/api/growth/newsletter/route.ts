@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { growthAutomation } from '@/lib/growth/automation';
 
 /**
  * POST /api/growth/newsletter
@@ -19,6 +18,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Lazy-load the growth automation module
+    const { growthAutomation } = await import('@/lib/growth/automation');
+
     // Registrar subscriber
     const subscriber = await growthAutomation.addNewsletterSubscriber(
       email,
@@ -28,57 +30,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: subscriber,
-      message: 'Inscrição realizada com sucesso!',
+      subscriberId: subscriber.id,
+      email: subscriber.email
     });
-  } catch (error: any) {
-    console.error('Erro ao registrar subscriber:', error);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      {
-        error: 'Falha ao processar inscrição',
-        message: error.message,
-      },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * GET /api/growth/newsletter
- * Retorna estatísticas de newsletter
- */
-export async function GET(request: NextRequest) {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  const apiToken = process.env.API_TOKEN;
-
-  if (!token || token !== apiToken) {
-    return NextResponse.json(
-      { error: 'Não autorizado' },
-      { status: 401 }
-    );
-  }
-
-  try {
-    // Em produção, buscar do DB
-    return NextResponse.json({
-      success: true,
-      data: {
-        totalSubscribers: 1250,
-        activeSubscribers: 1180,
-        unsubscribed: 70,
-        bounced: 15,
-        engagementRate: 0.42,
-        openRate: 0.32,
-        clickRate: 0.08,
-        lastCampaignDate: '2026-04-29',
-      },
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        error: 'Falha ao buscar estatísticas',
-        message: error.message,
-      },
+      { error: message },
       { status: 500 }
     );
   }

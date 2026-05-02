@@ -1,34 +1,22 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { auth } from '@/auth';
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { params } = context;
+  const { id } = await params;
+
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const { id } = await params;
     const call = await prisma.callRecord.findUnique({
-      where: { id },
-      include: {
-        lead: {
-          select: {
-            id: true,
-            fullName: true,
-            firstName: true,
-            lastName: true,
-            phone: true,
-            company: true,
-            email: true
-          }
-        },
-        transcripts: {
-          orderBy: { createdAt: 'asc' },
-          select: {
-            id: true,
-            speaker: true,
-            content: true,
-            timestampSec: true,
-            createdAt: true
-          }
-        }
-      }
+      where: { id }
     });
 
     if (!call) {

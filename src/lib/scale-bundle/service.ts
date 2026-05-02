@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { anthropic } from '@/lib/ai/anthropic-client';
+import { anthropicClient } from '@/lib/ai/anthropic-client';
 import { logAuditEvent } from '@/lib/audit';
 import { prisma } from '@/lib/db';
 import type {
@@ -633,7 +633,7 @@ export async function chatWithAlexBundle(params: {
 
   if (anthropic) {
     try {
-      const response = await anthropic.messages.create({
+      const response = await anthropicClient.messages.create({
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',
         max_tokens: 500,
         messages: [

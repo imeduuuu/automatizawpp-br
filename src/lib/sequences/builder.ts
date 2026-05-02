@@ -238,3 +238,6 @@ export async function getWorkspaceSequences(workspaceId: string): Promise<any[]>
     }
   });
 }
+
+// Re-export from scheduler for backward compatibility
+export { scheduleSequenceFollowUps } from './scheduler';

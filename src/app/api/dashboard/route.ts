@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
+import { LeadStatus, SubscriptionStatus } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { resolveWorkspaceId } from '@/lib/workspace';
-import { LeadStatus, SubscriptionStatus } from '@prisma/client';
-
-function toPercent(numerator: number, denominator: number) {
-  if (denominator <= 0) return 0;
-  return Number(((numerator / denominator) * 100).toFixed(1));
-}
 
 interface DashboardMetrics {
   totalContacts: number;
@@ -18,15 +13,22 @@ interface DashboardMetrics {
   callsToday: number;
   emailsToday: number;
   avgCallDuration: number;
-  topStatus: { status: LeadStatus; count: number }[];
+  topStatus: Array<{ status: string; count: number }>;
   recentContacts: Array<{
     id: string;
-    fullName: string;
-    email?: string | null;
-    phone?: string | null;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
     status: LeadStatus;
     createdAt: string;
   }>;
+}
+
+function toPercent(numerator: number, denominator: number): number {
+  if (denominator <= 0) {
+    return 0;
+  }
+  return Number(((numerator / denominator) * 100).toFixed(1));
 }
 
 export async function GET(request: Request) {
@@ -36,63 +38,55 @@ export async function GET(request: Request) {
 
     const where = workspaceId ? { workspaceId } : {};
 
-    const [
-      leadStatusRows,
-      totalLeads,
-      mrrTotal,
-      callsToday,
-      emailsToday,
-      avgCallDuration,
-      recentContacts
-    ] = await prisma.$transaction([
-      prisma.lead.groupBy({
-        by: ['status'],
-        where,
-        _count: { _all: true }
-      }),
-      prisma.lead.count({ where }),
-      prisma.subscription.aggregate({
-        where: { ...where, status: SubscriptionStatus.ACTIVE },
-        _sum: { mrr: true }
-      }),
-      prisma.callRecord.count({
-        where: {
-          ...where,
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
-          }
+    const totalLeads = await prisma.lead.count({ where });
+    const mrrTotal = await prisma.subscription.aggregate({
+      where: { ...where, status: SubscriptionStatus.ACTIVE },
+      _sum: { mrr: true }
+    });
+    const callsToday = await prisma.callRecord.count({
+      where: {
+        ...where,
+        createdAt: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0))
         }
-      }),
-      prisma.emailEvent.count({
-        where: {
-          ...where,
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
-          }
+      }
+    });
+    const emailsToday = await prisma.emailEvent.count({
+      where: {
+        ...where,
+        createdAt: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0))
         }
-      }),
-      prisma.callRecord.aggregate({
-        where,
-        _avg: { durationSec: true }
-      }),
-      prisma.lead.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: 8,
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          status: true,
-          createdAt: true
-        }
-      })
-    ]);
+      }
+    });
+    const avgCallDuration = await prisma.callRecord.aggregate({
+      where,
+      _avg: { durationSec: true }
+    });
+    const recentContacts = await prisma.lead.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        status: true,
+        createdAt: true
+      }
+    });
 
-    const statusCount = new Map<LeadStatus, number>();
-    for (const row of leadStatusRows) {
-      statusCount.set(row.status, row._count._all);
+    // Get status breakdown
+    const leads = await prisma.lead.findMany({
+      where,
+      select: { status: true }
+    });
+
+    const statusCount = new Map<string, number>();
+    for (const lead of leads) {
+      const current = statusCount.get(lead.status) || 0;
+      statusCount.set(lead.status, current + 1);
     }
 
     const newContacts = statusCount.get(LeadStatus.NEW) ?? 0;

@@ -1,4 +1,4 @@
-import { anthropic } from '@/lib/ai/anthropic-client';
+import { anthropicClient } from '@/lib/ai/anthropic-client';
 import { DetectedError, DiagnosisResult } from '@/lib/sentinel/types';
 
 const SYSTEM_PROMPT = `Eres Sentinel, un agente de diagnostico y reparacion automatica para AutomatizaWPP.
@@ -23,7 +23,7 @@ Responde SIEMPRE en JSON con este formato exacto:
 Si no estas seguro, usa canAutoFix=false y type=none.`;
 
 export async function diagnoseError(error: DetectedError): Promise<DiagnosisResult> {
-  if (!anthropic) {
+  if (!anthropicClient) {
     return {
       diagnosis: `Diagnostico automatico no disponible para ${error.source}.`,
       suggestedFix: 'Revisar manualmente el error y la integracion afectada.',
@@ -32,7 +32,7 @@ export async function diagnoseError(error: DetectedError): Promise<DiagnosisResu
   }
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await anthropicClient.messages.create({
       model: process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
       messages: [
         {

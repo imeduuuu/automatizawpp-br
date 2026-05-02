@@ -85,3 +85,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }
   }
 });
+
+export async function getSession() {
+  return auth();
+}

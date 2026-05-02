@@ -22,6 +22,7 @@ export async function GET() {
     const [leadStatusRows, totalLeads, mrrTotal, mrrByPlan, callAttempts, emailEvents] = await Promise.all([
       prisma.lead.groupBy({
         by: ['status'],
+        orderBy: { status: 'asc' },
         _count: { _all: true }
       }),
       prisma.lead.count(),
@@ -32,6 +33,7 @@ export async function GET() {
       prisma.subscription.groupBy({
         by: ['plan'],
         where: { status: SubscriptionStatus.ACTIVE },
+        orderBy: { plan: 'asc' },
         _sum: { mrr: true }
       }),
       prisma.callAttempt.findMany({
@@ -70,7 +72,7 @@ export async function GET() {
 
     const statusCount = new Map<LeadStatus, number>();
     for (const row of leadStatusRows) {
-      statusCount.set(row.status, row._count._all);
+      statusCount.set(row.status, row._count?._all ?? 0);
     }
 
     const funnel = {
