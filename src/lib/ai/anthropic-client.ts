@@ -1,13 +1,22 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  throw new Error('ANTHROPIC_API_KEY is not configured');
-}
+const apiKey = process.env.ANTHROPIC_API_KEY;
 
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  timeout: 60000,
-});
+// Only validate at runtime, not during build
+let anthropicInstance: Anthropic | null = null;
+
+function getAnthropicClient() {
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY is not configured');
+  }
+  if (!anthropicInstance) {
+    anthropicInstance = new Anthropic({
+      apiKey,
+      timeout: 60000,
+    });
+  }
+  return anthropicInstance;
+}
 
 export const MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
 
@@ -16,7 +25,8 @@ export async function callAI(
   userMessage: string,
   maxTokens: number = 2000
 ): Promise<string> {
-  const response = await anthropic.messages.create({
+  const client = getAnthropicClient();
+  const response = await client.messages.create({
     model: MODEL,
     max_tokens: maxTokens,
     system: systemPrompt,
@@ -50,3 +60,15 @@ export async function callAIStructured<T>(
     throw new Error(`Failed to parse AI response as JSON: ${content}`);
   }
 }
+
+// For backward compatibility with imports like: import { anthropic } from '@/lib/ai/anthropic-client'
+export function getAnthropic() {
+  return getAnthropicClient();
+}
+
+// Export a proxy that acts like the Anthropic client
+export const anthropicClient = new Proxy({} as Anthropic, {
+  get(target, prop) {
+    return Reflect.get(getAnthropicClient(), prop);
+  }
+});

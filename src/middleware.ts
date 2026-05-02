@@ -12,6 +12,8 @@ const PUBLIC_PAGE_PATHS = [
   '/casos-sucesso',
   '/blog',
   '/teste-gratis',   // página de trial gratuito — acesso público
+  '/contatos',       // página de contatos — acesso público
+  '/contatos-publico',  // página de contatos — acesso público
   '/pricing',        // página de preços de marketing — acesso público
 ];
 
@@ -25,12 +27,15 @@ const PUBLIC_API_PREFIXES = [
   '/api/events/inbound', // inbound events from external providers
   '/api/test',           // testing endpoints
   '/api/public',         // public dashboard endpoints (with token auth)
+  '/api/forms',          // public form submissions
+  '/api/leads',          // lead creation from public forms
   '/api/health',         // Docker healthcheck — no auth required
   '/api/ops',            // internal ops/metrics endpoints
   '/api/system/tick',    // background tick — follow-ups + sentinel
   '/api/sentinel',       // sentinel scanner — sem auth própria
   '/api/newsletter',     // inscrição newsletter — público
   '/api/diagnostico',    // pedido de diagnóstico gratuito — público
+  '/api/growth',         // growth automation — público
   '/api/blog',           // geração de posts via cron — protegido por secret próprio
   '/api/monitoring/check', // cron health checks — protegido por secret
   '/api/monitoring/snapshot', // cron metrics snapshot — protegido por secret
