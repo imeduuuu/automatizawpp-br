@@ -48,6 +48,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/leads',          // Creación de leads desde formularios públicos
   '/api/health',
   '/api/ops',
+  '/api/followups',     // Cron job para ejecutar follow-ups automáticos
   '/api/system/tick',
   '/api/sentinel',
   '/api/newsletter',

@@ -10,24 +10,76 @@ type AuthPageShellProps = {
 
 export function AuthPageShell({ eyebrow, title, subtitle, children, footer }: AuthPageShellProps) {
   return (
-    <div className="ds-auth-wrap">
-      <div className="ds-auth-card">
-        <Link href="/" className="ds-logo" style={{ marginBottom: 10 }}>
-          <span className="ds-logo-mark" />
-          <span className="ds-logo-text">AutomatizaWPP</span>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        padding: 20,
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 400,
+          background: '#111',
+          border: '1px solid rgba(240,237,232,0.08)',
+          borderRadius: 8,
+          padding: 32,
+        }}
+      >
+        <Link
+          href="/"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            marginBottom: 16,
+            textDecoration: 'none',
+            color: '#f0ede8',
+          }}
+        >
+          <span
+            style={{
+              display: 'inline-block',
+              width: 12,
+              height: 12,
+              borderRadius: 3,
+              background: '#25D366',
+            }}
+          />
+          <span style={{ fontWeight: 700, fontSize: 16 }}>AutomatizaWPP</span>
         </Link>
-        <p className="ds-muted" style={{ margin: 0, fontSize: 11, textTransform: 'uppercase', fontWeight: 600 }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 11,
+            textTransform: 'uppercase',
+            fontWeight: 600,
+            color: 'rgba(240,237,232,0.6)',
+            letterSpacing: '0.5px',
+          }}
+        >
           {eyebrow}
         </p>
-        <h1 style={{ margin: '6px 0 0', fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>{title}</h1>
-        <p className="ds-subtitle" style={{ marginTop: 6 }}>
-          {subtitle}
-        </p>
+        <h1 style={{ margin: '6px 0 0', fontSize: 24, fontWeight: 700, color: '#f0ede8' }}>{title}</h1>
+        <p style={{ marginTop: 6, fontSize: 14, color: 'rgba(240,237,232,0.7)' }}>{subtitle}</p>
 
-        <div style={{ marginTop: 12 }}>{children}</div>
+        <div style={{ marginTop: 20 }}>{children}</div>
 
         {footer ? (
-          <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1.5px solid var(--border)', fontSize: 13, color: 'var(--text)' }}>{footer}</div>
+          <div
+            style={{
+              marginTop: 20,
+              paddingTop: 16,
+              borderTop: '1px solid rgba(240,237,232,0.08)',
+              fontSize: 13,
+              color: '#f0ede8',
+            }}
+          >
+            {footer}
+          </div>
         ) : null}
       </div>
     </div>
