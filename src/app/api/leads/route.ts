@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { LeadStatus } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { resolveWorkspaceId } from '@/lib/workspace';
+import { triggerAutomation } from '@/lib/scoring/automation-rules';
+import { getApplicableSequence } from '@/lib/sequences/builder';
+import { scheduleSequenceFollowUps } from '@/lib/sequences/scheduler';
 
 const createLeadSchema = z.object({
   workspaceId: z.string().min(1).optional(),
@@ -116,20 +119,34 @@ export async function POST(request: Request) {
     }
   });
 
+  // Dispara scoring e automação assincronamente
+  (async () => {
+    try {
+      // Score inicial
+      await triggerAutomation({
+        leadId: lead.id,
+        workspaceId,
+        triggerEvent: 'SCORE_UPDATED'
+      });
+    } catch (error) {
+      console.error(`[Lead Creation] Erro ao disparar automação:`, error);
+    }
+  })();
+
+  // Envio de email assincronamente
   if (lead.email) {
     const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
       .toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 
     const appUrl = process.env.APP_URL ?? 'https://automatizawpp.com';
 
-    // disparo assíncrono, não bloqueia a resposta
     import('@/lib/mail').then(({ sendSmtpMail }) =>
       import('@/lib/email-templates').then(({ renderEmailTemplate }) => {
         const { subject, html, text } = renderEmailTemplate('welcome', {
           name: lead.fullName ?? 'Cliente',
           businessName: lead.company ?? lead.fullName ?? 'seu negócio',
           trialEndsAt,
-          password: '',   // senha já foi definida pelo usuário
+          password: '',
           appUrl,
         });
         return sendSmtpMail({ to: lead.email!, subject, html, text });

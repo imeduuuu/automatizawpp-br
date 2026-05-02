@@ -32,6 +32,8 @@ const PUBLIC_API_PREFIXES = [
   '/api/newsletter',     // inscrição newsletter — público
   '/api/diagnostico',    // pedido de diagnóstico gratuito — público
   '/api/blog',           // geração de posts via cron — protegido por secret próprio
+  '/api/monitoring/check', // cron health checks — protegido por secret
+  '/api/monitoring/snapshot', // cron metrics snapshot — protegido por secret
 ];
 
 function isResetPasswordPath(pathname: string) {

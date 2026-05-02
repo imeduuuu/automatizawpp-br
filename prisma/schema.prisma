@@ -201,6 +201,7 @@ model User {
   serviceAccesses ClientServiceAccess[]
   auditEvents  AuditLog[]  @relation("AuditActor")
   serviceActivities ServiceActivity[] @relation("ServiceActivityActor")
+  events             Event[] @relation("EventActor")
   subscriptionRequests SubscriptionRequest[]
 }
 
@@ -356,6 +357,9 @@ model Workspace {
   agentRuns             AgentRun[]
   toolCallLogs          ToolCallLog[]
   conversationSummaries ConversationSummary[]
+  events             Event[]
+  systemAlerts       SystemAlert[]
+  metricsSnapshots   MetricsSnapshot[]
 }
 
 model Lead {
@@ -409,6 +413,7 @@ model Lead {
   agentRuns             AgentRun[]
   activityLogs          ActivityLog[]
   summaries             ConversationSummary[]
+  events                Event[] @relation("EventLead")
 
   @@index([workspaceId, status])
   @@index([workspaceId, leadScoreValue])
@@ -826,4 +831,143 @@ model WebhookEvent {
 
   @@unique([source, externalId])
   @@index([source, processedAt])
+}
+
+// Phase 5D: Monitoring & Observability
+// Event logging system for tracking all system events
+
+enum EventSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum EventSource {
+  API
+  WEBHOOK
+  CRON
+  AGENT
+  EMAIL_SERVICE
+  CALL_SERVICE
+  DATABASE
+  SYSTEM
+}
+
+model Event {
+  id            String         @id @default(cuid())
+  workspaceId   String?
+  userId        String?
+  leadId        String?
+  eventType     String         // e.g., "lead.created", "email.sent", "webhook.received"
+  source        EventSource    @default(SYSTEM)
+  severity      EventSeverity  @default(INFO)
+  title         String         // Human-readable title
+  description   String?        // Detailed description
+  metadata      Json?          // Additional context (request/response data, errors, etc)
+  createdAt     DateTime       @default(now())
+  workspace     Workspace?     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user          User?          @relation("EventActor", fields: [userId], references: [id], onDelete: SetNull)
+  lead          Lead?          @relation("EventLead", fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([severity, createdAt])
+  @@index([source, createdAt])
+  @@index([userId, createdAt])
+  @@index([leadId, createdAt])
+}
+
+// Health check status for various system components
+enum HealthStatus {
+  HEALTHY
+  DEGRADED
+  UNHEALTHY
+}
+
+model HealthCheck {
+  id            String        @id @default(cuid())
+  component     String        // e.g., "database", "resend_email", "n8n_webhook", "vapi_calls"
+  status        HealthStatus  @default(HEALTHY)
+  lastCheckedAt DateTime      @default(now())
+  lastErrorAt   DateTime?
+  errorMessage  String?
+  responseTimeMs Int?
+  metadata      Json?         // Component-specific info (latency, uptime %, etc)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([component])
+  @@index([status, lastCheckedAt])
+  @@index([lastCheckedAt])
+}
+
+// System alerts for critical issues
+enum AlertStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+model SystemAlert {
+  id             String       @id @default(cuid())
+  workspaceId    String?
+  title          String
+  description    String
+  alertType      String       // e.g., "service_down", "high_error_rate", "quota_exceeded"
+  status         AlertStatus  @default(ACTIVE)
+  severity       EventSeverity @default(ERROR)
+  component      String?      // e.g., "email_service", "database"
+  metadata       Json?
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  resolvedAt     DateTime?
+  resolvedBy     String?
+  createdAt      DateTime     @default(now())
+  workspace      Workspace?   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status, createdAt])
+  @@index([alertType, status])
+  @@index([severity, createdAt])
+}
+
+// Daily metrics snapshot for historical analysis
+model MetricsSnapshot {
+  id                String   @id @default(cuid())
+  workspaceId       String
+  date              DateTime @db.Date
+
+  // Lead metrics
+  leadsCreated      Int      @default(0)
+  leadsQualified    Int      @default(0)
+  leadsUnqualified  Int      @default(0)
+  leadsLost         Int      @default(0)
+
+  // Email metrics
+  emailsSent        Int      @default(0)
+  emailsOpened      Int      @default(0)
+  emailsClicked     Int      @default(0)
+  emailsBounced     Int      @default(0)
+
+  // Call metrics
+  callsLogged       Int      @default(0)
+  callsDuration     Int      @default(0) // Total seconds
+  callsConnected    Int      @default(0)
+
+  // Revenue metrics
+  conversionRate    Float    @default(0)
+  mrrActive         Float    @default(0)
+
+  // Performance metrics
+  avgApiResponseMs  Int      @default(0)
+  webhookErrors     Int      @default(0)
+
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, date])
+  @@index([workspaceId, date])
+  @@index([date])
 }
