@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm ci && npx prisma migrate deploy && npm run build",
   "installCommand": "npm ci",
   "framework": "nextjs",
   "nodejs": "22.x",
