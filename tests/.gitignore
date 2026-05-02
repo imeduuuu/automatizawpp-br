@@ -1,0 +1,12 @@
+# Test results
+test-results/
+playwright-report/
+coverage/
+.nyc_output/
+*.log
+
+# Playwright
+.playwright/
+
+# Dependencies
+node_modules/
