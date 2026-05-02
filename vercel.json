@@ -1,7 +1,8 @@
 {
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
   "framework": "nextjs",
+  "nodejs": "22.x",
   "crons": [
     {
       "path": "/api/sentinel/scan-now",
