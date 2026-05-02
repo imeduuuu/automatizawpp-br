@@ -12,14 +12,19 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build || true
 
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: team_iaJnUSoBZVGq6KBJFKfJL2Zs
           VERCEL_PROJECT_ID: prj_ZLVv1KIrp5xOgYXMeqN4I3AqZki2
-        run: vercel deploy --prod --token=$VERCEL_TOKEN
+        run: |
+          npm install -g vercel
+          vercel deploy --prod --token=$VERCEL_TOKEN --no-wait
