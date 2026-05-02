@@ -19,6 +19,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: '/login'
   },
+  logger: {
+    error: (code, metadata) => console.error('[NextAuth]', code, metadata),
+    warn: (code) => console.warn('[NextAuth]', code),
+    debug: (code, metadata) => console.log('[NextAuth]', code, metadata)
+  },
   providers: [
     Credentials({
       name: 'credentials',
