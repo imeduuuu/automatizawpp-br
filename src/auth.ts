@@ -14,15 +14,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // PrismaAdapter removido: incompatível com strategy: 'jwt' (Credentials provider)
   trustHost: true,
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
+    maxAge: 7 * 24 * 60 * 60
+  },
+  jwt: {
+    maxAge: 7 * 24 * 60 * 60
   },
   pages: {
     signIn: '/login'
-  },
-  logger: {
-    error: (code, metadata) => console.error('[NextAuth]', code, metadata),
-    warn: (code) => console.warn('[NextAuth]', code),
-    debug: (code, metadata) => console.log('[NextAuth]', code, metadata)
   },
   providers: [
     Credentials({
@@ -32,33 +31,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' }
       },
       async authorize(rawCredentials) {
-        const parsed = credentialsSchema.safeParse(rawCredentials);
-        if (!parsed.success) {
+        try {
+          const parsed = credentialsSchema.safeParse(rawCredentials);
+          if (!parsed.success) {
+            return null;
+          }
+
+          const { email, password } = parsed.data;
+          const normalizedEmail = email.toLowerCase();
+
+          const user = await prisma.user.findUnique({
+            where: { email: normalizedEmail }
+          });
+
+          if (!user) {
+            return null;
+          }
+
+          if (!user.passwordHash) {
+            return null;
+          }
+
+          const isValidPassword = await verifyPassword(password, user.passwordHash);
+          if (!isValidPassword) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            workspaceId: user.workspaceId,
+            role: user.role
+          };
+        } catch (error) {
+          console.error('[Auth]authorize error:', error);
           return null;
         }
-
-        const { email, password } = parsed.data;
-
-        const user = await prisma.user.findUnique({
-          where: { email: email.toLowerCase() }
-        });
-
-        if (!user?.passwordHash) {
-          return null;
-        }
-
-        const isValidPassword = await verifyPassword(password, user.passwordHash);
-        if (!isValidPassword) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          workspaceId: user.workspaceId,
-          role: user.role
-        };
       }
     })
   ],
