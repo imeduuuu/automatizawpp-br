@@ -58,10 +58,12 @@ export async function POST(request: NextRequest) {
     const parsed = loginSchema.safeParse(body);
 
     if (!parsed.success) {
+      console.error('[Auth Login] Validation error:', parsed.error.flatten());
       return NextResponse.json(
         {
           ok: false,
-          error: parsed.error.flatten().fieldErrors
+          error: 'Invalid email or password format',
+          details: parsed.error.flatten().fieldErrors
         },
         { status: 400 }
       );
