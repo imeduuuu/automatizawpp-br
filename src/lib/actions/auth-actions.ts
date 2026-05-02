@@ -1,9 +1,8 @@
 'use server';
 
-import { AuthError } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { auth, signIn, signOut } from '@/auth';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/lib/auth/password';
 import { createPasswordResetToken, getValidPasswordResetToken, invalidateUserResetTokens, markPasswordResetTokenAsUsed } from '@/lib/auth/password-reset';
@@ -68,21 +67,34 @@ export async function loginAction(_previousState: ActionState = initialActionSta
   const { email, password, callbackUrl } = parsed.data;
 
   try {
-    await signIn('credentials', {
-      email: email.toLowerCase(),
-      password,
-      redirectTo: callbackUrl || '/dashboard'
+    // Llamar al nuevo endpoint de login
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email.toLowerCase(),
+        password
+      })
     });
-    return { status: 'success', message: 'Acesso efetuado com sucesso.' };
-  } catch (error) {
-    if (error instanceof AuthError) {
+
+    if (!response.ok) {
+      const error = await response.json();
       return {
         status: 'error',
-        message: 'Email ou senha incorretos.'
+        message: error.error || 'Email ou senha incorretos.'
       };
     }
 
-    throw error;
+    // Éxito: redirigir
+    const callbackUrlFinal = callbackUrl || '/dashboard';
+    redirect(callbackUrlFinal);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[LoginAction]', message);
+    return {
+      status: 'error',
+      message: 'Erro ao entrar. Tente novamente.'
+    };
   }
 }
 
@@ -141,25 +153,28 @@ export async function signupAction(_previousState: ActionState = initialActionSt
     metadata: { plan: 'profesional' }
   });
 
+  // Tentar fazer login automático após signup
   try {
-    await signIn('credentials', {
-      email: normalizedEmail,
-      password,
-      redirectTo: '/dashboard'
+    const loginResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: normalizedEmail,
+        password
+      })
     });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return {
-        status: 'success',
-        message: 'Conta criada. Entre para continuar.'
-      };
+
+    if (loginResponse.ok) {
+      redirect('/dashboard');
     }
-    throw error;
+  } catch (error) {
+    console.error('[SignupAction] Auto-login failed:', error);
   }
 
   return {
     status: 'success',
-    message: 'Conta criada com sucesso.'
+    message: 'Conta criada com sucesso. Faça login para continuar.',
+    fieldErrors: {}
   };
 }
 

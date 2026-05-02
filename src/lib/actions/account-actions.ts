@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { auth, signOut } from '@/auth';
 import { prisma } from '@/lib/db';
-import { hashPassword, verifyPassword } from '@/lib/auth/password';
+import { hashPassword, verifyPassword, isValidBcryptHash } from '@/lib/auth/password';
 import { logAuditEvent } from '@/lib/audit';
 import { initialActionState, type ActionState } from '@/lib/actions/types';
 
@@ -118,6 +118,16 @@ export async function changePasswordAction(_previousState: ActionState = initial
   }
 
   if (!user.passwordHash) {
+    console.error('[changePasswordAction] Usuario sin hash:', user.id);
+    return {
+      status: 'error',
+      message: 'No se puede validar la contrasena actual. Contacta soporte.'
+    };
+  }
+
+  // Validar que el hash sea un bcrypt válido
+  if (!isValidBcryptHash(user.passwordHash)) {
+    console.error('[changePasswordAction] Hash corrupto para usuario:', user.id);
     return {
       status: 'error',
       message: 'No se puede validar la contrasena actual. Contacta soporte.'
@@ -126,13 +136,25 @@ export async function changePasswordAction(_previousState: ActionState = initial
 
   const isCurrentPasswordValid = await verifyPassword(parsed.data.currentPassword, user.passwordHash);
   if (!isCurrentPasswordValid) {
+    console.warn('[changePasswordAction] Contraseña incorrecta para usuario:', user.id);
     return {
       status: 'error',
       message: 'La contrasena actual no es correcta.'
     };
   }
 
-  const nextPasswordHash = await hashPassword(parsed.data.nextPassword);
+  // Hash la nueva contraseña con validación
+  let nextPasswordHash: string;
+  try {
+    nextPasswordHash = await hashPassword(parsed.data.nextPassword);
+  } catch (hashError) {
+    const message = hashError instanceof Error ? hashError.message : 'Error desconocido';
+    console.error('[changePasswordAction] Error al hashear:', message);
+    return {
+      status: 'error',
+      message: 'Error procesando la nueva contraseña. Contacta soporte.'
+    };
+  }
 
   await prisma.user.update({
     where: { id: user.id },

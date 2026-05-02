@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
-import { hashPassword, verifyPassword } from '@/lib/auth/password';
+import { hashPassword, verifyPassword, isValidBcryptHash } from '@/lib/auth/password';
 import { logAuditEvent } from '@/lib/audit';
 
 const passwordSchema = z
@@ -45,15 +45,33 @@ export async function POST(request: Request) {
     }
 
     if (!user.passwordHash) {
+      console.error('[Password.POST] Usuario sin hash:', user.id);
       return NextResponse.json({ error: 'Não foi possível validar a senha atual.' }, { status: 400 });
     }
 
+    // Validar que el hash en BD sea válido
+    if (!isValidBcryptHash(user.passwordHash)) {
+      console.error('[Password.POST] Hash corrupto en BD para usuario:', user.id);
+      return NextResponse.json({ error: 'Não foi possível validar a senha atual.' }, { status: 400 });
+    }
+
+    // Verificar contraseña actual
     const isCurrentPasswordValid = await verifyPassword(parsed.data.currentPassword, user.passwordHash);
     if (!isCurrentPasswordValid) {
+      console.warn('[Password.POST] Contraseña incorrecta para usuario:', user.id);
       return NextResponse.json({ error: 'A senha atual não está correta.' }, { status: 400 });
     }
 
-    const nextPasswordHash = await hashPassword(parsed.data.nextPassword);
+    // Hash la nueva contraseña
+    let nextPasswordHash: string;
+    try {
+      nextPasswordHash = await hashPassword(parsed.data.nextPassword);
+    } catch (hashError) {
+      const message = hashError instanceof Error ? hashError.message : 'Error al hashear';
+      console.error('[Password.POST] Error al hashear nueva contraseña:', message);
+      return NextResponse.json({ error: 'Erro ao processar nova senha.' }, { status: 500 });
+    }
+
     await prisma.user.update({
       where: { id: user.id },
       data: { passwordHash: nextPasswordHash }
@@ -69,6 +87,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Password.POST] Error crítico:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

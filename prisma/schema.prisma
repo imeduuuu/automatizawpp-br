@@ -5,6 +5,8 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // En Vercel (prod), la CONNECTION_LIMIT se reduce para compartir el pool
+  // Ajustar según necesidad: Vercel Plan Free = ~5 conexiones totales
 }
 
 enum LeadStatus {
@@ -198,6 +200,8 @@ model User {
   accounts     Account[]
   sessions     Session[]
   passwordResetTokens PasswordResetToken[]
+  refreshTokens RefreshToken[]
+  apiTokens    ApiToken[]
   serviceAccesses ClientServiceAccess[]
   auditEvents  AuditLog[]  @relation("AuditActor")
   serviceActivities ServiceActivity[] @relation("ServiceActivityActor")
@@ -970,4 +974,38 @@ model MetricsSnapshot {
   @@unique([workspaceId, date])
   @@index([workspaceId, date])
   @@index([date])
+}
+
+// Refresh tokens for session management
+model RefreshToken {
+  id          String   @id @default(cuid())
+  userId      String
+  hashedToken String
+  expiresAt   DateTime
+  isRevoked   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hashedToken])
+  @@index([userId, isRevoked])
+  @@index([expiresAt])
+}
+
+// API tokens for programmatic access
+model ApiToken {
+  id          String   @id @default(cuid())
+  userId      String
+  hashedToken String   @unique
+  name        String
+  expiresAt   DateTime
+  lastUsedAt  DateTime?
+  isRevoked   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRevoked])
+  @@index([expiresAt])
+  @@index([lastUsedAt])
 }
