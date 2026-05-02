@@ -48,6 +48,53 @@ body {
   background-image:
     linear-gradient(rgba(240, 237, 232, 0.06) 1px, transparent 1px),
     linear-gradient(90deg, rgba(240, 237, 232, 0.06) 1px, transparent 1px);
+}
+
+/* Loading states */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background-color: var(--surface2);
+  border-radius: 4px;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, var(--surface2), var(--surface3), var(--surface2));
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Error states */
+.error-state {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: #fca5a5;
+}
+
+/* Empty states */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted2);
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+  }
+}
   background-size: 66px 66px;
   background-position: center center;
 }
