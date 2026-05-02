@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/lib/auth/auth-core';
 
 const PUBLIC_PAGE_PATHS = [
+  '/',                          // CRÍTICO: Landing page deve ser pública
   '/login',
   '/signup',
   '/register',
@@ -26,6 +27,8 @@ const PUBLIC_PAGE_PATHS = [
   '/contatos-publico',
   '/pricing',
   '/api-docs',
+  '/privacidade',               // CRÍTICO: Obrigação legal LGPD
+  '/termos',                    // CRÍTICO: Obrigação legal LGPD
 ];
 
 // API que NO requieren autenticación (tienen su propia autenticación)

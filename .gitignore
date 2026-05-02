@@ -10,3 +10,4 @@ build/
 .claude/
 .vercel
 .env*.local
+.env.production
