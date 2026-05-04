@@ -55,7 +55,7 @@ export default function EmailsPage() {
       setSelected(msg);
       return;
     }
-    fetch(`/api/emails/message?uid=${msg.uid}&folder=${folder}`)
+    fetch(`/api/emails/message?id=${msg.id}&folder=${folder}`)
       .then((r) => r.json())
       .then((data) => { if (data.ok) setSelected(data.message); });
   }

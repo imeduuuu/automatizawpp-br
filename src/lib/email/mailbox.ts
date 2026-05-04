@@ -1,8 +1,10 @@
+// mailbox.ts — Bird API v2 (canal email-sparkpost inbox@automatizawpp.com)
+
 export type MailFolderKey = 'inbox' | 'sent' | 'important' | 'spam' | 'archive';
 
 export type MailMessage = {
   uid: number;
-  id: string;
+  id: string;          // Bird conversation ID
   folder: MailFolderKey;
   subject: string;
   from: string;
@@ -15,130 +17,170 @@ export type MailMessage = {
   read: boolean;
 };
 
-const ZOHO_API  = 'https://mail.zoho.eu/api';
-const ZOHO_AUTH = 'https://accounts.zoho.eu/oauth/v2';
+const BIRD_API    = 'https://api.bird.com';
+const WORKSPACE   = () => process.env.BIRD_WORKSPACE_ID ?? '';
+const CHANNEL_ID  = () => process.env.BIRD_EMAIL_CHANNEL_ID ?? '';
+const API_KEY     = () => process.env.BIRD_API_KEY ?? '';
 
-// Mapeamento de chave interna para nome de pasta no Zoho EU
-const PASTA_ZOHO: Record<MailFolderKey, string> = {
-  inbox:     'Inbox',
-  sent:      'Sent',
-  important: 'Starred',
-  spam:      'Spam',
-  archive:   'Archive',
-};
-
-let tokenCache: { value: string; exp: number } | null = null;
-
-function accountId(): string {
-  return process.env.ZOHO_ACCOUNT_ID ?? '8510223000000002002';
+interface BirdEmailBody {
+  subject?: string;
+  from?:    { email?: string; name?: string };
+  to?:      Array<{ email?: string; name?: string }>;
+  text?:    { text?: string };
+  html?:    { html?: string };
 }
 
-async function fetchToken(): Promise<string> {
-  const body = new URLSearchParams({
-    grant_type:    'refresh_token',
-    client_id:     process.env.ZOHO_CLIENT_ID ?? '',
-    client_secret: process.env.ZOHO_CLIENT_SECRET ?? '',
-    refresh_token: process.env.ZOHO_REFRESH_TOKEN ?? '',
-  });
-  const res  = await fetch(`${ZOHO_AUTH}/token`, { method: 'POST', body });
-  const json = await res.json() as Record<string, unknown>;
-  if (!json.access_token) throw new Error(`Zoho auth: ${JSON.stringify(json)}`);
-  return json.access_token as string;
+interface BirdMessage {
+  id:         string;
+  direction?: 'received' | 'sent';
+  status?:    string;
+  createdAt?: string;
+  body?: {
+    type:    string;
+    text?:   { text: string };
+    email?:  BirdEmailBody;
+  };
 }
 
-async function getToken(): Promise<string> {
-  const now = Date.now();
-  if (tokenCache && now < tokenCache.exp) return tokenCache.value;
-  const value = await fetchToken();
-  tokenCache = { value, exp: now + 55 * 60_000 };
-  return value;
+interface BirdContact {
+  id:           string;
+  displayName?: string;
+  identifiers?: Array<{ key: string; value: string }>;
 }
 
-function decodeHtml(str: string): string {
-  return str
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"');
+interface BirdConversation {
+  id:           string;
+  status?:      string;
+  contact?:     BirdContact;
+  lastMessage?: BirdMessage;
+  createdAt?:   string;
+  updatedAt?:   string;
 }
 
-interface ZohoMsg {
-  messageId: string;
-  subject?:  string;
-  sender?:   string;
-  fromAddress?: string;
-  toAddress?:   string;
-  receivedTime?: string;
-  sentDateInGMT?: string;
-  summary?:  string;
-  status?:   string;  // '0' = unread, '1' = read
-  folderId?: string;
+function contactEmail(c?: BirdContact): string | null {
+  if (!c?.identifiers) return null;
+  return (
+    c.identifiers.find((i) => i.key === 'emailaddress')?.value ??
+    c.identifiers.find((i) => i.key === 'email')?.value ??
+    null
+  );
+}
+
+function parseBody(msg: BirdMessage): {
+  subject: string;
+  from: string;
+  fromEmail: string | null;
+  text: string | null;
+  html: string | null;
+} {
+  if (msg.body?.type === 'email' && msg.body.email) {
+    const e = msg.body.email;
+    const fe = e.from?.email ?? null;
+    const fn = e.from?.name;
+    return {
+      subject:   e.subject ?? '(Sem assunto)',
+      from:      fn ? `${fn} <${fe}>` : (fe ?? ''),
+      fromEmail: fe,
+      text:      e.text?.text ?? null,
+      html:      e.html?.html ?? null,
+    };
+  }
+  return {
+    subject:   '(Sem assunto)',
+    from:      '',
+    fromEmail: null,
+    text:      msg.body?.text?.text ?? null,
+    html:      null,
+  };
+}
+
+function birdHeaders() {
+  return {
+    Authorization: `AccessKey ${API_KEY()}`,
+    Accept:        'application/json',
+  };
 }
 
 export async function fetchMessages(folder: MailFolderKey = 'inbox', limit = 30): Promise<MailMessage[]> {
+  const key = API_KEY();
+  const ws  = WORKSPACE();
+  if (!key || !ws) return [];
+
   try {
-    const token      = await getToken();
-    const folderName = PASTA_ZOHO[folder];
-    // Usa a URL com folderName para filtrar pela pasta correta no Zoho EU
-    const url = `${ZOHO_API}/accounts/${accountId()}/folders/${folderName}/messages/view?start=0&limit=${Math.min(limit, 100)}`;
+    const ch       = CHANNEL_ID();
+    const chParam  = ch ? `&channelId=${ch}` : '';
+    const url      = `${BIRD_API}/workspaces/${ws}/conversations?pageSize=${Math.min(limit, 100)}${chParam}`;
+    const res      = await fetch(url, { headers: birdHeaders() });
+    if (!res.ok) return [];
 
-    const res  = await fetch(url, {
-      headers: { Authorization: `Zoho-oauthtoken ${token}` },
-    });
-    const json = await res.json() as { data?: ZohoMsg[]; status?: { code: number } };
-    if (!Array.isArray(json.data)) return [];
+    const json = await res.json() as { results?: BirdConversation[] };
+    if (!Array.isArray(json.results)) return [];
 
-    return json.data.map((m) => {
-      const ts = m.receivedTime ?? m.sentDateInGMT;
-      return {
-        uid:       Number(m.messageId),
-        id:        m.messageId,
+    const messages: MailMessage[] = [];
+
+    json.results.forEach((conv, idx) => {
+      const last = conv.lastMessage;
+      if (!last) return;
+
+      const dir = last.direction;
+      if (folder === 'inbox' && dir === 'sent')     return;
+      if (folder === 'sent' && dir !== 'sent')      return;
+
+      const { subject, from, fromEmail, text } = parseBody(last);
+      const ce = contactEmail(conv.contact);
+
+      messages.push({
+        uid:       idx + 1,
+        id:        conv.id,
         folder,
-        subject:   decodeHtml(m.subject ?? '(Sem assunto)'),
-        from:      decodeHtml(m.sender || m.fromAddress || ''),
-        fromEmail: m.fromAddress || null,
-        to:        decodeHtml(m.toAddress ?? ''),
-        date:      ts ? new Date(Number(ts)).toISOString() : null,
-        preview:   decodeHtml((m.summary ?? '').slice(0, 120)),
+        subject,
+        from:      from || conv.contact?.displayName || ce || 'Desconhecido',
+        fromEmail: fromEmail ?? ce,
+        to:        'inbox@automatizawpp.com',
+        date:      last.createdAt ?? conv.updatedAt ?? conv.createdAt ?? null,
+        preview:   (text ?? '').slice(0, 120),
         html:      null,
-        text:      m.summary ? decodeHtml(m.summary) : null,
-        read:      m.status === '1',
-      };
+        text:      null,
+        read:      last.status === 'read' || last.status === 'delivered',
+      });
     });
+
+    return messages;
   } catch {
     return [];
   }
 }
 
-export async function fetchMessage(uid: number, folder: MailFolderKey = 'inbox'): Promise<MailMessage | null> {
+// Busca mensagem completa (HTML + texto) por Bird conversation ID
+export async function fetchMessage(conversationId: string): Promise<MailMessage | null> {
+  const key = API_KEY();
+  const ws  = WORKSPACE();
+  if (!key || !ws) return null;
+
   try {
-    const token      = await getToken();
-    // Usa o nome da pasta diretamente — evita buscar 200 mensagens só para obter o folderId
-    const folderName = PASTA_ZOHO[folder];
+    const url = `${BIRD_API}/workspaces/${ws}/conversations/${conversationId}/messages?pageSize=50`;
+    const res = await fetch(url, { headers: birdHeaders() });
+    if (!res.ok) return null;
 
-    const res  = await fetch(
-      `${ZOHO_API}/accounts/${accountId()}/folders/${folderName}/messages/${uid}/content?includeBlockedImages=1&getBody=true`,
-      { headers: { Authorization: `Zoho-oauthtoken ${token}` } },
-    );
-    const json = await res.json() as { data?: Record<string, unknown>; status?: { code: number } };
-    if (json.status?.code !== 200 || !json.data) return null;
+    const json = await res.json() as { results?: BirdMessage[] };
+    if (!Array.isArray(json.results) || json.results.length === 0) return null;
 
-    const d  = json.data;
-    const ts = (d.receivedTime ?? d.sentDateInGMT) as string | undefined;
+    // Primeiro mensagem recebida na thread
+    const msg = json.results.find((m) => m.direction === 'received') ?? json.results[0];
+    const { subject, from, fromEmail, text, html } = parseBody(msg);
 
     return {
-      uid,
-      id:        String(uid),
-      folder,
-      subject:   decodeHtml((d.subject as string) || '(Sem assunto)'),
-      from:      decodeHtml((d.sender as string) || (d.fromAddress as string) || ''),
-      fromEmail: (d.fromAddress as string) || null,
-      to:        decodeHtml((d.toAddress as string) || ''),
-      date:      ts ? new Date(Number(ts)).toISOString() : null,
-      preview:   decodeHtml(((d.summary as string) ?? '').slice(0, 120)),
-      html:      (d.htmlBody as string) || null,
-      text:      (d.content as string) || (d.summary as string) ? decodeHtml((d.content as string) || (d.summary as string)) : null,
+      uid:       0,
+      id:        conversationId,
+      folder:    'inbox',
+      subject,
+      from,
+      fromEmail,
+      to:        'inbox@automatizawpp.com',
+      date:      msg.createdAt ?? null,
+      preview:   (text ?? '').slice(0, 120),
+      html,
+      text,
       read:      true,
     };
   } catch {
