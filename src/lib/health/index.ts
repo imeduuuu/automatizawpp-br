@@ -94,10 +94,13 @@ export async function checkN8nWebhook(): Promise<HealthCheckResult> {
       throw new Error('N8N_WEBHOOK_URL não configurada');
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     const response = await fetch(webhookUrl, {
       method: 'GET',
-      timeout: 5000
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
 
     const responseTime = Date.now() - start;
 

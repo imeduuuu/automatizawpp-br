@@ -52,6 +52,32 @@
 
 ---
 
+### 2026-05-03 — `RESEND_API_KEY` en producción retorna 401 "API key is invalid" — RESUELTO en Sprint 1.8
+
+**Síntoma:** Tests E2E del Sprint 1.7 muestran que el flow inbound completo persiste el Message OUTBOUND en DB con `metadata.deliveryError = "Resend 401 ..."`, pero ningún email real se entrega.
+
+**Causa raíz:** El `.env.production.local` del droplet **no tenía** `RESEND_API_KEY` definida. Heredaba el valor placeholder `"your-resend-key-here"` del `.env` legacy.
+
+**Fix aplicado (Sprint 1.8):** Copié la key válida ya existente en `.env` local (`re_Nd1ybj1K_...`) a `/opt/automatizawpp/.env.production.local` + `RESEND_FROM="AutomatizaWPP <hola@automatizawpp.com>"`. `pm2 restart --update-env`. Verificación E2E: `delivery.sent:true`, `providerMessageId: ac7b2173-...`, `deliveryStatus:sent` en `Message.metadata`.
+
+**Lección:** Los `.env.*.local` del servidor requieren auditoría completa de las keys que usa la app — no asumir que heredan del `.env` cuando ese tiene placeholders. Test `tools/_check_resend.ts` actualmente lee `.env` (no `.env.production.local`), debería tener flag `--env=production` para verificar el entorno real. Deuda pendiente.
+
+---
+
+### 2026-05-03 — Quiet hours timezone-blind (UTC en lugar de Workspace.timezone)
+
+**Síntoma:** Tests E2E iniciales caían en `HOLD: Within quiet hours (21:00 - 9:00)` porque el servidor está en UTC y el default `QUIET_HOURS_START=21 / END=9` se evalúa con `new Date().getHours()` en UTC.
+
+**Causa raíz:** `src/lib/agents/orchestrator.ts:228-242` usa `currentHour = new Date().getHours()` ignorando `Workspace.timezone`. Para clientes brasileños (`America/Sao_Paulo` UTC-3), las quiet hours UTC 21-09 = local 18:00-06:00, bloqueando casi toda la jornada laboral local.
+
+**Fix temporal usado en E2E:** override env `QUIET_HOURS_START=0 QUIET_HOURS_END=0 MAX_TOUCHES_PER_DAY=999` durante el test, restaurar al final.
+
+**Fix permanente pendiente (Sprint futuro):** `checkCompliance` debe leer `workspace.timezone` y calcular `currentHour` con `Intl.DateTimeFormat('en-US', { timeZone: workspace.timezone, hour: 'numeric' })`.
+
+**Lección:** Todo cálculo de tiempo en orquestación multi-tenant debe ser timezone-aware del workspace, nunca `Date.getHours()` directo.
+
+---
+
 ### 2026-05-02 — Rate limit de login en memoria bloquea reintentos legítimos
 
 **Síntoma:** Tras múltiples intentos de login (incluso con credenciales válidas), el endpoint `/api/auth/login` retorna `{"ok":false,"error":"Error en la autenticación. Intente más tarde."}` aunque la API esté sana.
@@ -127,4 +153,140 @@ Documentado en `core/README.md`, `tools/README.md` y aquí.
 
 ## Restricciones de negocio
 
-_Pendiente de Fase 1 (Visión) — Eduardo debe responder formalmente las 5 Preguntas de Descubrimiento. La narrativa actual (extraída del código) está en `CLAUDE.md` § 1-3._
+Definidas formalmente por Eduardo en respuesta a las 5 Preguntas de Descubrimiento (2026-05-02). Documentadas como Constitución del Lead Response Agent en `CLAUDE.md` §3. Reglas duras: tono warm/premium, <200 palabras, no revelar AI, quiet hours 21-09, max 5 touches/día, opt-out absoluto.
+
+---
+
+## 7 Gaps detectados en el flow inbound→outbound (2026-05-02)
+
+Auditoría del código por Eduardo durante respuesta a las 5 Preguntas. Cada gap representa una desviación entre la Constitución (CLAUDE.md §3) y el comportamiento real del código. Plan de cierre en `plan.md` (Sprints 1-3).
+
+### Gap #1 — Closer prompt en PT-BR, resto de prompts en inglés 🔴
+
+**Síntoma:** Mezcla de idiomas en agentes. Closer usa PT-BR, los otros usan inglés.
+
+**Causa raíz:** Prompts escritos en momentos distintos sin convención unificada.
+
+**Impacto:** **Viola regla absoluta del CLAUDE.md** ("idioma PT-BR/ES, nunca inglés"). Lead recibe mezcla de idiomas según qué agente responda.
+
+**Fix (Sprint 1.1):** Reescribir todos los prompts a PT-BR como base. Switch a ES si `lead.preferredLanguage='es'`.
+
+---
+
+### Gap #2 — `lead.preferredLanguage` no se lee en ningún prompt 🔴
+
+**Síntoma:** Campo `Lead.preferredLanguage` existe en schema (default `es`) pero NINGÚN agente lo lee.
+
+**Causa raíz:** Feature parcialmente implementada — schema preparado, lógica nunca cableada.
+
+**Impacto:** Todas las respuestas salen en idioma fijo (probablemente inglés por gap #1), ignorando preferencia del lead. Bug crítico de localización.
+
+**Fix (Sprint 1.2):** En cada agente leer `lead.preferredLanguage` antes de construir el prompt. Si vacío → auto-detect (Sprint 3.2).
+
+---
+
+### Gap #3 — `qa-agent.ts` existe pero NO está cableado al flow 🔴
+
+**Síntoma:** El archivo `src/lib/agents/qa-agent.ts` existe con lógica de QA pre-envío, pero el flow `processInboundMessage()` llama directamente a `provider.send()` sin pasar por QA.
+
+**Causa raíz:** Implementación a medio camino — agente creado pero integración no completada.
+
+**Impacto:** Mensajes salen sin revisión. Riesgo de mensajes off-tone, alucinaciones de Claude, violaciones de la lista negra (gap #5).
+
+**Fix (Sprint 1.3):** Insertar `qa-agent.review(draft)` antes de `provider.send()`. Si `qaPassed=false` → no enviar, registrar en `AgentRun`, escalar a admin (depende de Sprint 2).
+
+---
+
+### Gap #4 — ESCALATE no se ejecuta desde inbound (solo RESPOND/QUALIFY/HOLD) 🟠
+
+**Síntoma:** Orchestrator puede devolver acción `ESCALATE`, pero `processInboundMessage()` solo tiene branches para `RESPOND`, `QUALIFY` y `HOLD`. `ESCALATE` cae al default (silencio).
+
+**Causa raíz:** Action enum incluye 7 valores pero el handler solo cubre 3.
+
+**Impacto:** Lead que pide "hablar con persona" o menciona "queja" / "abogado" / "devolución" NO llega a humano. Riesgo legal + pérdida de lead caliente.
+
+**Fix (Sprint 2.1 + 2.2):** Añadir branch ESCALATE → `triggerEscalation(leadId, reason)` + marcar `Lead.escalated=true`. Detección de keywords críticas en Orchestrator (lista en CLAUDE.md §3 "Escalación obligatoria").
+
+---
+
+### Gap #5 — Sin lista negra de palabras/temas prohibidos 🟠
+
+**Síntoma:** El `LEAD_RESPONSE_PROMPT` no tiene restricciones explícitas de qué NO decir.
+
+**Causa raíz:** Prompt enfocado en tono pero no en restricciones de contenido.
+
+**Impacto:** Claude puede dar precios concretos, prometer SLAs, hablar de competidores, garantizar resultados. Riesgo comercial + legal (promesas no respaldadas).
+
+**Fix (Sprint 2.3):** Añadir sección "NÃO DIZER" al prompt: precios concretos, fechas/SLAs específicos, promesas de resultados, competidores, URLs no aprobadas. Documentado en CLAUDE.md §3.
+
+---
+
+### Gap #6 — Notificaciones admin no se disparan desde inbound flow 🟡
+
+**Síntoma:** `src/lib/notifications/` tiene sistema completo (alert-rules, channels, scheduler, templates, triggers, types) con triggers tipo `triggerLeadCreated`, `triggerHighIntentLead`, `triggerEmailFailed`. Ningún path de inbound los invoca.
+
+**Causa raíz:** Sistema construido en paralelo al inbound, sin integración.
+
+**Impacto:** Admin no se entera en tiempo real de leads de alta intención, fallos de envío, o escalaciones. Solo sabe mirando dashboard manualmente.
+
+**Fix (Sprint 3.1):** Cablear triggers desde puntos clave: nueva conversación → `triggerLeadCreated`, score alto → `triggerHighIntentLead`, fallo de envío → `triggerEmailFailed`, ESCALATE → `triggerEscalation`.
+
+---
+
+### Gap #7 — Auto-detect de idioma no implementado 🟡
+
+**Síntoma:** Si `lead.preferredLanguage` está vacío, no hay fallback a detectar el idioma del mensaje entrante.
+
+**Causa raíz:** Decisión de implementación pendiente.
+
+**Impacto:** Workaround actual = forzar `es` como default. Si el lead escribe en PT-BR, recibe respuesta en ES.
+
+**Fix (Sprint 3.2):** Crear `src/lib/agents/language-detector.ts` atómico: prompt corto a Claude Haiku con el mensaje entrante → retorna `'es' | 'pt-BR'`. Cachear en `Lead.preferredLanguage` tras primera detección.
+
+---
+
+## Gap #8 — Notification record FAILED por canal externo no configurado 🟠 (2026-05-04 ✅ resuelto)
+
+**Síntoma:** Tabela `Notification` em prod com records `status=FAILED, failureReason="SLACK_WEBHOOK_URL not configured"`.
+
+**Causa raíz:** Regras em `alert-rules.ts` (`lead-high-intent`, `lead-vip`, `email-failed`, `system-error`, `system-health`, `opportunity-high-value`) incluem `'SLACK'` em `channels`. `triggers.ts` chama `sendNotification` por canal. Sem `SLACK_WEBHOOK_URL`, criava record antes de descobrir que iria falhar.
+
+**Fix:** Adicionado `isChannelEnabled(channel)` em `src/lib/notifications/service.ts`. `sendNotification` faz early return com log `[NOTIFICATION SKIPPED]` quando canal não habilitado — **sem criar Notification record**.
+
+| Canal | Habilitado quando |
+|---|---|
+| IN_APP | sempre |
+| EMAIL | `RESEND_API_KEY \|\| BREVO_API_KEY \|\| BIRD_EMAIL_CHANNEL_ID` |
+| WHATSAPP | `BIRD_API_KEY && BIRD_WORKSPACE_ID` |
+| SLACK | `SLACK_WEBHOOK_URL` |
+
+**Adicional:** `<NotificationBell />` montado em `src/components/ui/TopBar.tsx` (antes era código solto, ninguém importava).
+
+**Lección:** Canais opcionais devem ser opt-in via env. Filtrar antes de criar é melhor que marcar FAILED depois.
+
+---
+
+## Gap #9 — _prisma_migrations sujo com records pending duplicados 🟡 (2026-05-04 ✅ resuelto)
+
+**Síntoma:** Em prod, `SELECT * FROM _prisma_migrations` mostrava 3 records para `add_notifications_schema` (2 com `finished_at=NULL`, 1 ok).
+
+**Causa raíz:** Tentativas de `prisma migrate deploy` em 2026-05-02 falharam silenciosamente 2 vezes antes da terceira funcionar. Cada tentativa cria um record; só o último completou.
+
+**Fix (2026-05-04):**
+1. `pg_dump --table='_prisma_migrations' --data-only` → `/opt/automatizawpp/backups/_prisma_migrations_pre_cleanup_20260504.sql`
+2. `DELETE FROM _prisma_migrations WHERE id IN (...)` para os 2 pending
+3. `prisma migrate status` agora retorna "Database schema is up to date!"
+
+**Lección:** Quando migration falha, record fica pending. Não confiar só em `migrate status` — auditar `_prisma_migrations` direto periodicamente.
+
+---
+
+## Gap #10 — Baseline Prisma `0_init` vazio (não é bug, é pattern) 🟢 (2026-05-04 ✅ documentado)
+
+**Síntoma:** `prisma/migrations/0_init/migration.sql` tem só comentários, parece bug.
+
+**Causa raíz:** A BD prod foi inicializada via `prisma db push` antes de adotarmos `prisma migrate deploy`. Pattern oficial Prisma para esse caso é **baselining**: criar `0_init/migration.sql` vazio + `prisma migrate resolve --applied 0_init`.
+
+**Fix (2026-05-04):** Criado `prisma/migrations/0_init/README.md` documentando o pattern, o que NÃO fazer (preencher), e o procedimento para greenfield.
+
+**Lección:** Baselining vazio é correto para projetos pré-existentes. Não tratar como bug.

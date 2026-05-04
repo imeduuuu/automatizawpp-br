@@ -1,11 +1,13 @@
+import type { ReactNode } from 'react';
+
 export function EmptyState({
   title = 'Nenhum dado disponível',
   message = 'Comece adicionando um novo item',
-  icon?: React.ReactNode
+  icon,
 }: {
-  title?: string
-  message?: string
-  icon?: React.ReactNode
+  title?: string;
+  message?: string;
+  icon?: ReactNode;
 }) {
   return (
     <div className="empty-state">

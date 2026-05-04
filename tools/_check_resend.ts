@@ -10,7 +10,6 @@ function carregarEnv(): void {
   const arquivos = [".env", ".env.local"];
   for (const arquivo of arquivos) {
     try {
-      // @ts-expect-error — process.loadEnvFile existe em Node 20.12+
       process.loadEnvFile(resolve(process.cwd(), arquivo));
     } catch {
       // ignora

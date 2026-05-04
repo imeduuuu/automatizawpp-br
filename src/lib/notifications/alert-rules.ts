@@ -37,6 +37,14 @@ export const ALERT_RULES: Record<string, AlertRuleConfig> = {
     }
   },
 
+  // Sprint 2.4-A — fecha deuda #3: trigger dedicado de escalonamento humano
+  'lead-escalated': {
+    template: 'LEAD_ESCALATED',
+    priority: 'URGENT',
+    channels: ['IN_APP', 'EMAIL'],
+    conditions: {}
+  },
+
   'email-failed': {
     template: 'EMAIL_FAILED',
     priority: 'HIGH',

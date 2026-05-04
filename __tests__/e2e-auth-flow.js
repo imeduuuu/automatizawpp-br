@@ -9,7 +9,7 @@
 
 const axios = require('axios');
 
-const BASE_URL = process.env.APP_URL || 'http://192.168.1.37:3000';
+const BASE_URL = process.env.APP_URL || 'http://localhost:3001';
 
 class AuthFlowTester {
   constructor() {
@@ -59,8 +59,8 @@ class AuthFlowTester {
     try {
       // Credenciales de prueba (admin por defecto)
       const credentials = {
-        email: 'admin@automatizawpp.com',
-        password: 'SecurePassword123!'
+        email: 'test@automatizawpp.com',
+        password: 'TestPassword123!'
       };
 
       console.log(`  → Enviando POST ${BASE_URL}/api/auth/login`);
@@ -121,8 +121,8 @@ class AuthFlowTester {
 
     try {
       const credentials = {
-        email: 'admin@automatizawpp.com',
-        password: 'SecurePassword123!'
+        email: 'test@automatizawpp.com',
+        password: 'TestPassword123!'
       };
 
       console.log(`  → Realizando nuevo POST para verificar cookies`);
@@ -188,8 +188,8 @@ class AuthFlowTester {
       // Primero loguearse para obtener cookies
       console.log(`  → Preparando cookies de sesión...`);
       const credentials = {
-        email: 'admin@automatizawpp.com',
-        password: 'SecurePassword123!'
+        email: 'test@automatizawpp.com',
+        password: 'TestPassword123!'
       };
 
       const loginResponse = await this.client.post('/api/auth/login', credentials);

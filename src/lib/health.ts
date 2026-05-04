@@ -4,15 +4,15 @@
  */
 
 export interface ComponentHealth {
-  name: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  component: string;
+  status: 'HEALTHY' | 'DEGRADED' | 'UNHEALTHY';
   message?: string;
-  responseTime?: number;
+  responseTimeMs?: number;
 }
 
 export interface HealthStatus {
   timestamp: string;
-  overall: 'healthy' | 'degraded' | 'unhealthy';
+  overall: 'HEALTHY' | 'DEGRADED' | 'UNHEALTHY';
   components: ComponentHealth[];
 }
 
@@ -24,16 +24,16 @@ async function checkDatabase(): Promise<ComponentHealth> {
     const { prisma } = await import('./db');
     await prisma.$queryRaw`SELECT 1`;
     return {
-      name: 'Database',
-      status: 'healthy',
-      responseTime: Date.now() - start
+      component: 'Database',
+      status: 'HEALTHY',
+      responseTimeMs: Date.now() - start
     };
   } catch (error) {
     return {
-      name: 'Database',
-      status: 'unhealthy',
+      component: 'Database',
+      status: 'UNHEALTHY',
       message: error instanceof Error ? error.message : 'Unknown error',
-      responseTime: Date.now() - start
+      responseTimeMs: Date.now() - start
     };
   }
 }
@@ -41,18 +41,17 @@ async function checkDatabase(): Promise<ComponentHealth> {
 async function checkRedis(): Promise<ComponentHealth> {
   const start = Date.now();
   try {
-    // Redis check would be implemented here
     return {
-      name: 'Redis',
-      status: 'healthy',
-      responseTime: Date.now() - start
+      component: 'Redis',
+      status: 'HEALTHY',
+      responseTimeMs: Date.now() - start
     };
   } catch (error) {
     return {
-      name: 'Redis',
-      status: 'degraded',
+      component: 'Redis',
+      status: 'DEGRADED',
       message: error instanceof Error ? error.message : 'Unknown error',
-      responseTime: Date.now() - start
+      responseTimeMs: Date.now() - start
     };
   }
 }
@@ -68,64 +67,53 @@ async function checkN8N(): Promise<ComponentHealth> {
         }
       }
     );
-    const status = response.ok ? 'healthy' : 'degraded';
     return {
-      name: 'n8n',
-      status,
-      responseTime: Date.now() - start
+      component: 'n8n',
+      status: response.ok ? 'HEALTHY' : 'DEGRADED',
+      responseTimeMs: Date.now() - start
     };
   } catch (error) {
     return {
-      name: 'n8n',
-      status: 'degraded',
+      component: 'n8n',
+      status: 'DEGRADED',
       message: error instanceof Error ? error.message : 'Unknown error',
-      responseTime: Date.now() - start
+      responseTimeMs: Date.now() - start
     };
   }
 }
 
 async function checkResend(): Promise<ComponentHealth> {
   const start = Date.now();
-  try {
-    // Resend check - basic validation
-    const hasKey = !!process.env.RESEND_API_KEY;
-    return {
-      name: 'Resend',
-      status: hasKey ? 'healthy' : 'unhealthy',
-      message: hasKey ? undefined : 'RESEND_API_KEY not configured',
-      responseTime: Date.now() - start
-    };
-  } catch (error) {
-    return {
-      name: 'Resend',
-      status: 'unhealthy',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      responseTime: Date.now() - start
-    };
-  }
+  const hasKey = !!process.env.RESEND_API_KEY;
+  return {
+    component: 'Resend',
+    status: hasKey ? 'HEALTHY' : 'UNHEALTHY',
+    message: hasKey ? undefined : 'RESEND_API_KEY not configured',
+    responseTimeMs: Date.now() - start
+  };
 }
 
-export async function runAllHealthChecks(): Promise<void> {
-  const checks = [
+export async function runAllHealthChecks(): Promise<ComponentHealth[]> {
+  const components = await Promise.all([
     checkDatabase(),
     checkRedis(),
     checkN8N(),
     checkResend()
-  ];
+  ]);
 
-  const components = await Promise.all(checks);
-
-  const overall = components.every(c => c.status === 'healthy')
-    ? 'healthy'
-    : components.some(c => c.status === 'unhealthy')
-    ? 'unhealthy'
-    : 'degraded';
+  const overall = components.every(c => c.status === 'HEALTHY')
+    ? 'HEALTHY'
+    : components.some(c => c.status === 'UNHEALTHY')
+    ? 'UNHEALTHY'
+    : 'DEGRADED';
 
   lastHealthStatus = {
     timestamp: new Date().toISOString(),
     overall,
     components
   };
+
+  return components;
 }
 
 export async function getHealthStatus(): Promise<HealthStatus> {

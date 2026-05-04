@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { getSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/db';
 
 const DEFAULT_SETTINGS = {
@@ -46,18 +46,18 @@ function toSettingsObject(entries: Array<{ key: string; value: string }>) {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.workspaceId) {
+  const session = await getSession();
+  if (!session?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
   const [workspace, settings] = await Promise.all([
     prisma.workspace.findUnique({
-      where: { id: session.user.workspaceId },
+      where: { id: session.workspaceId },
       select: { name: true }
     }),
     prisma.setting.findMany({
-      where: { workspaceId: session.user.workspaceId }
+      where: { workspaceId: session.workspaceId }
     })
   ]);
 
@@ -68,8 +68,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user?.workspaceId) {
+  const session = await getSession();
+  if (!session?.workspaceId) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
@@ -91,20 +91,20 @@ export async function POST(request: Request) {
 
   await prisma.$transaction([
     prisma.workspace.update({
-      where: { id: session.user.workspaceId },
+      where: { id: session.workspaceId },
       data: { name: workspaceName }
     }),
     ...updates.map((entry) =>
       prisma.setting.upsert({
         where: {
           workspaceId_key: {
-            workspaceId: session.user.workspaceId,
+            workspaceId: session.workspaceId,
             key: entry.key
           }
         },
         update: { value: entry.value },
         create: {
-          workspaceId: session.user.workspaceId,
+          workspaceId: session.workspaceId,
           key: entry.key,
           value: entry.value,
           secure: false

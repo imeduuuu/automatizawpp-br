@@ -3,7 +3,7 @@ import { getUserServiceAccess } from '@/lib/services/catalog';
 
 export async function getClientAreaContext() {
   const user = await requireCurrentUser();
-  const access = await getUserServiceAccess(user.id);
+  const access = await getUserServiceAccess(user.id ?? user.userId);
 
   return {
     user,

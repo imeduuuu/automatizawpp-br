@@ -1,6 +1,7 @@
 // Serviço de notificações Phase 5B
 
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { NotificationPayload, NotificationResult, NotificationChannel, SendNotificationInput } from './types';
 import { sendEmailNotification } from './channels/email';
 import { sendWhatsappNotification } from './channels/whatsapp';
@@ -11,6 +12,40 @@ import { renderTemplate } from './templates';
 interface NotificationLogs {
   sent: NotificationResult[];
   failed: NotificationResult[];
+}
+
+/**
+ * Verifica se um canal está configurado via env vars.
+ * Sprint pós-V.L.A.E.G. — fecha deuda #3: evita criar Notification records FAILED
+ * quando o webhook/API key do canal externo não existe (caso típico de SLACK
+ * em ambientes que não usam Slack).
+ *
+ * IN_APP: sempre habilitado (puramente DB-driven, renderiza no NotificationBell).
+ * EMAIL: pelo menos um dos providers (Resend/Brevo/Bird).
+ * WHATSAPP: API Bird configurada.
+ * SLACK: webhook configurado.
+ */
+export function isChannelEnabled(channel: NotificationChannel): boolean {
+  switch (channel) {
+    case 'IN_APP':
+      return true;
+    case 'EMAIL':
+      return Boolean(process.env.RESEND_API_KEY || process.env.BREVO_API_KEY || process.env.BIRD_EMAIL_CHANNEL_ID);
+    case 'WHATSAPP':
+      return Boolean(process.env.BIRD_API_KEY && process.env.BIRD_WORKSPACE_ID && process.env.BIRD_WHATSAPP_CHANNEL_ID);
+    case 'SLACK':
+      return Boolean(process.env.SLACK_WEBHOOK_URL);
+    default:
+      return false;
+  }
+}
+
+/**
+ * Filtra a lista de canais de uma regra para incluir só os habilitados.
+ * Usado em `triggers.ts` antes de iterar `rule.channels`.
+ */
+export function filterEnabledChannels(channels: NotificationChannel[]): NotificationChannel[] {
+  return channels.filter(isChannelEnabled);
 }
 
 export async function sendNotification(
@@ -24,7 +59,20 @@ export async function sendNotification(
     return { results: [{ success: true, channel: payload.channel }] };
   }
 
-  // Criar registro de notificação no banco
+  // Skip silencioso para canais externos não configurados (ex: SLACK sem webhook).
+  // Evita poluir a tabela `Notification` com records FAILED por config ausente.
+  // IN_APP nunca cai aqui — sempre está habilitado.
+  if (!isChannelEnabled(payload.channel)) {
+    console.log(`[NOTIFICATION SKIPPED] Channel ${payload.channel} not configured (env var ausente)`);
+    return {
+      results: [{ success: true, channel: payload.channel, error: `Channel ${payload.channel} disabled (no config)` }],
+    };
+  }
+
+  // Limpieza V.L.A.E.G. — fecha deuda #1.
+  // O modelo `Notification` agora está declarado em `prisma/schema.prisma` e
+  // sincronizado com a DB via migration `lead_lang_optional_and_notifications_sync`.
+  // Removido o guard defensivo `notificationDelegate` — agora confiamos no client.
   let notificationId: string | undefined;
   try {
     const notification = await prisma.notification.create({
@@ -36,33 +84,35 @@ export async function sendNotification(
         message: payload.message,
         channel: payload.channel,
         priority: payload.priority || 'MEDIUM',
-        template: payload.template,
+        template: payload.template as unknown as import('@prisma/client').NotificationTemplate,
         recipientEmail: payload.recipientEmail,
         recipientPhone: payload.recipientPhone,
         recipientSlackId: payload.recipientSlackId,
-        metadata: payload.metadata
-      }
+        metadata: payload.metadata as Prisma.InputJsonValue | undefined,
+      },
     });
     notificationId = notification.id;
   } catch (error) {
     console.error('[NOTIFICATION ERROR] Failed to create notification record:', error);
     return {
-      results: [{
-        success: false,
-        channel: payload.channel,
-        error: 'Database error',
-        retryable: true
-      }]
+      results: [
+        {
+          success: false,
+          channel: payload.channel,
+          error: 'Database error',
+          retryable: true,
+        },
+      ],
     };
   }
 
-  // Enviar via canal especificado
+  // Envio pelo canal especificado. Se o registro foi criado, sincronizamos status.
   try {
     const result = await sendViaChannel(payload);
     if (result.success) {
       await prisma.notification.update({
         where: { id: notificationId },
-        data: { status: 'SENT', sentAt: new Date() }
+        data: { status: 'SENT', sentAt: new Date() },
       });
     } else {
       await prisma.notification.update({
@@ -70,8 +120,8 @@ export async function sendNotification(
         data: {
           status: 'FAILED',
           failureReason: result.error,
-          retryCount: 1
-        }
+          retryCount: 1,
+        },
       });
     }
     results.push(result);
@@ -82,14 +132,14 @@ export async function sendNotification(
       data: {
         status: 'FAILED',
         failureReason: errorMsg,
-        retryCount: 1
-      }
+        retryCount: 1,
+      },
     });
     results.push({
       success: false,
       channel: payload.channel,
       error: errorMsg,
-      retryable: true
+      retryable: true,
     });
   }
 

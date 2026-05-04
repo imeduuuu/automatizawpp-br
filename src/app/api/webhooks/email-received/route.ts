@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         subject: subject,
         threadRef: threadId,
         messageId: messageId,
-        receivedAt: new Date(receivedAt || Date.now()),
+        receivedAt: receivedAt || Date.now(),
         metadata: {
           from,
           inReplyTo,

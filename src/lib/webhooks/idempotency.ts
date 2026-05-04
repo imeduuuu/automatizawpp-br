@@ -1,39 +1,39 @@
-// Idempotencia para webhooks - evitar procesar el mismo evento dos veces
+// Idempotencia para webhooks — evitar procesar el mismo evento dos veces
 
-interface IdempotencyKey {
-  source: string;
-  externalId: string;
-}
-
-// Almacenamiento temporal en memoria (TODO: integrar con Prisma cuando esté disponible)
 const processedEvents = new Set<string>();
 
 function getKey(source: string, externalId: string): string {
   return `${source}:${externalId}`;
 }
 
+export type ClaimResult =
+  | { status: 'claimed' }
+  | { status: 'duplicate'; previouslyProcessedAt: Date }
+  | { status: 'error'; error: string };
+
 /**
- * Reclamar un evento de webhook para asegurar que solo se procesa una vez
- * Retorna true si este es el primer procesamiento, false si ya fue procesado
+ * Reclamar un evento de webhook para asegurar que solo se procesa una vez.
+ * Acepta params adicionales para compatibilidad con los webhooks (event, body).
  */
 export async function claimWebhookEvent(
   source: 'bird' | 'brevo' | 'stripe' | 'vapi' | 'meta' | 'n8n' | 'resend',
-  externalId: string
-): Promise<boolean> {
+  externalId: string,
+  _event?: unknown,
+  _body?: unknown
+): Promise<ClaimResult> {
   try {
     const key = getKey(source, externalId);
-    
     if (processedEvents.has(key)) {
-      console.log(`[idempotency] Event already processed: ${source}/${externalId}`);
-      return false;
+      console.log(`[idempotency] Evento ya procesado: ${source}/${externalId}`);
+      return { status: 'duplicate', previouslyProcessedAt: new Date() };
     }
-    
     processedEvents.add(key);
-    console.log(`[idempotency] Claimed new event: ${source}/${externalId}`);
-    return true;
+    console.log(`[idempotency] Evento reclamado: ${source}/${externalId}`);
+    return { status: 'claimed' };
   } catch (error) {
-    console.error('[idempotency] Error claiming event:', error);
-    throw error;
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[idempotency] Error al reclamar evento:', message);
+    return { status: 'error', error: message };
   }
 }
 
@@ -45,59 +45,24 @@ export async function markWebhookEventAsFailed(
   externalId: string,
   errorMessage: string
 ): Promise<void> {
-  try {
-    console.log(
-      `[idempotency] Marked event as failed: ${source}/${externalId} - ${errorMessage}`
-    );
-    // TODO: Persistir en DB cuando esté disponible Prisma WebhookEvent
-  } catch (error) {
-    console.error('[idempotency] Failed to update event status:', error);
-  }
+  console.log(`[idempotency] Evento fallido: ${source}/${externalId} — ${errorMessage}`);
 }
 
-/**
- * Obtener estado de un evento previamente procesado
- */
 export async function getWebhookEventStatus(
   source: string,
   externalId: string
 ): Promise<'PROCESSED' | 'FAILED' | null> {
-  try {
-    const key = getKey(source, externalId);
-    if (processedEvents.has(key)) {
-      return 'PROCESSED';
-    }
-    return null;
-  } catch (error) {
-    console.error('[idempotency] Failed to get event status:', error);
-    return null;
-  }
+  const key = getKey(source, externalId);
+  return processedEvents.has(key) ? 'PROCESSED' : null;
 }
 
-/**
- * Limpiar eventos antiguos (más de 30 días)
- * Nota: Con almacenamiento en memoria, se limpian al reiniciar
- */
-export async function cleanupOldWebhookEvents(
-  daysOld: number = 30
-): Promise<number> {
-  try {
-    const count = processedEvents.size;
-    // Con memoria, se limpian automáticamente al reiniciar
-    console.log(`[idempotency] Ready to clean ${count} events (cleanup on restart)`);
-    return 0; // En memoria no hay persistencia de antigüedad
-  } catch (error) {
-    console.error('[idempotency] Cleanup failed:', error);
-    throw error;
-  }
+export async function cleanupOldWebhookEvents(_daysOld = 30): Promise<number> {
+  console.log(`[idempotency] ${processedEvents.size} eventos en memoria (se limpian al reiniciar)`);
+  return 0;
 }
 
-/**
- * Resetear almacenamiento (solo para testing)
- */
 export function resetIdempotencyStore(): void {
   processedEvents.clear();
-  console.log('[idempotency] Store reset (testing only)');
 }
 
 export const markWebhookEventFailed = markWebhookEventAsFailed;

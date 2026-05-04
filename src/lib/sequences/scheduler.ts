@@ -112,11 +112,11 @@ export async function dispatchFollowUp(followUpTask: any): Promise<DispatchResul
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-    // Marca como falho
+    // Marca como cancelado (FAILED não existe em FollowUpStatus — usa CANCELLED)
     await prisma.followUpTask.update({
       where: { id },
       data: {
-        status: 'FAILED'
+        status: 'CANCELLED'
       }
     });
 

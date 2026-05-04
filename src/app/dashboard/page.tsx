@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { getSession } from '@/auth';
+import { getSession } from '@/lib/auth/session';
 import DashboardClient from './dashboard-client';
 
 export default async function DashboardPage() {
-  const session = await getSession();
+  const payload = await getSession();
 
-  if (!session?.user) {
+  if (!payload) {
     redirect('/login');
   }
 

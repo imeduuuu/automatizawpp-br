@@ -1,6 +1,7 @@
 // Gerenciador de preferências de notificações
 
 import { prisma } from '@/lib/db';
+import { NotificationTemplate } from '@prisma/client';
 import { NotificationChannel, NotificationTemplateType } from './types';
 
 export async function getUserPreferences(
@@ -8,12 +9,10 @@ export async function getUserPreferences(
   userId: string,
   channel: NotificationChannel
 ) {
-  let preferences = await prisma.notificationPreference.findUnique({
+  let preferences = await prisma.notificationPreference.findFirst({
     where: {
-      userId_channel: {
-        userId,
-        channel
-      }
+      userId,
+      channel
     }
   });
 
@@ -57,13 +56,14 @@ export async function updateUserPreferences(
     opportunityHighValue: boolean;
   }>
 ) {
+  const existing = await prisma.notificationPreference.findFirst({
+    where: { userId, channel }
+  });
+  if (!existing) {
+    throw new Error(`NotificationPreference não encontrada para userId=${userId} channel=${channel}`);
+  }
   return prisma.notificationPreference.update({
-    where: {
-      userId_channel: {
-        userId,
-        channel
-      }
-    },
+    where: { id: existing.id },
     data: updates
   });
 }
@@ -73,12 +73,10 @@ export async function isNotificationEnabled(
   channel: NotificationChannel,
   template: NotificationTemplateType
 ): Promise<boolean> {
-  const prefs = await prisma.notificationPreference.findUnique({
+  const prefs = await prisma.notificationPreference.findFirst({
     where: {
-      userId_channel: {
-        userId,
-        channel
-      }
+      userId,
+      channel
     }
   });
 
@@ -89,6 +87,7 @@ export async function isNotificationEnabled(
     'LEAD_QUALIFIED': 'leadQualified',
     'LEAD_HIGH_INTENT': 'leadHighIntent',
     'LEAD_VIP': 'leadVip',
+    'LEAD_ESCALATED': 'leadVip', // escalonamento: reutiliza preferência VIP como fallback
     'EMAIL_FAILED': 'emailFailed',
     'CALL_COMPLETED': 'callCompleted',
     'FOLLOW_UP_SENT': 'followUpSent',
@@ -113,21 +112,23 @@ export async function saveNotificationTemplate(
     variables?: string[];
   }
 ) {
-  return prisma.notificationTemplateModel.upsert({
-    where: {
-      workspaceId_templateType_channel: {
-        workspaceId,
-        templateType,
-        channel
-      }
-    },
-    create: {
+  const prismaTemplateType = templateType as unknown as NotificationTemplate;
+  const existing = await prisma.notificationTemplateConfig.findFirst({
+    where: { workspaceId, templateType: prismaTemplateType, channel }
+  });
+  if (existing) {
+    return prisma.notificationTemplateConfig.update({
+      where: { id: existing.id },
+      data: config
+    });
+  }
+  return prisma.notificationTemplateConfig.create({
+    data: {
       workspaceId,
-      templateType,
+      templateType: prismaTemplateType,
       channel,
       ...config
-    },
-    update: config
+    }
   });
 }
 
@@ -136,13 +137,11 @@ export async function getNotificationTemplate(
   templateType: NotificationTemplateType,
   channel: NotificationChannel
 ) {
-  return prisma.notificationTemplateModel.findUnique({
+  return prisma.notificationTemplateConfig.findFirst({
     where: {
-      workspaceId_templateType_channel: {
-        workspaceId,
-        templateType,
-        channel
-      }
+      workspaceId,
+      templateType: templateType as unknown as NotificationTemplate,
+      channel
     }
   });
 }

@@ -67,7 +67,7 @@ export async function acknowledgeAlert(alertId: string, userId?: string) {
     title: `Alerta reconhecido: ${alert.title}`,
     source: 'SYSTEM',
     context: {
-      workspaceId: alert.workspaceId,
+      workspaceId: alert.workspaceId ?? undefined,
       userId,
       metadata: { alertId }
     }
@@ -94,7 +94,7 @@ export async function resolveAlert(alertId: string, userId?: string) {
     title: `Alerta resolvido: ${alert.title}`,
     source: 'SYSTEM',
     context: {
-      workspaceId: alert.workspaceId,
+      workspaceId: alert.workspaceId ?? undefined,
       userId,
       metadata: { alertId }
     }

@@ -1,11 +1,11 @@
 export function ErrorState({
   title = 'Erro ao carregar',
   message = 'Tente novamente mais tarde',
-  retry?: () => void
+  retry,
 }: {
-  title?: string
-  message?: string
-  retry?: () => void
+  title?: string;
+  message?: string;
+  retry?: () => void;
 }) {
   return (
     <div className="error-state">

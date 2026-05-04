@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { getSession } from '@/lib/auth/session';
 import { buildAlexCallOverrides } from '@/lib/vapi/alex-payload';
 
 const DEFAULT_ASSISTANT_ID = '3f91ff80-85db-4735-bc22-2d6abf291b44';
@@ -19,8 +19,8 @@ function getVapiConfig() {
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session?.userId) {
     return jsonResponse({ error: 'Unauthorised' }, { status: 401 });
   }
 

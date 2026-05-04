@@ -1,25 +1,52 @@
 import { SalesAgent, AgentContext } from '@/lib/agents/contracts';
-import { AGENT_PROMPTS } from '@/lib/agents/prompts';
+import { getPrompt, Language, resolveLanguage } from '@/lib/agents/prompts';
 import { runAgentPrompt } from '@/lib/agents/utils';
 import { computeRoi, extractRoiInputs, hasCompleteRoiInputs } from '@/lib/roi/roi-sales-mode';
+
+/**
+ * Fallback bilingue. Sprint 1.2 V.L.A.E.G.
+ */
+function getFallback(context: AgentContext, lang: Language) {
+  const summary =
+    lang === 'pt-BR'
+      ? `Lead ${context.lead.fullName} atualmente em ${context.lead.status.toLowerCase()} com score ${context.lead.leadScoreValue}.`
+      : `Lead ${context.lead.fullName} actualmente en ${context.lead.status.toLowerCase()} con score ${context.lead.leadScoreValue}.`;
+
+  return {
+    summary,
+    keyFacts: [context.lead.productInterest, context.lead.source].filter(Boolean),
+    changedFields: ['lastTouchpointSummary'],
+  };
+}
+
+/**
+ * Resumo ROI bilingue (substitui texto EN do snapshot anterior).
+ */
+function buildRoiSummaryText(fullName: string, lang: Language): string {
+  return lang === 'pt-BR'
+    ? `Snapshot de ROI atualizado para ${fullName}.`
+    : `Snapshot de ROI actualizado para ${fullName}.`;
+}
 
 export class MemoryAgent implements SalesAgent {
   name = 'MEMORY' as const;
 
   async run(context: AgentContext) {
+    const lang: Language = resolveLanguage(context.lead.preferredLanguage ?? null);
+
     const extracted = extractRoiInputs(context.message ?? '');
     if (hasCompleteRoiInputs(extracted)) {
       const roi = computeRoi(extracted);
       return {
         agent: this.name,
-        summary: 'Memory ROI snapshot refreshed.',
+        summary: 'Snapshot de ROI da memória atualizado.',
         payload: {
-          summary: `ROI snapshot updated for ${context.lead.fullName}.`,
+          summary: buildRoiSummaryText(context.lead.fullName, lang),
           keyFacts: [
             `lead_volume:${extracted.leadVolumePeriod}`,
             `missed_pct:${extracted.missedPercent}`,
             `avg_deal_value:${extracted.averageDealValue}`,
-            `estimated_missed_revenue:${Math.round(roi.lostRevenue)}`
+            `estimated_missed_revenue:${Math.round(roi.lostRevenue)}`,
           ],
           changedFields: [
             'leadVolumePeriod',
@@ -28,7 +55,7 @@ export class MemoryAgent implements SalesAgent {
             'estimatedMissedRevenue',
             'estimatedRecoveryLow',
             'estimatedRecoveryHigh',
-            'roiSummary'
+            'roiSummary',
           ],
           roiSummary: {
             leadVolumePeriod: extracted.leadVolumePeriod,
@@ -36,23 +63,22 @@ export class MemoryAgent implements SalesAgent {
             avgDealValue: extracted.averageDealValue,
             estimatedMissedRevenue: roi.lostRevenue,
             estimatedRecoveryLow: roi.recoveryLow,
-            estimatedRecoveryHigh: roi.recoveryHigh
-          }
-        }
+            estimatedRecoveryHigh: roi.recoveryHigh,
+          },
+        },
       };
     }
 
-    const result = await runAgentPrompt(AGENT_PROMPTS.MEMORY, context, 'MEMORY');
-    const fallback = {
-      summary: `Lead ${context.lead.fullName} currently ${context.lead.status.toLowerCase()} with score ${context.lead.leadScoreValue}.`,
-      keyFacts: [context.lead.productInterest, context.lead.source].filter(Boolean),
-      changedFields: ['lastTouchpointSummary']
-    };
+    const systemPrompt = getPrompt('memory', lang);
+    const result = await runAgentPrompt(systemPrompt, context, 'MEMORY');
 
+    // Sprint 3.4 V.L.A.E.G. — Deuda #5: memory-agent NÃO gera `message` para
+    // o lead (é apenas análise interna de contexto). Por isso não normalizamos
+    // o payload para `message`. Documentado como "não aplicável".
     return {
       agent: this.name,
-      summary: 'Memory snapshot refreshed.',
-      payload: (result.json as Record<string, unknown>) ?? fallback
+      summary: 'Snapshot de memória atualizado.',
+      payload: (result.json as Record<string, unknown>) ?? getFallback(context, lang),
     };
   }
 }

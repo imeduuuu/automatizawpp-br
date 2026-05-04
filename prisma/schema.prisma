@@ -60,6 +60,46 @@ enum ChannelType {
   FACEBOOK_MESSENGER
   VOICE
   INTERNAL
+  NOTIFICATION
+}
+
+// Phase 5B — Sistema de notificações (limpieza V.L.A.E.G. — fecha deuda #1)
+// Estes enums e os models Notification* são fontes de verdade do schema da DB
+// (migration `add_notifications_schema`). Antes desta limpeza, o schema.prisma
+// não os declarava e `prisma.notification` era undefined em runtime.
+enum NotificationChannel {
+  EMAIL
+  WHATSAPP
+  IN_APP
+  SLACK
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+  ARCHIVED
+}
+
+enum NotificationTemplate {
+  LEAD_CREATED
+  LEAD_QUALIFIED
+  LEAD_HIGH_INTENT
+  LEAD_VIP
+  EMAIL_FAILED
+  CALL_COMPLETED
+  FOLLOW_UP_SENT
+  SYSTEM_ERROR
+  SYSTEM_HEALTH
+  OPPORTUNITY_HIGH_VALUE
 }
 
 enum MessageDirection {
@@ -207,6 +247,8 @@ model User {
   serviceActivities ServiceActivity[] @relation("ServiceActivityActor")
   events             Event[] @relation("EventActor")
   subscriptionRequests SubscriptionRequest[]
+  notifications      Notification[]
+  notificationPreferences NotificationPreference[]
 }
 
 model Account {
@@ -364,6 +406,9 @@ model Workspace {
   events             Event[]
   systemAlerts       SystemAlert[]
   metricsSnapshots   MetricsSnapshot[]
+  notifications      Notification[]
+  notificationPreferences NotificationPreference[]
+  notificationTemplates   NotificationTemplateConfig[]
 }
 
 model Lead {
@@ -389,7 +434,10 @@ model Lead {
   leadScoreValue        Int                   @default(0)
   qualificationScore    Int?
   closeProbability      Float                 @default(0)
-  preferredLanguage     String                @default("es")
+  // Limpieza V.L.A.E.G. — fecha deuda #2.
+  // null indica que ainda não foi detectado o idioma do lead. Quando null, o
+  // endpoint inbound dispara auto-detecção e persiste o resultado.
+  preferredLanguage     String?
   preferredStyle        String                @default("professional")
   consentToContact      Boolean               @default(true)
   optOutAt              DateTime?
@@ -398,6 +446,9 @@ model Lead {
   lastEmailAt           DateTime?
   nextAction            String?
   nextActionAt          DateTime?
+  // Sinalização de escalonamento humano (Sprint 2.4-A — fecha deuda #4)
+  escalated             Boolean               @default(false)
+  escalatedAt           DateTime?
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
   workspace             Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -418,6 +469,7 @@ model Lead {
   activityLogs          ActivityLog[]
   summaries             ConversationSummary[]
   events                Event[] @relation("EventLead")
+  notifications         Notification[]
 
   @@index([workspaceId, status])
   @@index([workspaceId, leadScoreValue])
@@ -1008,4 +1060,83 @@ model ApiToken {
   @@index([userId, isRevoked])
   @@index([expiresAt])
   @@index([lastUsedAt])
+}
+
+// Phase 5B — Notificações: registro persistente de toda notificação enviada.
+// Limpieza V.L.A.E.G. — fecha deuda #1.
+model Notification {
+  id               String                @id @default(cuid())
+  workspaceId      String
+  userId           String?
+  leadId           String?
+  title            String
+  message          String
+  channel          NotificationChannel
+  priority         NotificationPriority  @default(MEDIUM)
+  template         NotificationTemplate
+  status           NotificationStatus    @default(PENDING)
+  recipientEmail   String?
+  recipientPhone   String?
+  recipientSlackId String?
+  metadata         Json?
+  sentAt           DateTime?
+  readAt           DateTime?
+  failureReason    String?
+  retryCount       Int                   @default(0)
+  maxRetries       Int                   @default(3)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @default(now())
+  workspace        Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user             User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lead             Lead?                 @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([userId, createdAt])
+  @@index([leadId])
+  @@index([channel, status])
+  @@index([status, createdAt])
+}
+
+// Preferências de notificação por usuário e canal.
+model NotificationPreference {
+  id                   String              @id @default(cuid())
+  workspaceId          String
+  userId               String
+  channel              NotificationChannel
+  leadCreated          Boolean             @default(true)
+  leadQualified        Boolean             @default(true)
+  leadHighIntent       Boolean             @default(true)
+  leadVip              Boolean             @default(true)
+  emailFailed          Boolean             @default(true)
+  callCompleted        Boolean             @default(false)
+  followUpSent         Boolean             @default(false)
+  systemError          Boolean             @default(true)
+  systemHealth         Boolean             @default(false)
+  opportunityHighValue Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @default(now())
+  workspace            Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, userId])
+  @@index([userId, channel])
+}
+
+// Templates configuráveis por workspace para cada tipo de notificação.
+model NotificationTemplateConfig {
+  id              String                @id @default(cuid())
+  workspaceId     String
+  templateType    NotificationTemplate
+  channel         NotificationChannel
+  subject         String?
+  titleTemplate   String
+  messageTemplate String
+  htmlTemplate    String?
+  isActive        Boolean               @default(true)
+  variables       String[]              @default([])
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @default(now())
+  workspace       Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, templateType])
 }

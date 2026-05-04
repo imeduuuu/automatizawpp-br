@@ -37,6 +37,7 @@ export {
   triggerLeadQualified,
   triggerHighIntentLead,
   triggerVipLead,
+  triggerEscalation,
   triggerEmailFailed,
   triggerSystemError,
   triggerOpportunityHighValue

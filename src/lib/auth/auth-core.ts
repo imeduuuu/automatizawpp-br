@@ -24,10 +24,15 @@ const JWT_EXPIRATION = {
 
 export interface AuthPayload {
   userId: string;
+  id?: string;
   workspaceId: string;
   email: string;
   role: 'admin' | 'client' | 'agent';
   type: 'session' | 'api';
+  subscriptionStatus?: string;
+  trialEndsAt?: Date | null;
+  businessName?: string;
+  [key: string]: unknown;
 }
 
 export interface AuthTokens {

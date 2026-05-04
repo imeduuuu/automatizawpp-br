@@ -104,25 +104,33 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
     const password = formData.get('password') as string;
 
     try {
+      console.log('[LoginForm] Iniciando login para:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password })
       });
 
+      console.log('[LoginForm] Response status:', response.status);
+
       if (!response.ok) {
         const data = await response.json();
+        console.error('[LoginForm] Login failed:', data);
         setError(data.error || 'Email ou senha incorretos.');
         setLoading(false);
         return;
       }
 
+      const loginData = await response.json();
+      console.log('[LoginForm] Login success:', loginData);
+
+      const redirectUrl = callbackUrl || '/dashboard';
+      console.log('[LoginForm] Redirecting to:', redirectUrl);
       setLoading(false);
-      setTimeout(() => {
-        window.location.href = callbackUrl || '/dashboard';
-      }, 100);
+      window.location.href = redirectUrl;
     } catch (err) {
-      console.error('[LoginForm]', err);
+      console.error('[LoginForm] Error:', err);
       setError('Erro ao entrar. Tente novamente.');
       setLoading(false);
     }

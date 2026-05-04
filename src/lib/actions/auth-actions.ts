@@ -10,6 +10,7 @@ import { sendPasswordResetEmail } from '@/lib/auth/email';
 import { logAuditEvent } from '@/lib/audit';
 import { assignServicesToUser } from '@/lib/services/catalog';
 import { initialActionState, type ActionState } from '@/lib/actions/types';
+import { auth, signOut } from '@/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Informe um e-mail válido'),

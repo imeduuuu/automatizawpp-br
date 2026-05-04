@@ -160,6 +160,7 @@ async function calculateContactScore(leadId: string): Promise<number> {
 
   const conversations = await prisma.conversation.findMany({
     where: { leadId },
+    include: { messages: true },
     orderBy: { createdAt: 'desc' }
   });
 

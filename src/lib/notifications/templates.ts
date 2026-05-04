@@ -92,6 +92,28 @@ const TEMPLATES: Record<NotificationTemplateType, {
     }
   },
 
+  // Sprint 2.4-A — escalonamento humano obrigatório (queja, abogado, devolución, etc.)
+  LEAD_ESCALATED: {
+    email: {
+      subject: '[ESCALONAMENTO] Lead {leadName} requer atenção humana',
+      title: 'Lead escalonado para atendimento humano',
+      message: 'O lead {leadName} foi escalonado. Motivo: {reason}',
+      html: '<p><strong>Escalonamento humano disparado</strong></p><p>Lead: <strong>{leadName}</strong></p><p>Motivo: {reason}</p><p>Lead ID: {leadId}</p><p>Acesse o painel para tomar a próxima ação.</p>'
+    },
+    whatsapp: {
+      title: 'Lead escalonado',
+      message: '{leadName} precisa de atenção humana. Motivo: {reason}'
+    },
+    inApp: {
+      title: 'Escalonamento: {leadName}',
+      message: 'Motivo: {reason}'
+    },
+    slack: {
+      title: 'Lead escalonado',
+      message: '{leadName} - {reason}'
+    }
+  },
+
   EMAIL_FAILED: {
     email: {
       subject: 'Falha ao enviar email para {leadName}',
@@ -238,11 +260,12 @@ export function renderTemplate(
     });
   };
 
+  const cfg = templateConfig as { title: string; message: string; subject?: string; html?: string };
   return {
-    title: interpolate(templateConfig.title),
-    message: interpolate(templateConfig.message),
-    subject: templateConfig.subject ? interpolate(templateConfig.subject) : undefined,
-    html: templateConfig.html ? interpolate(templateConfig.html) : undefined
+    title: interpolate(cfg.title),
+    message: interpolate(cfg.message),
+    subject: cfg.subject ? interpolate(cfg.subject) : undefined,
+    html: cfg.html ? interpolate(cfg.html) : undefined
   };
 }
 

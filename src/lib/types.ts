@@ -65,6 +65,9 @@ export interface LeadView {
   lastContactAt?: string | null;
   lastCallAt?: string | null;
   lastEmailAt?: string | null;
+  // Sprint 1.2 V.L.A.E.G.: idioma preferido del lead (sincronizado con prisma.lead.preferredLanguage).
+  // 'es' por defecto cuando undefined/null. PT-BR para mercado BR.
+  preferredLanguage?: 'es' | 'pt-BR' | null;
 }
 
 export interface NextBestAction {

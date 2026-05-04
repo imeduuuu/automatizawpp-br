@@ -44,9 +44,9 @@ automatizawppBR/
 ## 3. Schemas críticos
 
 ### Modelos Prisma principales
-`Workspace`, `User`, `Lead`, `Service`, `ClientServiceAccess`, `ServiceActivity`, `AuditLog`, `Session`, `PasswordResetToken`. Schema completo en `prisma/schema.prisma`.
+`Workspace`, `User`, `Lead`, `LeadMemory`, `Conversation`, `Message`, `AgentRun`, `AgentTask`, `ConversationSummary`, `ActivityLog`, `Event`, `WebhookEvent`, `Service`, `ClientServiceAccess`, `ServiceActivity`, `AuditLog`, `Session`, `PasswordResetToken`. Schema completo en `prisma/schema.prisma`.
 
-### Schema de input/output del login (ejemplo)
+### Schema A — Login (ya operativo)
 ```json
 {
   "input_schema": {
@@ -67,7 +67,78 @@ automatizawppBR/
 }
 ```
 
-JSON schemas de payloads de integraciones (Bird webhook, Brevo bounce, etc.) se documentan en `docs-veg/findings.md` a medida que se descubren.
+### Schema B — Mensaje inbound normalizado (entrada al Orchestrator)
+Producto: cualquier mensaje entrante (Resend webhook, Bird webhook, Bird email-received) se normaliza a este formato.
+
+```json
+{
+  "messageId": "string (idempotency key)",
+  "workspaceId": "string",
+  "leadId": "string",
+  "channel": "email | whatsapp | sms",
+  "direction": "inbound",
+  "from": "string (email | phone E164)",
+  "content": "string",
+  "subject": "string?",
+  "receivedAt": "ISO8601",
+  "rawWebhookEventId": "string (FK → WebhookEvent.id)"
+}
+```
+
+### Schema C — Decisión del Orchestrator
+```json
+{
+  "action": "RESPOND | QUALIFY | HANDLE_OBJECTION | CLOSE | FOLLOW_UP | ESCALATE | HOLD",
+  "reason": "string",
+  "holdReason": "QUIET_HOURS | MAX_TOUCHES | OPT_OUT | ESCALATED | null",
+  "agentRunId": "string (FK → AgentRun.id)",
+  "scheduledFor": "ISO8601?"
+}
+```
+
+### Schema D — Mensaje outbound (entrega final)
+```json
+{
+  "messageId": "string",
+  "leadId": "string",
+  "channel": "email | whatsapp | sms",
+  "direction": "outbound",
+  "language": "es | pt-BR | en (auto-detected o lead.preferredLanguage)",
+  "content": "string (<200 palabras)",
+  "qaPassed": "boolean",
+  "qaNotes": "string?",
+  "deliveryProvider": "resend | brevo | bird",
+  "deliveryStatus": "queued | sent | delivered | bounced | failed",
+  "agentRunId": "string"
+}
+```
+
+### Constitución del Lead Response Agent
+
+**Tono:** warm, premium, elegant, conversacional, nunca robótico. NO revelar que es AI salvo si lead lo pregunta directamente.
+**Longitud:** <200 palabras.
+**Idioma:** `lead.preferredLanguage` (default `es`). Si está vacío → auto-detect del idioma del mensaje entrante (PT-BR / ES). Nunca inglés.
+**Tiempo objetivo:** <5 minutos desde inbound a outbound.
+**Quiet hours:** 21:00–09:00 (timezone del workspace) → fuerza `HOLD`.
+**Max touches/día:** 5 por lead (env `MAX_TOUCHES_PER_DAY`) → fuerza `HOLD`.
+**Opt-out:** respeta `lead.optOutAt` → `HOLD`.
+**QA pre-envío:** `qa-agent.ts` revisa el draft antes de `provider.send()`. Si `qaPassed=false`, NO se envía y se loguea en `AgentRun`.
+**Escalación obligatoria:** keyword detection (queja, abogado, devolución, "hablar con persona") → `ESCALATE` → notifyAdmin via `src/lib/notifications/triggers.ts`.
+**Lista negra (NO decir):** precios concretos, fechas concretas de entrega/SLA, promesas de resultados garantizados, info de competidores, URLs no-aprobadas.
+
+### Routing de entrega (cascada)
+- **Email outbound:** Resend (prioritario) → Brevo (fallback) → Bird email
+- **WhatsApp outbound:** Bird (único provider)
+- **SMS:** stub (no operativo)
+
+### Routing de entrada (3 endpoints activos)
+| Endpoint | Origen | Uso |
+|---|---|---|
+| `POST /api/events/inbound` | genérico | Normaliza payload Bird, idempotente vía `WebhookEvent` |
+| `POST /api/webhooks/bird` | Bird directo | Webhook firmado de Bird (email + WhatsApp) |
+| `POST /api/webhooks/email-received` | Bird Email API | Loop cerrado de email entrante |
+
+> Resend es **outbound only**. Zoho IMAP NO está en el loop inbound (solo SMTP en `.env`, sin poller). Si se reactiva Zoho, debe haber poller que escriba a `WebhookEvent`.
 
 ## 4. Stack y dependencias clave
 

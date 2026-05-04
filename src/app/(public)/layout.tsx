@@ -995,6 +995,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
           <Link href="/automacao-whatsapp">Serviços</Link>
           <Link href="/casos-sucesso">Cases</Link>
           <Link href="/blog">Blog</Link>
+          <Link href="/login" style={{ fontWeight: 600, color: 'var(--text-muted, rgba(255,255,255,0.7))' }}>Entrar</Link>
           <Link href="/automacao-whatsapp" className="cta-header">Quero automatizar</Link>
         </nav>
 
@@ -1011,6 +1012,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         <Link href="/automacao-atendimento">Atendimento 24h</Link>
         <Link href="/casos-sucesso">Cases</Link>
         <Link href="/blog">Blog</Link>
+        <Link href="/login" className="mobile-cta" style={{ background: 'transparent', border: '1px solid var(--neon, #25D366)', color: 'var(--neon, #25D366)' }}>Entrar na plataforma</Link>
         <Link href="/automacao-whatsapp" className="mobile-cta">Quero automatizar</Link>
       </div>
 

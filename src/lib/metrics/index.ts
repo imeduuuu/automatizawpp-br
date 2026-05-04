@@ -116,7 +116,7 @@ export async function getMetrics(
     LeadStatus.CLOSED_WON
   ];
   qualifiedLeads = Array.from(leadsByStatusMap.entries())
-    .filter(([status]) => qualifiedStatuses.includes(status as LeadStatus))
+    .filter(([status]) => (qualifiedStatuses as string[]).includes(status))
     .reduce((sum, [_, count]) => sum + count, 0);
 
   // Processar emails

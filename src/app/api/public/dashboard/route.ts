@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { validatePublicToken } from '@/lib/public-auth';
 import { LeadStatus } from '@prisma/client';
@@ -8,7 +8,7 @@ function toPercent(numerator: number, denominator: number) {
   return Number(((numerator / denominator) * 100).toFixed(1));
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const hasToken = validatePublicToken(request);
     if (!hasToken) {
@@ -24,47 +24,33 @@ export async function GET(request: Request) {
 
     const where = { workspaceId };
 
-    const [
-      leadStatusRows,
-      totalLeads,
-      callsToday,
-      emailsToday,
-      recentContacts
-    ] = await prisma.$transaction([
-      prisma.lead.groupBy({
-        by: ['status'],
-        where,
-        _count: { _all: true }
-      }),
-      prisma.lead.count({ where }),
-      prisma.callRecord.count({
-        where: {
-          ...where,
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
-          }
-        }
-      }),
-      prisma.emailEvent.count({
-        where: {
-          ...where,
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
-          }
-        }
-      }),
-      prisma.lead.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-        select: {
-          id: true,
-          fullName: true,
-          status: true,
-          createdAt: true
-        }
-      })
-    ]);
+    const [leadStatusRows, totalLeads, callsToday, emailsToday, recentContacts] =
+      await Promise.all([
+        prisma.lead.groupBy({
+          by: ['status'],
+          where,
+          _count: { _all: true },
+        }),
+        prisma.lead.count({ where }),
+        prisma.callRecord.count({
+          where: {
+            ...where,
+            createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+          },
+        }),
+        prisma.emailEvent.count({
+          where: {
+            leadId: { not: undefined },
+            createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+          },
+        }),
+        prisma.lead.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: { id: true, fullName: true, status: true, createdAt: true },
+        }),
+      ]);
 
     const statusCount = new Map<LeadStatus, number>();
     for (const row of leadStatusRows) {
@@ -75,7 +61,7 @@ export async function GET(request: Request) {
     const qualifiedContacts =
       (statusCount.get(LeadStatus.QUALIFIED) ?? 0) +
       (statusCount.get(LeadStatus.PROPOSAL_SENT) ?? 0) +
-      (statusCount.get(LeadStatus.NEGOTIATING) ?? 0);
+      (statusCount.get(LeadStatus.NEGOTIATION) ?? 0);
     const closedWonContacts = statusCount.get(LeadStatus.CLOSED_WON) ?? 0;
     const conversionRate = toPercent(closedWonContacts, totalLeads);
 
@@ -87,14 +73,14 @@ export async function GET(request: Request) {
         closedWonContacts,
         conversionRate,
         callsToday,
-        emailsToday
+        emailsToday,
       },
       recentActivity: recentContacts.map(c => ({
         id: c.id,
         name: c.fullName,
         status: c.status,
-        createdAt: c.createdAt.toISOString()
-      }))
+        createdAt: c.createdAt.toISOString(),
+      })),
     };
 
     return NextResponse.json(data);

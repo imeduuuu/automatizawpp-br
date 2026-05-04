@@ -39,6 +39,16 @@ interface SystemErrorEvent {
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 }
 
+// Sprint 2.4-A — fecha deuda #3: evento dedicado de escalonamento humano
+interface LeadEscalatedEvent {
+  leadId: string;
+  workspaceId: string;
+  reason: string;
+  fullName?: string;
+  ownerUserId?: string;
+  recipientEmail?: string;
+}
+
 export async function triggerLeadCreated(event: LeadCreatedEvent) {
   const rule = getAlertRule('lead-created');
   if (!rule) return;
@@ -174,6 +184,47 @@ export async function triggerVipLead(
     payload.channel = channel;
     if (channel === 'EMAIL' && email) {
       payload.recipientEmail = email;
+    }
+    await sendNotification({ payload });
+  }
+}
+
+/**
+ * Dispara notificação de escalonamento humano.
+ * Sprint 2.4-A — substitui o workaround de chamar `triggerLeadCreated` quando
+ * o orchestrator decide ESCALATE. Usa a regra `lead-escalated` (URGENT, EMAIL+IN_APP).
+ *
+ * Pré-requisito: o caller já deve ter atualizado o Lead com
+ * `escalated: true, escalatedAt: new Date()` antes de chamar este trigger.
+ */
+export async function triggerEscalation(event: LeadEscalatedEvent) {
+  const rule = getAlertRule('lead-escalated');
+  if (!rule) return;
+
+  const leadName = event.fullName || 'Sem nome';
+  const payload: NotificationPayload = {
+    workspaceId: event.workspaceId,
+    userId: event.ownerUserId,
+    leadId: event.leadId,
+    title: `[ESCALONAMENTO] ${leadName}`,
+    // Mensagem PT-BR / ES — atendimento humano requerido
+    message: `Lead ${leadName} requer atenção humana. Motivo: ${event.reason}`,
+    channel: 'IN_APP',
+    priority: rule.priority,
+    template: rule.template,
+    recipientEmail: event.recipientEmail,
+    metadata: {
+      leadName,
+      reason: event.reason,
+      leadId: event.leadId,
+      source: 'lead-escalated-trigger'
+    }
+  };
+
+  for (const channel of rule.channels) {
+    payload.channel = channel;
+    if (channel === 'EMAIL' && event.recipientEmail) {
+      payload.recipientEmail = event.recipientEmail;
     }
     await sendNotification({ payload });
   }

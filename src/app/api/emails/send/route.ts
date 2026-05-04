@@ -34,14 +34,9 @@ export async function POST(request: Request) {
     // Registar o evento de email
     const emailEvent = await prisma.emailEvent.create({
       data: {
-        workspaceId: workspaceId || lead.workspaceId,
         leadId: parsed.data.leadId,
         type: 'SENT',
-        subject: parsed.data.subject,
-        body: parsed.data.body,
-        fromEmail: process.env.SMTP_FROM || 'noreply@automatizawpp.com',
-        toEmail: parsed.data.to,
-        status: 'PENDING'
+        emailTemplate: parsed.data.subject
       }
     });
 

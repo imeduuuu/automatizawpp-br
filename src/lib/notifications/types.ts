@@ -8,6 +8,7 @@ export type NotificationTemplateType =
   | 'LEAD_QUALIFIED'
   | 'LEAD_HIGH_INTENT'
   | 'LEAD_VIP'
+  | 'LEAD_ESCALATED'
   | 'EMAIL_FAILED'
   | 'CALL_COMPLETED'
   | 'FOLLOW_UP_SENT'

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { getSession } from '@/lib/auth/session';
 
 const DEFAULT_ASSISTANT_ID = '3f91ff80-85db-4735-bc22-2d6abf291b44';
 const DEFAULT_PHONE_ID = '041a9afd-ecb7-4ceb-803a-2b36af793f2d';
@@ -30,8 +30,8 @@ function sanitizeAssistantPayload(payload: Record<string, unknown>) {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session?.userId) {
     return jsonResponse({ error: 'Unauthorised' }, { status: 401 });
   }
 
@@ -60,8 +60,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session?.userId) {
     return jsonResponse({ error: 'Unauthorised' }, { status: 401 });
   }
 

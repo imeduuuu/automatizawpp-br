@@ -631,7 +631,7 @@ export async function chatWithAlexBundle(params: {
 
   let reply = fallbackAlexReply(params.message, report);
 
-  if (anthropic) {
+  if (process.env.ANTHROPIC_API_KEY) {
     try {
       const response = await anthropicClient.messages.create({
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',

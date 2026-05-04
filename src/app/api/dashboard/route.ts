@@ -93,7 +93,7 @@ export async function GET(request: Request) {
     const qualifiedContacts =
       (statusCount.get(LeadStatus.QUALIFIED) ?? 0) +
       (statusCount.get(LeadStatus.PROPOSAL_SENT) ?? 0) +
-      (statusCount.get(LeadStatus.NEGOTIATING) ?? 0);
+      (statusCount.get(LeadStatus.NEGOTIATION) ?? 0);
     const closedWonContacts = statusCount.get(LeadStatus.CLOSED_WON) ?? 0;
     const conversionRate = toPercent(closedWonContacts, totalLeads);
 

@@ -12,10 +12,22 @@ export interface QualificationScore {
 }
 
 export async function runQualificationAgent(leadId: string, conversationText: string): Promise<QualificationScore> {
-  const result = await callAIStructured<QualificationScore>(
+  const raw = await callAIStructured<QualificationScore>(
     QUALIFICATION_PROMPT,
     conversationText
   );
+
+  // Sprint 1.6 V.L.A.E.G.: callAIStructured agora pode retornar null. Fallback seguro.
+  const result: QualificationScore = raw && typeof raw.score === 'number'
+    ? raw
+    : {
+        score: 50,
+        intent: 'MEDIUM',
+        urgency: 'MEDIUM',
+        buyingStage: 'AWARENESS',
+        fitRating: 'possible',
+        reasoning: 'Fallback: respuesta del modelo inválida o vacía',
+      };
 
   await prisma.lead.update({
     where: { id: leadId },

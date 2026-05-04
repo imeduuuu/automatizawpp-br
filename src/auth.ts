@@ -21,12 +21,6 @@ declare module 'next-auth' {
   interface User extends ExtendedUser {}
 }
 
-declare module 'next-auth/jwt' {
-  interface JWT {
-    workspaceId: string;
-    role: string;
-  }
-}
 
 // Rate limiting en memoria (TODO: migrar a Redis en producción)
 const loginAttempts = new Map<string, { count: number; resetTime: number }>();
@@ -72,8 +66,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     updateAge: 24 * 60 * 60 // Refrescar cada 24h
   },
   jwt: {
-    maxAge: 7 * 24 * 60 * 60,
-    secret: process.env.NEXTAUTH_SECRET
+    maxAge: 7 * 24 * 60 * 60
   },
   pages: {
     signIn: '/login',
@@ -87,6 +80,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' }
       },
       async authorize(rawCredentials) {
+        let normalizedEmail = '';
         try {
           const parsed = credentialsSchema.safeParse(rawCredentials);
           if (!parsed.success) {
@@ -95,7 +89,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           const { email, password } = parsed.data;
-          const normalizedEmail = email.toLowerCase();
+          normalizedEmail = email.toLowerCase();
 
           // Rate limiting: protección contra fuerza bruta
           if (!checkRateLimit(normalizedEmail)) {

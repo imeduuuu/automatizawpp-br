@@ -8,6 +8,12 @@ export interface AgentContext {
   message?: string;
   memorySummary?: string;
   recentMessages?: string[];
+  // Sprint 1.7 V.L.A.E.G. — BUG C: ID del AgentRun en curso (opcional).
+  // Permite que los agentes hijos guarden trazabilidad cruzada en sus
+  // payloads y que QA / persistencia outbound enlacen al run que originó
+  // el draft. Se puebla en `events/inbound/route.ts` antes de invocar
+  // a LeadResponseAgent.
+  agentRunId?: string;
   complianceState?: {
     dailyTouches: number;
     maxTouchesPerDay: number;
