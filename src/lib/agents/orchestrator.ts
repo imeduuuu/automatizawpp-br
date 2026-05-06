@@ -479,10 +479,10 @@ export class OrchestratorAgent implements SalesAgent {
     if (!compliance) {
       return {
         agent: this.name,
-        summary: 'Orchestrator action blocked by compliance check',
+        summary: 'Ação bloqueada por regras de conformidade (compliance)',
         payload: {
           action: 'HOLD',
-          reasoning: 'Compliance rules prevent action',
+          reasoning: 'Regras de compliance impedem ação agora',
           targetAgent: 'compliance',
           confidence: 1.0,
         },
@@ -504,7 +504,7 @@ export class OrchestratorAgent implements SalesAgent {
       };
       return {
         agent: this.name,
-        summary: `Orchestrator selected action: ESCALATE (keyword crítica)`,
+        summary: `Orquestrador selecionou ação: ESCALATE (palavra-chave crítica)`,
         payload: escalationDecision,
       };
     }
@@ -528,7 +528,7 @@ export class OrchestratorAgent implements SalesAgent {
 
     return {
       agent: this.name,
-      summary: `Orchestrator selected action: ${safeDecision.action}`,
+      summary: `Orquestrador selecionou ação: ${safeDecision.action}`,
       payload: safeDecision,
     };
   }

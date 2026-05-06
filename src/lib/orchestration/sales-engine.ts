@@ -151,7 +151,8 @@ export async function runSalesOrchestration(input: {
       buyingStage: lead.buyingStage,
       closeProbability: lead.closeProbability,
       nextAction: lead.nextAction,
-      lastContactAt: lead.lastContactAt?.toISOString() ?? null
+      lastContactAt: lead.lastContactAt?.toISOString() ?? null,
+      preferredLanguage: (lead.preferredLanguage === 'es' || lead.preferredLanguage === 'pt-BR' ? lead.preferredLanguage : null),
     },
     objective: 'Handle inbound lead event',
     channel: input.channel,
@@ -186,7 +187,8 @@ export async function runSalesOrchestration(input: {
       buyingStage: lead.buyingStage ?? 'AWARENESS',
       closeProbability: lead.closeProbability ?? 0.5,
       assignedTo: undefined,
-      qualificationScore: lead.leadScoreValue
+      qualificationScore: lead.leadScoreValue,
+      preferredLanguage: (lead.preferredLanguage === 'es' || lead.preferredLanguage === 'pt-BR' ? lead.preferredLanguage : null),
     },
     objective: action,
     channel: input.channel,

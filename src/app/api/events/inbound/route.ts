@@ -449,6 +449,7 @@ export async function POST(request: NextRequest) {
             urgencyLevel: lead.urgencyLevel ?? 'MEDIUM',
             buyingStage: lead.buyingStage ?? 'AWARENESS',
             closeProbability: lead.closeProbability ?? 0.5,
+            preferredLanguage: (lead.preferredLanguage === 'es' || lead.preferredLanguage === 'pt-BR' ? lead.preferredLanguage : null),
           },
           objective: 'QA review pre-envío del draft outbound',
           channel: normalized.channel,

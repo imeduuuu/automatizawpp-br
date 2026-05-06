@@ -32,7 +32,7 @@ export class SalesQaAgent implements SalesAgent {
 
     return {
       agent: this.name,
-      summary: 'QA review executed.',
+      summary: lang === 'pt-BR' ? 'Revisão QA executada.' : 'Revisión QA ejecutada.',
       payload: (result.json as Record<string, unknown>) ?? getFallback(lang),
     };
   }

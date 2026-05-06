@@ -84,7 +84,7 @@ Retorne JSON com:
 }`;
 
   const message = await anthropic.messages.create({
-    model: 'claude-opus-4-1-20250805',
+    model: process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
     max_tokens: 1024,
     messages: [
       {
@@ -169,7 +169,7 @@ Mensagem deve ser:
 - Tom profissional mas amigável`;
 
   const message = await anthropic.messages.create({
-    model: 'claude-opus-4-1-20250805',
+    model: process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
     max_tokens: 256,
     messages: [
       {
@@ -209,7 +209,7 @@ Retorne uma resposta:
 - Em português, tom profissional`;
 
   const message = await anthropic.messages.create({
-    model: 'claude-opus-4-1-20250805',
+    model: process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
     max_tokens: 512,
     messages: [
       {
