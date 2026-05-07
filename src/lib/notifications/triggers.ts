@@ -8,7 +8,7 @@ import { NotificationPayload } from './types';
 async function resolveNotificationUserId(workspaceId: string, ownerUserId?: string): Promise<string | undefined> {
   if (ownerUserId) return ownerUserId;
   const admin = await prisma.user.findFirst({
-    where: { workspaceId, role: { in: ['OWNER', 'ADMIN'] } },
+    where: { workspaceId, role: { in: ['owner', 'admin', 'OWNER', 'ADMIN'] } },
     orderBy: { createdAt: 'asc' },
     select: { id: true }
   });
