@@ -1,20 +1,13 @@
 // Idempotencia para webhooks — evitar procesar el mismo evento dos veces
+// Persistido en WebhookEvent (DB) para sobrevivir reinicios de PM2.
 
-const processedEvents = new Set<string>();
-
-function getKey(source: string, externalId: string): string {
-  return `${source}:${externalId}`;
-}
+import { prisma } from '@/lib/db';
 
 export type ClaimResult =
   | { status: 'claimed' }
   | { status: 'duplicate'; previouslyProcessedAt: Date }
   | { status: 'error'; error: string };
 
-/**
- * Reclamar un evento de webhook para asegurar que solo se procesa una vez.
- * Acepta params adicionales para compatibilidad con los webhooks (event, body).
- */
 export async function claimWebhookEvent(
   source: 'bird' | 'brevo' | 'stripe' | 'vapi' | 'meta' | 'n8n' | 'resend',
   externalId: string,
@@ -22,47 +15,75 @@ export async function claimWebhookEvent(
   _body?: unknown
 ): Promise<ClaimResult> {
   try {
-    const key = getKey(source, externalId);
-    if (processedEvents.has(key)) {
-      console.log(`[idempotency] Evento ya procesado: ${source}/${externalId}`);
-      return { status: 'duplicate', previouslyProcessedAt: new Date() };
+    const existing = await prisma.webhookEvent.findUnique({
+      where: { source_externalId: { source, externalId } },
+      select: { processedAt: true },
+    });
+
+    if (existing) {
+      console.log(`[idempotency] Evento já processado: ${source}/${externalId}`);
+      return { status: 'duplicate', previouslyProcessedAt: existing.processedAt };
     }
-    processedEvents.add(key);
-    console.log(`[idempotency] Evento reclamado: ${source}/${externalId}`);
+
+    await prisma.webhookEvent.create({
+      data: { source, externalId, status: 'PROCESSED' },
+    });
+
+    console.log(`[idempotency] Evento registrado: ${source}/${externalId}`);
     return { status: 'claimed' };
   } catch (error) {
+    // Unique constraint violation = race condition duplicate
+    if (
+      error instanceof Error &&
+      (error.message.includes('Unique constraint') || error.message.includes('unique'))
+    ) {
+      console.log(`[idempotency] Duplicado detectado por race condition: ${source}/${externalId}`);
+      return { status: 'duplicate', previouslyProcessedAt: new Date() };
+    }
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';
-    console.error('[idempotency] Error al reclamar evento:', message);
+    console.error('[idempotency] Erro ao registrar evento:', message);
     return { status: 'error', error: message };
   }
 }
 
-/**
- * Marcar un evento como fallido (para reintentos)
- */
 export async function markWebhookEventAsFailed(
   source: string,
   externalId: string,
   errorMessage: string
 ): Promise<void> {
-  console.log(`[idempotency] Evento fallido: ${source}/${externalId} — ${errorMessage}`);
+  try {
+    await prisma.webhookEvent.upsert({
+      where: { source_externalId: { source, externalId } },
+      update: { status: 'FAILED', errorMessage },
+      create: { source, externalId, status: 'FAILED', errorMessage },
+    });
+  } catch (err) {
+    console.error('[idempotency] Erro ao marcar evento como falho:', err);
+  }
 }
 
 export async function getWebhookEventStatus(
   source: string,
   externalId: string
 ): Promise<'PROCESSED' | 'FAILED' | null> {
-  const key = getKey(source, externalId);
-  return processedEvents.has(key) ? 'PROCESSED' : null;
+  const event = await prisma.webhookEvent.findUnique({
+    where: { source_externalId: { source, externalId } },
+    select: { status: true },
+  });
+  if (!event) return null;
+  return event.status as 'PROCESSED' | 'FAILED';
 }
 
-export async function cleanupOldWebhookEvents(_daysOld = 30): Promise<number> {
-  console.log(`[idempotency] ${processedEvents.size} eventos en memoria (se limpian al reiniciar)`);
-  return 0;
+export async function cleanupOldWebhookEvents(daysOld = 30): Promise<number> {
+  const cutoff = new Date(Date.now() - daysOld * 24 * 60 * 60 * 1000);
+  const result = await prisma.webhookEvent.deleteMany({
+    where: { processedAt: { lt: cutoff } },
+  });
+  return result.count;
 }
 
 export function resetIdempotencyStore(): void {
-  processedEvents.clear();
+  // No-op: store é persistido no BD, não em memória
 }
 
 export const markWebhookEventFailed = markWebhookEventAsFailed;
