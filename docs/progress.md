@@ -453,3 +453,60 @@ Fase 5 (Gatillo):         ✅ Deployado, payload persiste en DB (destino global 
 - 3 backups em `/opt/automatizawpp/backups/`
 - 2 rows removidas de `_prisma_migrations` (records pending duplicados)
 - 0 mudanças de schema (validado por `migrate status`)
+
+---
+
+## Sessão 2026-05-06/07 — Sessão autônoma 4h: fixes de idioma, segurança e deploy
+
+**Contexto:** Eduardo autorizou sessão autônoma de 4h sem pedir autorização. Objetivo: corrigir todos os bugs conhecidos no AutomatizaWPP.
+
+### Realizado
+
+1. **Continuação da sessão anterior:**
+   - Commit `65d228f`: `src/lib/ai/client.ts` lazy init (evita crash no import sem `OPENAI_API_KEY`) + `scripts/cron-followups.sh` adicionado ao repo para sobreviver deploys rsync.
+
+2. **Fix idioma follow-up runner (Gap #11):**
+   - `runner.ts`: subject do email bilíngue (`preferredLanguage` → PT-BR/ES)
+   - `scheduler.ts`: reason field em PT-BR
+   - `followup-agent.ts`: objective bilíngue
+   - `sales-engine.ts`: objective + reason em `scheduleFollowUp` bilíngues
+   - `api/auth/me`: erros em PT-BR (Não autorizado, Token inválido, etc.)
+   - `api/forms/submit-lead`: erros em PT-BR (endpoint público)
+   - Commit `2d40ff6`
+
+3. **Segurança — debug endpoints bloqueados em produção (Gap #12):**
+   - `/api/debug/db-test` e `/api/debug/prisma-singleton` retornam 404 em `NODE_ENV=production`
+   - Removida exposição de DATABASE_URL status em handlers de erro
+   - Commit `ac4bcf3`
+
+4. **Deploy para produção:**
+   - `git stash + pull` no servidor para resolver divergência de estado (mudanças do rsync vs git)
+   - `rm tsconfig.tsbuildinfo + npm run build` (build limpo — o arquivo estava corrompido)
+   - `pm2 restart --update-env`
+   - Verificado: `localhost:3000/api/auth/me` → 401, `/api/followups/run` → `{"success":true,"executed":0}`
+
+### Arquivos modificados (commits 65d228f, 2d40ff6, ac4bcf3)
+- `src/lib/ai/client.ts` — lazy init OpenAI
+- `scripts/cron-followups.sh` — novo arquivo no repo
+- `src/lib/followup/runner.ts` — subject bilíngue
+- `src/lib/followup/scheduler.ts` — reason em PT-BR
+- `src/lib/agents/followup-agent.ts` — objective bilíngue
+- `src/lib/orchestration/sales-engine.ts` — objective/reason bilíngues
+- `src/app/api/auth/me/route.ts` — erros em PT-BR
+- `src/app/api/forms/submit-lead/route.ts` — erros em PT-BR
+- `src/app/api/debug/db-test/route.ts` — bloqueado em prod
+- `src/app/api/debug/prisma-singleton/route.ts` — bloqueado em prod
+- `docs/findings.md` — gaps #11 e #12 documentados
+
+### Estado de produção ao cierre
+- ✅ `https://automatizawpp.com` operacional (PM2 online, Nginx, SSL)
+- ✅ Follow-ups cron: `/var/log/automatizawpp-followups.log` com HTTP 200 a cada 5min
+- ✅ `scripts/cron-followups.sh` no repo — sobreviverá próximos deploys
+- ✅ Debug endpoints bloqueados em produção
+- ✅ Emails de follow-up agora em PT-BR ou ES conforme preferredLanguage do lead
+
+### Pendentes (próxima sessão)
+- [ ] Verificação GSC (Google Search Console) — Eduardo deve verificar manualmente
+- [ ] Canal WhatsApp Bird — aguardando `BIRD_WHATSAPP_CHANNEL_ID` de Eduardo
+- [ ] Webhook Bird: adicionar verificação de assinatura HMAC (segurança média)
+- [ ] `src/lib/tuning/feedback-service.ts`: implementar persistência real de reviews (TODO conhecido)

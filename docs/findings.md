@@ -290,3 +290,33 @@ Auditoría del código por Eduardo durante respuesta a las 5 Preguntas. Cada gap
 **Fix (2026-05-04):** Criado `prisma/migrations/0_init/README.md` documentando o pattern, o que NÃO fazer (preencher), e o procedimento para greenfield.
 
 **Lección:** Baselining vazio é correto para projetos pré-existentes. Não tratar como bug.
+
+---
+
+## Gap #11 — Email subject de follow-up em inglês (customer-facing) 🔴 (2026-05-07 ✅ resuelto)
+
+**Síntoma:** Leads recebiam emails de follow-up com assunto `'Follow-up: Your Inquiry'` em inglês.
+
+**Causa raíz:** `src/lib/followup/runner.ts:72` hardcoded em inglês. Violava CLAUDE.md §5 ("nunca inglês").
+
+**Fix:** Subject agora bilíngue baseado em `task.lead.preferredLanguage`:
+- PT-BR: `'Acompanhamento: Sua consulta'`
+- ES: `'Seguimiento: Su consulta'`
+
+Também corrigido `scheduler.ts` reason field e `followup-agent.ts` / `sales-engine.ts` objective strings.
+
+**Lección:** Qualquer string customer-facing (subject, body, CTA) deve passar por verificação de idioma. Sempre grep `'Follow-up:\|Your Inquiry\|Inquiry\|Automated\|Handle'` antes de fazer deploy de feature de messaging.
+
+---
+
+## Gap #12 — Endpoints /api/debug/* acessíveis em produção 🔴 (2026-05-07 ✅ resuelto)
+
+**Síntoma:** `/api/debug/db-test` e `/api/debug/prisma-singleton` retornavam dados sensíveis sem autenticação em produção:
+- `db-test`: email e ID do usuário admin, status de passwordHash, mensagem de erro com status de DATABASE_URL
+- `prisma-singleton`: contagem total de usuários, NODE_ENV, status de DATABASE_URL em caso de erro
+
+**Causa raíz:** Endpoints marcados como PUBLIC em `middleware.ts` (`'/api/debug'` na lista `PUBLIC_API_PREFIXES`), criados para debugging de desenvolvimento mas nunca bloqueados para produção.
+
+**Fix:** Adicionado guard `if (process.env.NODE_ENV === 'production') return NextResponse.json({ error: 'Não disponível' }, { status: 404 })` em ambos os endpoints. Removida exposição de `DATABASE_URL` nos handlers de erro.
+
+**Lección:** Todo endpoint de debug deve ter guard `NODE_ENV !== 'production'` ou ser removido do build de produção. Auditar `PUBLIC_API_PREFIXES` periodicamente para verificar que não há endpoints de debug expostos.
