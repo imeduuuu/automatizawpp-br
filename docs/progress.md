@@ -526,3 +526,31 @@ Fase 5 (Gatillo):         ✅ Deployado, payload persiste en DB (destino global 
 - [ ] Canal WhatsApp Bird — aguardando `BIRD_WHATSAPP_CHANNEL_ID` de Eduardo
 - [ ] Webhook Bird: adicionar verificação de assinatura HMAC (segurança média)
 - [ ] `src/lib/tuning/feedback-service.ts`: implementar persistência real de reviews (TODO conhecido)
+
+---
+
+## Sessão 2026-05-07 (continuação) — Bug Hunt Sprint #2
+
+### Commits desta sessão
+- `29eb6fd` — fix: role case mismatch em resolveNotificationUserId (IN_APP → SENT)
+- `24519b4` — i18n: 79 arquivos, strings inglesas → PT-BR/ES (bulk)
+- `72c7bad` — fix: monitoring routes + feedback-service DB persistence
+- `0f0f7ab` — fix: idempotência webhook em BD (WebhookEvent, sobrevive PM2 restart)
+
+### Infraestrutura
+- ✅ Nginx: redirect apex→www agora 308 (preserva POST body)
+- ✅ PM2 uptime OK após 7 restarts
+
+### Bugs corrigidos (Gaps #14–#17)
+- ✅ IN_APP notifications: role lowercase fix → todas as notificações agora SENT
+- ✅ 79 arquivos: 'Unknown error', 'Unauthorized', 'Forbidden', etc. → PT-BR
+- ✅ Monitoring routes: workspace hardcoded removido → isolamento multi-tenant real
+- ✅ feedback-service: implementação real via ActivityLog (type=QA_REVIEW)
+- ✅ Webhook idempotência: in-memory → Prisma WebhookEvent (persistente)
+- ✅ Nginx 301 → 308 para apex: POSTs não perdem body no redirect
+
+### Pendentes (próxima sessão)
+- [ ] GSC — Eduardo verificar manualmente
+- [ ] BIRD_WHATSAPP_CHANNEL_ID — aguardando de Eduardo
+- [ ] Webhook Bird HMAC signature verification (segurança)
+- [ ] Completar fallback 'Unknown' → 'Desconhecido' nos campos de lead criados via webhook

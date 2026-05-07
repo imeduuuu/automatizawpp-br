@@ -337,3 +337,51 @@ Também corrigido `scheduler.ts` reason field e `followup-agent.ts` / `sales-eng
 **Verificação:** Teste E2E com Bird workspace UUID externo → lead criado com `workspaceId=demo_workspace`, agente respondeu em PT-BR, QA passou, nenhum erro de FK no log.
 
 **Lección:** Nunca usar IDs externos de provedores (Bird, Stripe, SendGrid) como IDs internos da app. Criar sempre env vars separadas: `BIRD_API_WORKSPACE_ID` (para chamadas à API Bird) vs `APP_WORKSPACE_ID` (para a BD). O fallback `'demo_workspace'` garantia corretude mesmo sem env var explícita.
+
+---
+
+## Gap #14 — IN_APP notifications falhando: role case mismatch 🔴 (2026-05-07 ✅ resuelto)
+
+**Síntoma:** Todas as notificações `IN_APP` com status `FAILED` e `failureReason="workspaceId and userId required for in-app notifications"`. O fix da sessão anterior (resolveNotificationUserId) não estava surtindo efeito.
+
+**Causa raíz:** O schema Prisma salva `User.role` com lowercase padrão `"owner"`, mas `resolveNotificationUserId` filtrava por `role: { in: ['OWNER', 'ADMIN'] }` (uppercase). Query nunca encontrava o admin, retornando `userId: undefined`.
+
+**Fix:** `src/lib/notifications/triggers.ts`: filtro corrigido para `['owner', 'admin', 'OWNER', 'ADMIN']` para cobrir ambos os formatos.
+
+**Lección:** Sempre verificar o valor real salvo no BD antes de usar em filtros. `User.role` é `String` (não enum Prisma), portanto o valor pode ser qualquer case. Usar `role: { in: ['owner', 'admin'] }` ou migrar o campo para enum tipado.
+
+---
+
+## Gap #15 — Webhook idempotência em memória: duplicados após reiniciar PM2 🔴 (2026-05-07 ✅ resuelto)
+
+**Síntoma:** Qualquer reinício de PM2 (deploy, crash, restart) limpava o `Set<string>` de idempotência. Eventos Bird/Brevo poderiam ser processados duas vezes após reinício.
+
+**Causa raíz:** `src/lib/webhooks/idempotency.ts` usava `const processedEvents = new Set<string>()` em memória. O modelo `WebhookEvent` (com `@@unique([source, externalId])`) existia no schema mas não era usado.
+
+**Fix:** Reescrito para usar `prisma.webhookEvent` com `findUnique` + `create`. Race conditions detectadas via unique constraint violation (handled with try/catch). `cleanupOldWebhookEvents` agora deleta registros antigos do BD.
+
+**Lección:** Idempotência de webhooks DEVE ser persistida. A única proteção real contra duplicados num ambiente multi-restart é uma chave única no BD.
+
+---
+
+## Gap #16 — Monitoring routes com workspace hardcoded 🔴 (2026-05-07 ✅ resuelto)
+
+**Síntoma:** `/api/monitoring/metrics`, `/api/monitoring/alerts`, `/api/monitoring/events` usavam `workspaceId = 'workspace-default'` em vez do workspace do usuário autenticado. Qualquer usuário autenticado via com dados de todos os workspaces.
+
+**Causa raíz:** TODOs deixados pelos devs originais: `// TODO: Get workspaceId from session`.
+
+**Fix:** Substituído por `session.user.workspaceId ?? 'demo_workspace'` nos três routes.
+
+**Lección:** Grep `workspace-default\|workspaceId.*default` periodicamente em API routes para detectar placeholders que quebram o isolamento multi-tenant.
+
+---
+
+## Gap #17 — POST descartado em redirect 301 apex → www 🟡 (2026-05-07 ✅ resuelto)
+
+**Síntoma:** POSTs a `https://automatizawpp.com/api/...` perdiam o body após o redirect para `https://www.automatizawpp.com/...`. Bird webhooks configurados para o apex não chegavam ao backend.
+
+**Causa raíz:** Nginx usava `return 301` no bloco HTTPS apex. HTTP 301 permite que clientes mudem POST para GET ao seguir o redirect (comportamento RFC comum em browsers e curl).
+
+**Fix:** Mudado para `return 308` (Permanent Redirect que preserva o método HTTP). 308 é equivalente ao 301 mas garante que POST permanece POST.
+
+**Lección:** Redirects para endpoints de API/webhook devem usar 307 (temporário) ou 308 (permanente) para preservar o método. 301/302 são para browsers/páginas HTML onde o método de destino é sempre GET.
