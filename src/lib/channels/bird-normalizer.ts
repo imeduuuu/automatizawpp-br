@@ -82,7 +82,7 @@ export function normalizeBirdEvent(
     const source = channel === 'WHATSAPP' ? 'BIRD_WHATSAPP' : 'BIRD_EMAIL';
 
     return {
-      workspaceId: event.workspace?.id ?? defaultWorkspaceId,
+      workspaceId: defaultWorkspaceId,
       channel,
       message: stripQuotedHistory(rawText),
       subject: undefined,

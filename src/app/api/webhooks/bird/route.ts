@@ -3,7 +3,8 @@ import { normalizeBirdEvent } from '@/lib/channels/bird-normalizer';
 import { resolveLead } from '@/lib/orchestration/lead-resolution';
 import { runSalesOrchestration } from '@/lib/orchestration/sales-engine';
 
-const WORKSPACE_ID = process.env.BIRD_WORKSPACE_ID ?? 'demo_workspace';
+// APP_WORKSPACE_ID = workspace da app na BD. BIRD_WORKSPACE_ID é o ID externo do Bird API.
+const WORKSPACE_ID = process.env.APP_WORKSPACE_ID ?? 'demo_workspace';
 
 export async function POST(request: NextRequest) {
   let body: unknown;

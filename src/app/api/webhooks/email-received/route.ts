@@ -6,7 +6,7 @@ import { eventEmitter, EventType, EmailReceivedEvent } from '@/lib/events';
 import { resolveLead } from '@/lib/orchestration/lead-resolution';
 import { runSalesOrchestration } from '@/lib/orchestration/sales-engine';
 
-const WORKSPACE_ID = process.env.BIRD_WORKSPACE_ID ?? 'demo_workspace';
+const WORKSPACE_ID = process.env.APP_WORKSPACE_ID ?? 'demo_workspace';
 
 export async function POST(request: NextRequest) {
   let body: any;

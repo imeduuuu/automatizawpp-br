@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Normalize payload from n8n/external providers
-    const normalized = normalizeBirdEvent(body, process.env.BIRD_WORKSPACE_ID || 'default');
+    const normalized = normalizeBirdEvent(body, process.env.APP_WORKSPACE_ID ?? 'demo_workspace');
     if (!normalized) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
@@ -594,7 +594,7 @@ export async function POST(request: NextRequest) {
       const errMsg = error instanceof Error ? error.message : 'Unknown error';
       await triggerSystemError({
         // Fallback para evitar workspaceId vazio quando o erro acontece antes da normalização.
-        workspaceId: process.env.BIRD_WORKSPACE_ID || 'default',
+        workspaceId: process.env.APP_WORKSPACE_ID ?? 'demo_workspace',
         source: 'api/events/inbound',
         error: errMsg,
         severity: 'HIGH',
