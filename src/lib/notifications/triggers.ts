@@ -1,8 +1,19 @@
 // Gatilhos de notificação integrados com leads e eventos
 
+import { prisma } from '@/lib/db';
 import { sendNotification } from './service';
 import { getAlertRule } from './alert-rules';
 import { NotificationPayload } from './types';
+
+async function resolveNotificationUserId(workspaceId: string, ownerUserId?: string): Promise<string | undefined> {
+  if (ownerUserId) return ownerUserId;
+  const admin = await prisma.user.findFirst({
+    where: { workspaceId, role: { in: ['OWNER', 'ADMIN'] } },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true }
+  });
+  return admin?.id;
+}
 
 interface LeadCreatedEvent {
   leadId: string;
@@ -53,9 +64,11 @@ export async function triggerLeadCreated(event: LeadCreatedEvent) {
   const rule = getAlertRule('lead-created');
   if (!rule) return;
 
+  const userId = await resolveNotificationUserId(event.workspaceId, event.ownerUserId);
+
   const payload: NotificationPayload = {
     workspaceId: event.workspaceId,
-    userId: event.ownerUserId,
+    userId,
     leadId: event.leadId,
     title: `Novo Lead: ${event.fullName || 'Sem nome'}`,
     message: `${event.fullName || 'Novo prospect'} de ${event.company || 'Empresa desconhecida'} foi registrado no sistema`,
@@ -84,9 +97,11 @@ export async function triggerLeadQualified(event: LeadQualifiedEvent) {
   const rule = getAlertRule('lead-qualified');
   if (!rule) return;
 
+  const userId = await resolveNotificationUserId(event.workspaceId, event.ownerUserId);
+
   const payload: NotificationPayload = {
     workspaceId: event.workspaceId,
-    userId: event.ownerUserId,
+    userId,
     leadId: event.leadId,
     title: `Lead Qualificado: ${event.fullName || 'Prospect'}`,
     message: `${event.fullName || 'Prospect'} foi qualificado como prospect de alta qualidade (Score: ${event.qualificationScore || 0})`,
@@ -122,9 +137,11 @@ export async function triggerHighIntentLead(
   const rule = getAlertRule('lead-high-intent');
   if (!rule) return;
 
+  const userId = await resolveNotificationUserId(workspaceId, ownerUserId);
+
   const payload: NotificationPayload = {
     workspaceId,
-    userId: ownerUserId,
+    userId,
     leadId,
     title: `ALTA INTENÇÃO: ${fullName || 'Prospect'}`,
     message: `${fullName || 'Prospect'} de ${company || 'Empresa'} mostrou sinais de alta intenção de compra!`,
@@ -163,9 +180,11 @@ export async function triggerVipLead(
   const rule = getAlertRule('lead-vip');
   if (!rule) return;
 
+  const userId = await resolveNotificationUserId(workspaceId, ownerUserId);
+
   const payload: NotificationPayload = {
     workspaceId,
-    userId: ownerUserId,
+    userId,
     leadId,
     title: `VIP LEAD: ${fullName || 'Prospect'}`,
     message: `${fullName || 'Prospect'} de ${company || 'Empresa'} foi classificado como lead VIP - Requer atenção prioritária!`,
@@ -201,10 +220,11 @@ export async function triggerEscalation(event: LeadEscalatedEvent) {
   const rule = getAlertRule('lead-escalated');
   if (!rule) return;
 
+  const userId = await resolveNotificationUserId(event.workspaceId, event.ownerUserId);
   const leadName = event.fullName || 'Sem nome';
   const payload: NotificationPayload = {
     workspaceId: event.workspaceId,
-    userId: event.ownerUserId,
+    userId,
     leadId: event.leadId,
     title: `[ESCALONAMENTO] ${leadName}`,
     // Mensagem PT-BR / ES — atendimento humano requerido
@@ -234,9 +254,11 @@ export async function triggerEmailFailed(event: EmailFailedEvent) {
   const rule = getAlertRule('email-failed');
   if (!rule) return;
 
+  const userId = await resolveNotificationUserId(event.workspaceId, event.ownerUserId);
+
   const payload: NotificationPayload = {
     workspaceId: event.workspaceId,
-    userId: event.ownerUserId,
+    userId,
     leadId: event.leadId,
     title: 'Email Falhou',
     message: `Falha ao enviar email para ${event.recipientEmail}: ${event.reason}`,
@@ -296,9 +318,11 @@ export async function triggerOpportunityHighValue(
   const rule = getAlertRule('opportunity-high-value');
   if (!rule) return;
 
+  const userId = await resolveNotificationUserId(workspaceId, ownerUserId);
+
   const payload: NotificationPayload = {
     workspaceId,
-    userId: ownerUserId,
+    userId,
     leadId,
     title: `OPORTUNIDADE ALTO VALOR: ${fullName || 'Prospect'}`,
     message: `${fullName || 'Prospect'} de ${company || 'Empresa'} representa uma oportunidade de ~$${estimatedValue.toLocaleString()}`,
