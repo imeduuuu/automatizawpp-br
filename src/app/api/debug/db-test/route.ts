@@ -1,6 +1,11 @@
 import { prisma } from '@/lib/db';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Não disponível' }, { status: 404 });
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: { email: 'admin@automatizawpp.com' }
@@ -19,8 +24,7 @@ export async function GET() {
   } catch (error) {
     return Response.json({
       success: false,
-      error: (error as Error).message,
-      databaseUrl: process.env.DATABASE_URL ? '✓ Configurada' : '✗ NO CONFIGURADA'
+      error: (error as Error).message
     }, { status: 500 });
   }
 }
