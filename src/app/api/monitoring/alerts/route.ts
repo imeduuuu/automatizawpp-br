@@ -15,8 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    // TODO: Get workspaceId from session
-    const workspaceId = 'workspace-default';
+    const workspaceId = session.user.workspaceId ?? 'demo_workspace';
 
     const alerts = await getActiveAlerts(workspaceId);
 
