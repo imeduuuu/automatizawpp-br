@@ -320,3 +320,20 @@ Também corrigido `scheduler.ts` reason field e `followup-agent.ts` / `sales-eng
 **Fix:** Adicionado guard `if (process.env.NODE_ENV === 'production') return NextResponse.json({ error: 'Não disponível' }, { status: 404 })` em ambos os endpoints. Removida exposição de `DATABASE_URL` nos handlers de erro.
 
 **Lección:** Todo endpoint de debug deve ter guard `NODE_ENV !== 'production'` ou ser removido do build de produção. Auditar `PUBLIC_API_PREFIXES` periodicamente para verificar que não há endpoints de debug expostos.
+
+---
+
+## Gap #13 — Bird workspace ID ≠ app workspace ID: notifications e leads com FK inválida 🔴 (2026-05-07 ✅ resuelto)
+
+**Síntoma:** `Notification_workspaceId_fkey` foreign key violation em todos os eventos inbound do Bird. Notificações de admin nunca persistidas. Possível falha silenciosa de criação de leads com workspaceId inválido.
+
+**Causa raíz:** `BIRD_WORKSPACE_ID` no `.env` é o UUID externo do Bird API (`5996a896-da81-4c26-a3e9-7e9cf949228f`), não o ID do workspace da app na BD (`demo_workspace`). Em `bird-normalizer.ts`, `event.workspace?.id` (que vem do Bird) era usado com prioridade sobre `defaultWorkspaceId`, então mesmo passando `BIRD_WORKSPACE_ID` como default, o UUID do Bird prevalecia.
+
+**Fix:**
+1. `bird-normalizer.ts`: removida prioridade de `event.workspace?.id` — sempre usa `defaultWorkspaceId` (que deve ser o workspace da app).
+2. `/api/webhooks/bird`, `/api/events/inbound`, `/api/webhooks/email-received`: mudado de `BIRD_WORKSPACE_ID` para `APP_WORKSPACE_ID` (novo env var) com fallback `'demo_workspace'`.
+3. Servidor: `APP_WORKSPACE_ID=demo_workspace` adicionado ao `.env.production.local`.
+
+**Verificação:** Teste E2E com Bird workspace UUID externo → lead criado com `workspaceId=demo_workspace`, agente respondeu em PT-BR, QA passou, nenhum erro de FK no log.
+
+**Lección:** Nunca usar IDs externos de provedores (Bird, Stripe, SendGrid) como IDs internos da app. Criar sempre env vars separadas: `BIRD_API_WORKSPACE_ID` (para chamadas à API Bird) vs `APP_WORKSPACE_ID` (para a BD). O fallback `'demo_workspace'` garantia corretude mesmo sem env var explícita.

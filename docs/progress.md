@@ -505,6 +505,22 @@ Fase 5 (Gatillo):         ✅ Deployado, payload persiste en DB (destino global 
 - ✅ Debug endpoints bloqueados em produção
 - ✅ Emails de follow-up agora em PT-BR ou ES conforme preferredLanguage do lead
 
+4. **Bug crítico: Bird workspace ID ≠ App workspace ID (Gap #13):**
+   - Erro encontrado nos logs: `Foreign key constraint violated on the constraint: Notification_workspaceId_fkey`
+   - Causa raíz: `BIRD_WORKSPACE_ID = '5996a896-...'` (UUID externo Bird) ≠ `demo_workspace` (workspace da app na BD)
+   - `bird-normalizer.ts`: removida prioridade de `event.workspace?.id` do Bird
+   - 3 endpoints mudados de `BIRD_WORKSPACE_ID` para `APP_WORKSPACE_ID ?? 'demo_workspace'`
+   - Servidor: `APP_WORKSPACE_ID=demo_workspace` adicionado ao `.env.production.local`
+   - Verificado E2E: lead criado, agente respondeu PT-BR, QA passou, FK violations desapareceram dos logs
+   - Commit `9e64e39`
+
+### Estado de produção ao cierre (2026-05-07 ~12:30 UTC)
+- ✅ `https://automatizawpp.com` operacional
+- ✅ Follow-ups cron: HTTP 200 a cada 5min
+- ✅ Bug de workspaceId resolvido — notifications persistem corretamente
+- ✅ Debug endpoints bloqueados em produção
+- ✅ E2E verificado: inbound → lead criado → agente PT-BR → QA pass
+
 ### Pendentes (próxima sessão)
 - [ ] Verificação GSC (Google Search Console) — Eduardo deve verificar manualmente
 - [ ] Canal WhatsApp Bird — aguardando `BIRD_WHATSAPP_CHANNEL_ID` de Eduardo
