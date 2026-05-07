@@ -29,7 +29,7 @@ export async function scheduleFollowUp(
         scheduledFor,
         attempt: attemptNumber,
         channel: 'EMAIL',
-        reason: `Follow-up ${temperature} temperature - attempt ${attemptNumber + 1}`,
+        reason: `Follow-up ${temperature} — tentativa ${attemptNumber + 1}`,
       },
     });
   } catch (error) {

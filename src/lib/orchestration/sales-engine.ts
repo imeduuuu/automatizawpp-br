@@ -154,7 +154,9 @@ export async function runSalesOrchestration(input: {
       lastContactAt: lead.lastContactAt?.toISOString() ?? null,
       preferredLanguage: (lead.preferredLanguage === 'es' || lead.preferredLanguage === 'pt-BR' ? lead.preferredLanguage : null),
     },
-    objective: 'Handle inbound lead event',
+    objective: lead.preferredLanguage === 'pt-BR'
+      ? 'Processar evento inbound do lead'
+      : 'Procesar evento inbound del lead',
     channel: input.channel,
     message: input.message,
     memorySummary: memorySummary ?? undefined,
@@ -306,7 +308,9 @@ export async function runSalesOrchestration(input: {
       optedOut: Boolean(lead.optOutAt)
     },
     input.channel,
-    'Automated persistence after inbound conversation',
+    lead.preferredLanguage === 'pt-BR'
+      ? 'Persistência automática após conversa inbound'
+      : 'Persistencia automática tras conversación inbound',
     { action: agentPayload?.action }
   );
 

@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const workspaceId = await resolveWorkspaceId();
     if (!workspaceId) {
       return NextResponse.json(
-        { error: 'Workspace not found' },
+        { error: 'Configuração do workspace não encontrada' },
         { status: 400 }
       );
     }
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -146,7 +146,9 @@ export async function runFollowUpAgent(leadId: string, _attemptCount: number): P
         // Sprint 1.2: pasamos preferredLanguage del lead Prisma al AgentContext.
         preferredLanguage: (lead.preferredLanguage === 'pt-BR' ? 'pt-BR' : 'es') as 'es' | 'pt-BR',
       },
-      objective: 'Follow up with lead to maintain engagement and move toward conversion',
+      objective: lead.preferredLanguage === 'pt-BR'
+        ? 'Acompanhar o lead para manter engajamento e avançar para conversão'
+        : 'Hacer seguimiento al lead para mantener el engagement y avanzar hacia la conversión',
       channel: lead.conversations[0]?.channel ?? 'EMAIL',
       memorySummary: '',
       complianceState: {

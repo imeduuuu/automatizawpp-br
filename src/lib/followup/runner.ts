@@ -66,10 +66,15 @@ export async function runFollowUps() {
           throw new Error('Lead has no email or phone');
         }
 
+        const lang = task.lead.preferredLanguage === 'pt-BR' ? 'pt-BR' : 'es';
+        const subject = lang === 'pt-BR'
+          ? 'Acompanhamento: Sua consulta'
+          : 'Seguimiento: Su consulta';
+
         const delivery = await routeMessage({
           channel: task.channel || 'EMAIL',
           to,
-          subject: 'Follow-up: Your Inquiry',
+          subject,
           body: message,
         });
 

@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     if (!token) {
       return NextResponse.json(
-        { ok: false, error: 'Unauthorized' },
+        { ok: false, error: 'Não autorizado' },
         { status: 401 }
       );
     }
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     if (!payload) {
       return NextResponse.json(
-        { ok: false, error: 'Invalid or expired token' },
+        { ok: false, error: 'Token inválido ou expirado' },
         { status: 401 }
       );
     }
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { ok: false, error: 'User not found' },
+        { ok: false, error: 'Usuário não encontrado' },
         { status: 404 }
       );
     }
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[Auth Me]', error);
     return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
+      { ok: false, error: 'Erro interno do servidor' },
       { status: 500 }
     );
   }
