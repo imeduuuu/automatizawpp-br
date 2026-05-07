@@ -26,7 +26,7 @@ const schema = z.object({
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ ok: false, error: 'Não autorizado' }, { status: 401 });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

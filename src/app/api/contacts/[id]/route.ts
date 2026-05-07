@@ -43,7 +43,7 @@ export async function GET(
       }
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -74,7 +74,7 @@ export async function PATCH(
       }
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -91,7 +91,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

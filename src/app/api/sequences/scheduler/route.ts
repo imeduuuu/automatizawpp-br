@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   const expectedToken = process.env.CRON_TOKEN;
 
   if (expectedToken && cronToken !== expectedToken) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   try {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       results
     }, { status: 200 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('[Scheduler] Erro:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

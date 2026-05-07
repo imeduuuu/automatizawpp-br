@@ -73,7 +73,7 @@ export class BirdVoiceProvider implements VoiceProvider {
         status: 'failed' as const,
         metadata: {
           to: input.to,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : 'Erro interno do servidor',
           script: input.script
         }
       };

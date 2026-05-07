@@ -16,7 +16,7 @@ import { prisma } from '@/lib/db';
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   try {
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       lead: updatedLead
     }, { status: 200 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('[Automation API] Erro:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

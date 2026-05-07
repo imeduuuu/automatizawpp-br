@@ -126,7 +126,7 @@ export async function sendNotification(
     }
     results.push(result);
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    const errorMsg = error instanceof Error ? error.message : 'Erro interno do servidor';
     await prisma.notification.update({
       where: { id: notificationId },
       data: {
@@ -258,7 +258,7 @@ export async function retryFailedNotifications(limit = 10): Promise<Notification
         logs.failed.push(result);
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      const errorMsg = error instanceof Error ? error.message : 'Erro interno do servidor';
       await prisma.notification.update({
         where: { id: notif.id },
         data: { retryCount: notif.retryCount + 1 }

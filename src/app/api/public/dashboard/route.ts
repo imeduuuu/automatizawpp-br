@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const hasToken = validatePublicToken(request);
     if (!hasToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

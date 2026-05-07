@@ -17,7 +17,7 @@ async function resolveBundleAccess(userId: string, workspaceId: string) {
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id || !session.user.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   try {
@@ -28,7 +28,7 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: error.statusCode });
     }
 
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -36,7 +36,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id || !session.user.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   try {
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: error.statusCode });
     }
 
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

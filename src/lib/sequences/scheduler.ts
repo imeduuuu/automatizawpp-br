@@ -110,7 +110,7 @@ export async function dispatchFollowUp(followUpTask: any): Promise<DispatchResul
       status: 'SENT'
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
 
     // Marca como cancelado (FAILED não existe em FollowUpStatus — usa CANCELLED)
     await prisma.followUpTask.update({

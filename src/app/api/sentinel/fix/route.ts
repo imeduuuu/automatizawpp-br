@@ -149,7 +149,7 @@ export async function POST(request: Request) {
       fixResult: result
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return sentinelJson({ error: message }, { status: 500 });
   }
 }

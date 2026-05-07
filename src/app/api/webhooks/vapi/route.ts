@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   const incoming = request.headers.get('x-vapi-secret');
 
   if (secret && incoming !== secret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   let externalId: string | undefined;
@@ -171,7 +171,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     if (externalId) {
       await markWebhookEventFailed('vapi', externalId, message).catch(() => {});
     }

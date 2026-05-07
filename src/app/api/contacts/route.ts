@@ -72,7 +72,7 @@ export async function GET(request: Request) {
       limit
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       }
     }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

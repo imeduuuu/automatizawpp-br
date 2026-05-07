@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('[Email Events Webhook] Erro:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

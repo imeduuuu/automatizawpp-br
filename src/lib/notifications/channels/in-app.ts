@@ -32,7 +32,7 @@ export async function sendInAppNotification(payload: NotificationPayload): Promi
     return {
       success: false,
       channel: 'IN_APP',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Erro interno do servidor'
     };
   }
 }

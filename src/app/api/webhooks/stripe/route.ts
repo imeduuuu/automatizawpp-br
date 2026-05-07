@@ -115,7 +115,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     if (externalId) {
       await markWebhookEventFailed('stripe', externalId, message).catch(() => {});
     }

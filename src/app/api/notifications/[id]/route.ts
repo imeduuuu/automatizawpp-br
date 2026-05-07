@@ -11,7 +11,7 @@ export async function DELETE(
   
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   try {
@@ -20,7 +20,7 @@ export async function DELETE(
     });
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -34,7 +34,7 @@ export async function PATCH(
   
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   try {
@@ -45,7 +45,7 @@ export async function PATCH(
     });
     return NextResponse.json(updated);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

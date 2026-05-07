@@ -35,21 +35,21 @@ export async function POST(request: Request) {
         sessionId: body.sessionId || null
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Erro interno do servidor';
       return NextResponse.json({ error: message }, { status: 500 });
     }
   }
 
   const session = await auth();
   if (!session?.user?.id || !session.user.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   try {
     const result = await activateScaleBundleForUser(session.user.id);
     return NextResponse.json({ ok: true, activated: result });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

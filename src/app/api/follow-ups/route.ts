@@ -54,7 +54,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ followUps, total: followUps.length });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

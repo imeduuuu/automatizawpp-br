@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   try {
     const session = await getSession();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ preferences });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -34,7 +34,7 @@ export async function PUT(request: Request) {
   try {
     const session = await getSession();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const { channel, updates } = await request.json();
@@ -46,7 +46,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ preferences });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

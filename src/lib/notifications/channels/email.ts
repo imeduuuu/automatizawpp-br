@@ -43,7 +43,7 @@ export async function sendEmailNotification(payload: NotificationPayload): Promi
     return {
       success: false,
       channel: 'EMAIL',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : 'Erro interno do servidor',
       retryable: true
     };
   }

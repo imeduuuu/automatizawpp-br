@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       total: formattedConversations.length
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('[public/conversations] Error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

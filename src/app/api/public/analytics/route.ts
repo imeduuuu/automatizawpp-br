@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ stats });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('[public/analytics] Error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

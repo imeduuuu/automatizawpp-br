@@ -33,7 +33,7 @@ export async function checkDatabase(): Promise<HealthCheckResult> {
       component: 'database',
       status: 'UNHEALTHY',
       responseTimeMs: responseTime,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      errorMessage: error instanceof Error ? error.message : 'Erro interno do servidor'
     };
   }
 }
@@ -78,7 +78,7 @@ export async function checkEmailService(): Promise<HealthCheckResult> {
       component: 'resend_email',
       status: 'UNHEALTHY',
       responseTimeMs: responseTime,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      errorMessage: error instanceof Error ? error.message : 'Erro interno do servidor'
     };
   }
 }
@@ -125,7 +125,7 @@ export async function checkN8nWebhook(): Promise<HealthCheckResult> {
       component: 'n8n_webhook',
       status: 'UNHEALTHY',
       responseTimeMs: responseTime,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      errorMessage: error instanceof Error ? error.message : 'Erro interno do servidor'
     };
   }
 }
@@ -179,7 +179,7 @@ export async function checkCallService(): Promise<HealthCheckResult> {
       component: 'vapi_calls',
       status: 'UNHEALTHY',
       responseTimeMs: responseTime,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      errorMessage: error instanceof Error ? error.message : 'Erro interno do servidor'
     };
   }
 }

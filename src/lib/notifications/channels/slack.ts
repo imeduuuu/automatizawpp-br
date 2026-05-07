@@ -62,7 +62,7 @@ export async function sendSlackNotification(payload: NotificationPayload): Promi
     return {
       success: false,
       channel: 'SLACK',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : 'Erro interno do servidor',
       retryable: true
     };
   }

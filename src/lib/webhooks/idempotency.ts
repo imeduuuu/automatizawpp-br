@@ -31,7 +31,7 @@ export async function claimWebhookEvent(
     console.log(`[idempotency] Evento reclamado: ${source}/${externalId}`);
     return { status: 'claimed' };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('[idempotency] Error al reclamar evento:', message);
     return { status: 'error', error: message };
   }

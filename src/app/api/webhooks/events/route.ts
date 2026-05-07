@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
   const event = validateEvent(body);

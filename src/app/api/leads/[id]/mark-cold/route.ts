@@ -7,7 +7,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
     const lead = await transitionLead(id, { type: 'MARK_COLD' });
     return NextResponse.json({ ok: true, lead });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

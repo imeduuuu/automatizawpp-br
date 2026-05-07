@@ -86,7 +86,7 @@ export async function loginAction(_previousState: ActionState = initialActionSta
       };
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('[LoginAction]', message);
     return {
       status: 'error',

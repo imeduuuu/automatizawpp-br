@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('[Auth Login]', message);
 
     return NextResponse.json(

@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ ok: false, error: 'Não autorizado' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     if (parsed.data.userId !== session.user.id) {
-      return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ ok: false, error: 'Acesso negado' }, { status: 403 });
     }
 
     const user = await prisma.user.findUnique({
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

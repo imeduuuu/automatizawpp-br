@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const { workspaceId: providedWorkspaceId } = await request.json();
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       archivedCount: count
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

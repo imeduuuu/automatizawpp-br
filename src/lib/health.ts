@@ -32,7 +32,7 @@ async function checkDatabase(): Promise<ComponentHealth> {
     return {
       component: 'Database',
       status: 'UNHEALTHY',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message: error instanceof Error ? error.message : 'Erro interno do servidor',
       responseTimeMs: Date.now() - start
     };
   }
@@ -50,7 +50,7 @@ async function checkRedis(): Promise<ComponentHealth> {
     return {
       component: 'Redis',
       status: 'DEGRADED',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message: error instanceof Error ? error.message : 'Erro interno do servidor',
       responseTimeMs: Date.now() - start
     };
   }
@@ -76,7 +76,7 @@ async function checkN8N(): Promise<ComponentHealth> {
     return {
       component: 'n8n',
       status: 'DEGRADED',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message: error instanceof Error ? error.message : 'Erro interno do servidor',
       responseTimeMs: Date.now() - start
     };
   }

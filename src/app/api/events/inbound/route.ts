@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     // Normalize payload from n8n/external providers
     const normalized = normalizeBirdEvent(body, process.env.APP_WORKSPACE_ID ?? 'demo_workspace');
     if (!normalized) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+      return NextResponse.json({ error: 'Payload inválido' }, { status: 400 });
     }
 
     // Find or create lead
@@ -421,9 +421,9 @@ export async function POST(request: NextRequest) {
         }
       } else if (decision.action === 'QUALIFY') {
         const qualResult = await runQualificationAgent(lead.id, normalized.message);
-        agentResponse = `Lead qualified: ${qualResult.score}/100 - ${qualResult.intent} intent`;
+        agentResponse = `Lead qualificado: ${qualResult.score}/100 — intenção ${qualResult.intent}`;
       } else if (decision.action === 'HOLD') {
-        agentResponse = 'Action on hold due to compliance rules';
+        agentResponse = 'Ação pausada por regras de conformidade';
       }
 
       // Cableado QA pre-envío (Sprint 1.3 V.L.A.E.G.):
@@ -552,7 +552,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (innerErr) {
       // BUG B fix: cualquier error inesperado se refleja en el AgentRun como FAILED.
-      const errMsg = innerErr instanceof Error ? innerErr.message : 'Unknown agent error';
+      const errMsg = innerErr instanceof Error ? innerErr.message : 'Erro interno do agente';
       await prisma.agentRun.update({
         where: { id: agentRun.id },
         data: {
@@ -591,7 +591,7 @@ export async function POST(request: NextRequest) {
     // Notificamos o admin sobre exceções não tratadas no endpoint inbound.
     // Envolto em try/catch para nunca mascarar a resposta 500 ao chamador.
     try {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+      const errMsg = error instanceof Error ? error.message : 'Erro interno do servidor';
       await triggerSystemError({
         // Fallback para evitar workspaceId vazio quando o erro acontece antes da normalização.
         workspaceId: process.env.APP_WORKSPACE_ID ?? 'demo_workspace',
@@ -604,7 +604,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { error: error instanceof Error ? error.message : 'Erro interno do servidor' },
       { status: 500 }
     );
   }

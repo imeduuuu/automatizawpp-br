@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Validar CRON_SECRET
     const secret = request.headers.get('Authorization')?.replace('Bearer ', '');
     if (!secret || secret !== process.env.CRON_SECRET) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     // Obter todos os workspaces

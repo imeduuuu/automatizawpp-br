@@ -47,7 +47,7 @@ export function useSession(): UseSessionReturn {
         setSession(data.user);
         setStatus('authenticated');
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
+        const message = err instanceof Error ? err.message : 'Erro interno do servidor';
         setError(message);
         setStatus('unauthenticated');
         setSession(null);

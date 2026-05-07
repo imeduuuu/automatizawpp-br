@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   if (mode === 'subscribe' && token === process.env.META_VERIFY_TOKEN) {
     return new Response(challenge ?? '', { status: 200 });
   }
-  return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
 }
 
 // POST — inbound WhatsApp messages and status updates
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
     // Meta requires 200 always
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     if (externalId) {
       await markWebhookEventFailed('meta', externalId, message).catch(() => {});
     }

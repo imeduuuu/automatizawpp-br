@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
       pageSize: limit
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('[public/leads] Error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
