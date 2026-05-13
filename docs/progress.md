@@ -4,6 +4,40 @@
 
 ---
 
+## Sessão 2026-05-13 — Security + i18n gaps #18 e #19
+
+### Contexto
+Revisão autônoma do projeto após 6 dias sem sessão. 3 agentes paralelos diagnosticaram o estado do código. Identificados 2 gaps fecháveis imediatamente.
+
+### Realizado
+
+**Gap #18 — HMAC Bird webhook implementado:**
+- `src/app/api/webhooks/bird/route.ts`: lê body como texto raw, extrai `x-bird-signature`, valida HMAC-SHA256 contra `BIRD_WEBHOOK_SECRET`
+- Graceful degradation: se secret não configurado → log warning + continua. Se configurado e firma inválida → HTTP 401
+- Import: `extractSignature` + `validateWebhookSignature` de `src/lib/webhooks/signature.ts` (já existiam)
+
+**Gap #19 — Strings inglesas residuais corrigidas (5 arquivos):**
+- `src/middleware.ts` — `'Unauthorized'` → `'Não autorizado'`
+- `src/app/api/settings/route.ts` (×2) — `'Unauthorised'` → `'Não autorizado'`
+- `src/app/api/alex/config/route.ts` (×2) — `'Unauthorised'` → `'Não autorizado'`
+- `src/app/api/alex/test-call/route.ts` — `'Unauthorised'` → `'Não autorizado'`
+- `src/app/api/events/inbound/route.ts` — `fullName || 'Unknown'` → `'Desconhecido'`
+
+### Deploy
+- Commit: `f430892`
+- Push: `origin/main` atualizado
+- Servidor `68.183.203.16`: `git pull` + `rm -rf .next` + `npm run build` + `pm2 restart --update-env`
+- PM2 status: ✅ online (728ms ready)
+- TypeScript: ✅ 0 erros novos
+
+### Pendentes (próxima sessão)
+- [ ] GSC — Eduardo verificar manualmente
+- [ ] BIRD_WHATSAPP_CHANNEL_ID — aguardando de Eduardo (painel Bird)
+- [ ] BIRD_WEBHOOK_SECRET — adicionar ao `.env.production.local` no servidor para ativar validação HMAC real
+- [ ] Rate limiting auth → migrar de memória para Redis (não urgente)
+
+---
+
 ## 2026-05-03 — Sesión: Limpieza backlog (5 deudas cerradas)
 
 ### Hallazgo crítico durante deuda #1

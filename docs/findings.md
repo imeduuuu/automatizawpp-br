@@ -385,3 +385,27 @@ Também corrigido `scheduler.ts` reason field e `followup-agent.ts` / `sales-eng
 **Fix:** Mudado para `return 308` (Permanent Redirect que preserva o método HTTP). 308 é equivalente ao 301 mas garante que POST permanece POST.
 
 **Lección:** Redirects para endpoints de API/webhook devem usar 307 (temporário) ou 308 (permanente) para preservar o método. 301/302 são para browsers/páginas HTML onde o método de destino é sempre GET.
+
+---
+
+## Gap #18 — Bird webhook sem validação HMAC 🔴 (2026-05-13 ✅ resuelto)
+
+**Síntoma:** `POST /api/webhooks/bird` aceitava qualquer payload JSON sem verificar a assinatura do remetente. Um agente externo poderia injetar eventos falsos (leads falsos, conversas fabricadas).
+
+**Causa raíz:** A função `validateWebhookSignature()` foi implementada em `src/lib/webhooks/signature.ts` mas nunca foi chamada no handler do Bird webhook.
+
+**Fix:** `src/app/api/webhooks/bird/route.ts` agora lê o body como texto raw, extrai o header `x-bird-signature`, e valida HMAC-SHA256 contra `BIRD_WEBHOOK_SECRET`. Se o secret não está configurado, loga warning e continua. Se está configurado e a firma é inválida → HTTP 401.
+
+**Lección:** Toda integração de webhook deve validar a assinatura antes de processar o payload. A função de validação deve ser usada no handler, não apenas implementada como utility.
+
+---
+
+## Gap #19 — Strings inglesas residuais em API routes 🟡 (2026-05-13 ✅ resuelto)
+
+**Síntoma:** Respostas de erro `401 Unauthorized` / `401 Unauthorised` em inglês em 5 endpoints: `middleware.ts`, `settings/route.ts`, `alex/config/route.ts`, `alex/test-call/route.ts`, e fallback `'Unknown'` para fullName em `events/inbound/route.ts`.
+
+**Causa raíz:** Strings hardcoded EN não foram incluídas na passagem de i18n do 2026-05-07 (commit `24519b4`).
+
+**Fix:** Substituídas por `'Não autorizado'` e `'Desconhecido'` respetivamente.
+
+**Lección:** Após passagens bulk de i18n, fazer grep específico por `'Unauthoris'`, `'Unknown'`, `'Not found'` para garantir cobertura completa.
