@@ -114,7 +114,7 @@ export async function middleware(request: NextRequest) {
     // API privada: requiere autenticación
     if (!isAuthenticated) {
       return NextResponse.json(
-        { ok: false, error: 'Unauthorized' },
+        { ok: false, error: 'Não autorizado' },
         { status: 401 }
       );
     }

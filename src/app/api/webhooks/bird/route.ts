@@ -2,14 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { normalizeBirdEvent } from '@/lib/channels/bird-normalizer';
 import { resolveLead } from '@/lib/orchestration/lead-resolution';
 import { runSalesOrchestration } from '@/lib/orchestration/sales-engine';
+import { extractSignature, validateWebhookSignature } from '@/lib/webhooks/signature';
 
 // APP_WORKSPACE_ID = workspace da app na BD. BIRD_WORKSPACE_ID é o ID externo do Bird API.
 const WORKSPACE_ID = process.env.APP_WORKSPACE_ID ?? 'demo_workspace';
 
 export async function POST(request: NextRequest) {
+  const rawBody = await request.text();
+
+  // Validação HMAC-SHA256: rejeita payloads sem assinatura válida quando secret está configurado
+  const webhookSecret = process.env.BIRD_WEBHOOK_SECRET;
+  if (webhookSecret) {
+    const signature = extractSignature(request.headers, 'bird');
+    if (!validateWebhookSignature(rawBody, signature, 'bird', webhookSecret)) {
+      console.warn('[Bird] Assinatura HMAC inválida — payload rejeitado');
+      return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+    }
+  } else {
+    console.warn('[Bird] BIRD_WEBHOOK_SECRET não configurado — validação HMAC desativada');
+  }
+
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }

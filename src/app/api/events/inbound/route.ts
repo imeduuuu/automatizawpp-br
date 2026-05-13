@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       lead = await prisma.lead.create({
         data: {
           workspaceId: normalized.workspaceId,
-          fullName: normalized.lead.fullName || 'Unknown',
+          fullName: normalized.lead.fullName || 'Desconhecido',
           email: normalized.lead.email || `contact-${Date.now()}@unknown.local`,
           phone: normalized.lead.phone,
           source: normalized.lead.source,

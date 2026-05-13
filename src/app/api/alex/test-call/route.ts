@@ -21,7 +21,7 @@ function getVapiConfig() {
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session?.userId) {
-    return jsonResponse({ error: 'Unauthorised' }, { status: 401 });
+    return jsonResponse({ error: 'Não autorizado' }, { status: 401 });
   }
 
   const { apiKey, assistantId, phoneNumberId, testPhone: defaultTestPhone } = getVapiConfig();

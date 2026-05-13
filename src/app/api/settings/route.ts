@@ -48,7 +48,7 @@ function toSettingsObject(entries: Array<{ key: string; value: string }>) {
 export async function GET() {
   const session = await getSession();
   if (!session?.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   const [workspace, settings] = await Promise.all([
@@ -70,7 +70,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session?.workspaceId) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   const body = (await request.json()) as Partial<Record<string, string>>;

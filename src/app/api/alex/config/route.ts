@@ -32,7 +32,7 @@ function sanitizeAssistantPayload(payload: Record<string, unknown>) {
 export async function GET() {
   const session = await getSession();
   if (!session?.userId) {
-    return jsonResponse({ error: 'Unauthorised' }, { status: 401 });
+    return jsonResponse({ error: 'Não autorizado' }, { status: 401 });
   }
 
   const { apiKey, assistantId, phoneNumberId, testPhone } = getVapiConfig();
@@ -62,7 +62,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session?.userId) {
-    return jsonResponse({ error: 'Unauthorised' }, { status: 401 });
+    return jsonResponse({ error: 'Não autorizado' }, { status: 401 });
   }
 
   const { apiKey, assistantId } = getVapiConfig();
