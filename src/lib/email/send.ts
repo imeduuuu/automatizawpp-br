@@ -2,6 +2,7 @@
 // Resuelve Lead+Conversation automáticamente si no se proveen explícitamente.
 import { prisma } from '@/lib/db';
 import { resolveWorkspaceId } from '@/lib/workspace';
+import { renderBrandedEmail } from '@/lib/email/template';
 
 const BIRD_API = 'https://api.bird.com';
 
@@ -86,10 +87,13 @@ export async function sendEmailViaBird(params: SendEmailParams): Promise<SendEma
   }
 
   const fromEmail = 'inbox@automatizawpp.com';
-  const innerHtml = params.html || `<p>${escapeHtml(params.body).replace(/\n/g, '<br>')}</p>`;
-  // Bird API actual no acepta subject en el payload — SparkPost extrae el subject
-  // del <title> en el HTML. Embebemos siempre subject como <title>.
-  const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(params.subject)}</title></head><body>${innerHtml}</body></html>`;
+  // Bird API no acepta subject en el payload; SparkPost extrae <title> como subject.
+  // Todos los emails llevan el branding AutomatizaWPP.
+  const fullHtml = renderBrandedEmail({
+    subject: params.subject,
+    bodyHtml: params.html,
+    bodyText: params.body
+  });
 
   const payload = {
     receiver: { contacts: [{ identifierValue: params.to }] },
@@ -159,6 +163,3 @@ export async function sendEmailViaBird(params: SendEmailParams): Promise<SendEma
   }
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
