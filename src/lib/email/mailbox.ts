@@ -107,28 +107,45 @@ function birdHeaders() {
 
 // Lee de la BD local (tabla Message con channel=EMAIL). Los emails se reciben vía
 // webhook de Bird/SparkPost (src/app/api/webhooks/email-received) y se guardan aquí.
-// Bird API solo conservaba conversas recientes; la BD tiene histórico completo.
+// Gestión de carpetas via metadata jsonb: deleted, read, folder (spam|important|archive).
 export async function fetchMessages(folder: MailFolderKey = 'inbox', limit = 30): Promise<MailMessage[]> {
   try {
-    const directionFilter =
-      folder === 'sent' ? { direction: 'OUTBOUND' as const } :
-      folder === 'inbox' ? { direction: 'INBOUND' as const } :
-      {}; // important/spam/archive: por ahora muestran todo
-
+    // Filtro SQL minimal — el resto (deleted, folder override) se filtra en JS
+    // porque jsonb NOT/path con NULL no se comporta como queremos.
+    const direction = folder === 'sent' ? 'OUTBOUND' as const : folder === 'inbox' ? 'INBOUND' as const : undefined;
     const rows = await prisma.message.findMany({
-      where: { channel: 'EMAIL', ...directionFilter },
+      where: { channel: 'EMAIL', ...(direction ? { direction } : {}) },
       include: { lead: { select: { fullName: true, email: true } } },
       orderBy: { createdAt: 'desc' },
-      take: Math.min(limit, 100)
+      take: Math.min(limit * 2, 200) // overhead por filtrado post-query
     });
 
-    return rows.map((m, idx): MailMessage => {
+    // Filtrado en JS por metadata.deleted y metadata.folder
+    const filtered = rows.filter((m) => {
+      const meta = (m.metadata && typeof m.metadata === 'object' ? m.metadata : {}) as Record<string, unknown>;
+      const isDeleted = meta.deleted === true;
+      const metaFolder = typeof meta.folder === 'string' ? meta.folder : null;
+
+      if (isDeleted) return false;
+
+      if (folder === 'spam' || folder === 'important' || folder === 'archive') {
+        return metaFolder === folder;
+      }
+      if (folder === 'inbox') {
+        return metaFolder !== 'spam' && metaFolder !== 'archive';
+      }
+      // sent: ya filtrado por direction
+      return true;
+    }).slice(0, Math.min(limit, 100));
+
+    return filtered.map((m, idx): MailMessage => {
       const meta = (m.metadata && typeof m.metadata === 'object' ? m.metadata : {}) as Record<string, unknown>;
       const subject = (typeof meta.subject === 'string' && meta.subject) || '(Sem assunto)';
       const fromEmail = (typeof meta.fromEmail === 'string' && meta.fromEmail) || m.lead?.email || null;
       const fromName = m.lead?.fullName || (typeof meta.fromName === 'string' ? meta.fromName : '') || fromEmail || 'Desconhecido';
       const html = typeof meta.html === 'string' ? meta.html : null;
       const date = (m.receivedAt || m.sentAt || m.createdAt).toISOString();
+      const read = typeof meta.read === 'boolean' ? meta.read : (m.direction === 'OUTBOUND');
 
       return {
         uid: idx + 1,
@@ -137,12 +154,12 @@ export async function fetchMessages(folder: MailFolderKey = 'inbox', limit = 30)
         subject,
         from: fromEmail ? `${fromName} <${fromEmail}>` : fromName,
         fromEmail,
-        to: 'inbox@automatizawpp.com',
+        to: typeof meta.toEmail === 'string' ? meta.toEmail : 'inbox@automatizawpp.com',
         date,
         preview: m.body.replace(/<[^>]*>/g, '').trim().slice(0, 120),
         html,
         text: m.body,
-        read: true
+        read
       };
     });
   } catch (e) {
