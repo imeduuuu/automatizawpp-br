@@ -16,7 +16,7 @@ export default function HomePage() {
               <h1 className="hero-title reveal">
                 Venda mais no WhatsApp com{' '}
                 <span className="highlight">
-                  <span className="typewriter" data-text="IA trabalhando 24h">IA trabalhando 24h</span>
+                  <span className="typewriter" data-text="IA trabalhando 24h" suppressHydrationWarning>IA trabalhando 24h</span>
                 </span>
               </h1>
               <p className="hero-sub reveal">

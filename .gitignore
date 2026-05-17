@@ -12,3 +12,7 @@ build/
 .env*.local
 .env.production
 .tmp/
+
+# Backups y archivos temporales del Sentinel/deploy
+*.bak
+backups/

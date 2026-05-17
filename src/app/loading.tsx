@@ -1,9 +1,6 @@
+// Loading root intencionalmente vacío — cada sección usa su propio loading state
+// (public) → src/app/(public)/loading.tsx (spinner verde)
+// admin/auth → componentes individuales via ds-spinner en useApi
 export default function GlobalLoading() {
-  return (
-    <div className="ds-auth-wrap">
-      <div className="ds-auth-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 180 }}>
-        <div className="ds-spinner" aria-label="loading" />
-      </div>
-    </div>
-  );
+  return null;
 }
