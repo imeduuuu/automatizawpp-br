@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 
-const DEFAULT_ASSISTANT_ID = '3f91ff80-85db-4735-bc22-2d6abf291b44';
+const DEFAULT_ASSISTANT_ID = '41d17bef-28e7-42b5-8352-fe3e5d01f10c';
 const DEFAULT_PHONE_ID = '041a9afd-ecb7-4ceb-803a-2b36af793f2d';
 
 function jsonResponse(payload: unknown, init?: ResponseInit) {
