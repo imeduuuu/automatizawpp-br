@@ -24,7 +24,12 @@ function sanitizeAssistantPayload(payload: Record<string, unknown>) {
   }
   if (clone.voice && typeof clone.voice === 'object') {
     const voice = clone.voice as Record<string, unknown>;
+    // Vapi ya no acepta estas propiedades en la raíz de voice (provider-specific deprecadas)
     delete voice.stability;
+    delete voice.similarityBoost;
+    delete voice.style;
+    delete voice.useSpeakerBoost;
+    delete voice.optimizeStreamingLatency;
   }
   return clone as Record<string, unknown>;
 }
