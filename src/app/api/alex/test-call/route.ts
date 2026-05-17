@@ -1,76 +1,66 @@
+// /api/alex/test-call/route.ts — disparar una llamada de prueba via Bird
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getSession } from '@/lib/auth/session';
-import { buildAlexCallOverrides } from '@/lib/vapi/alex-payload';
+import { initiateBirdCall, getBirdCallStatus } from '@/lib/bird/voice';
 
-const DEFAULT_ASSISTANT_ID = '3f91ff80-85db-4735-bc22-2d6abf291b44';
-const DEFAULT_PHONE_ID = '041a9afd-ecb7-4ceb-803a-2b36af793f2d';
-
-function jsonResponse(payload: unknown, init?: ResponseInit) {
-  return NextResponse.json(payload, init);
-}
-
-function getVapiConfig() {
-  return {
-    apiKey: process.env.VAPI_API_KEY || '',
-    assistantId: process.env.VAPI_ASSISTANT_ID || DEFAULT_ASSISTANT_ID,
-    phoneNumberId: process.env.VAPI_PHONE_ID || DEFAULT_PHONE_ID,
-    testPhone: process.env.VAPI_TEST_PHONE || '+34680365779'
-  };
-}
+const callSchema = z.object({
+  phone: z.string().min(5),
+  sector: z.string().optional(),
+  company: z.string().optional()
+});
 
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session?.userId) {
-    return jsonResponse({ error: 'Não autorizado' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
-  const { apiKey, assistantId, phoneNumberId, testPhone: defaultTestPhone } = getVapiConfig();
-  if (!apiKey) {
-    return jsonResponse({ error: 'VAPI_API_KEY is not configured' }, { status: 500 });
+  const body = await request.json().catch(() => ({}));
+  const parsed = callSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const body = (await request.json().catch(() => ({}))) as { phone?: string; sector?: string; company?: string };
-  const phone = body.phone?.trim() || defaultTestPhone;
+  const phone = parsed.data.phone.trim();
+  // Normalizar a E.164 mínimo (debe empezar con +)
+  if (!phone.startsWith('+')) {
+    return NextResponse.json({ error: 'O telefone deve estar em formato E.164 (ex: +34680365779)' }, { status: 400 });
+  }
 
-  const assistantResponse = await fetch(`https://api.vapi.ai/assistant/${assistantId}`, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-    cache: 'no-store'
+  const result = await initiateBirdCall({
+    to: phone,
+    workspaceId: session.workspaceId
   });
 
-  const assistantText = await assistantResponse.text();
-  const assistantPayload = assistantText ? JSON.parse(assistantText) : {};
-  if (!assistantResponse.ok) {
-    return jsonResponse({ error: assistantPayload }, { status: assistantResponse.status });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error, raw: result.raw }, { status: 502 });
   }
 
-  const assistantOverrides = buildAlexCallOverrides(assistantPayload, {
-    sector: body.sector,
-    company: body.company,
-    phone
+  return NextResponse.json({
+    ok: true,
+    callId: result.callId,
+    callRecordId: result.callRecordId,
+    status: result.status,
+    message: `Chamada iniciada via Bird para ${phone}. ID: ${result.callId}`
   });
+}
 
-  const response = await fetch('https://api.vapi.ai/call/phone', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      assistantId,
-      phoneNumberId,
-      assistantOverrides,
-      customer: {
-        number: phone,
-        name: 'Prueba web AutomatizaWPP'
-      }
-    })
-  });
-
-  const text = await response.text();
-  const payload = text ? JSON.parse(text) : {};
-  if (!response.ok) {
-    return jsonResponse({ error: payload }, { status: response.status });
+export async function GET(request: Request) {
+  const session = await getSession();
+  if (!session?.userId) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
-  return jsonResponse({ ok: true, call: payload });
+  const callId = new URL(request.url).searchParams.get('callId');
+  if (!callId) {
+    return NextResponse.json({ error: 'callId is required' }, { status: 400 });
+  }
+
+  const result = await getBirdCallStatus(callId);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 502 });
+  }
+
+  return NextResponse.json({ ok: true, status: result.status, call: result.raw });
 }
