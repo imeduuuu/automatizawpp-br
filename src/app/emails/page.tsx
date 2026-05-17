@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { PageLayout } from '@/components/ui/PageLayout';
 import { useUiCopy } from '@/components/ui/UiLanguageProvider';
 
@@ -20,6 +20,7 @@ type MailMessage = {
 };
 
 type Folder = 'inbox' | 'sent' | 'important' | 'spam';
+type ComposeMode = 'reply' | 'forward' | 'compose';
 
 const FOLDERS: { key: Folder; label: string }[] = [
   { key: 'inbox', label: 'Recebidos' },
@@ -36,11 +37,14 @@ export default function EmailsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+  const [search, setSearch] = useState('');
 
-  // Modal de respuesta
-  const [replyOpen, setReplyOpen] = useState(false);
-  const [replyBody, setReplyBody] = useState('');
-  const [replySubject, setReplySubject] = useState('');
+  // Modal compose/reply/forward
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeMode, setComposeMode] = useState<ComposeMode>('compose');
+  const [composeTo, setComposeTo] = useState('');
+  const [composeSubject, setComposeSubject] = useState('');
+  const [composeBody, setComposeBody] = useState('');
   const [sending, setSending] = useState(false);
 
   const showToast = (kind: 'ok' | 'err', text: string) => {
@@ -62,13 +66,23 @@ export default function EmailsPage() {
       .finally(() => setLoading(false));
   }, [folder]);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useEffect(() => { reload(); }, [reload]);
+
+  // Filtrado por búsqueda en cliente
+  const filteredMessages = useMemo(() => {
+    if (!search.trim()) return messages;
+    const q = search.toLowerCase();
+    return messages.filter(
+      (m) =>
+        m.subject.toLowerCase().includes(q) ||
+        m.from.toLowerCase().includes(q) ||
+        (m.fromEmail || '').toLowerCase().includes(q) ||
+        m.preview.toLowerCase().includes(q)
+    );
+  }, [messages, search]);
 
   function openMessage(msg: MailMessage) {
     setSelected(msg);
-    // Marcar como leído si no lo está
     if (!msg.read) {
       fetch(`/api/emails/${msg.id}`, {
         method: 'PATCH',
@@ -91,9 +105,7 @@ export default function EmailsPage() {
       setMessages((prev) => prev.map((m) => (m.id === selected.id ? { ...m, read: false } : m)));
       setSelected({ ...selected, read: false });
       showToast('ok', 'Marcado como não lido');
-    } else {
-      showToast('err', 'Erro ao marcar');
-    }
+    } else showToast('err', 'Erro ao marcar');
   }
 
   async function deleteMessage() {
@@ -104,9 +116,7 @@ export default function EmailsPage() {
       setMessages((prev) => prev.filter((m) => m.id !== selected.id));
       setSelected(null);
       showToast('ok', 'Mensagem eliminada');
-    } else {
-      showToast('err', 'Erro ao eliminar');
-    }
+    } else showToast('err', 'Erro ao eliminar');
   }
 
   async function moveToFolder(target: Folder) {
@@ -120,36 +130,63 @@ export default function EmailsPage() {
       setMessages((prev) => prev.filter((m) => m.id !== selected.id));
       setSelected(null);
       showToast('ok', `Movida para ${target}`);
-    } else {
-      showToast('err', 'Erro ao mover');
-    }
+    } else showToast('err', 'Erro ao mover');
+  }
+
+  function openCompose() {
+    setComposeMode('compose');
+    setComposeTo('');
+    setComposeSubject('');
+    setComposeBody('');
+    setComposeOpen(true);
   }
 
   function openReply() {
     if (!selected) return;
+    setComposeMode('reply');
+    setComposeTo(selected.fromEmail || '');
     const subj = selected.subject.toLowerCase().startsWith('re:') ? selected.subject : `Re: ${selected.subject}`;
-    setReplySubject(subj);
-    setReplyBody(`\n\n---\nEm ${selected.date ? new Date(selected.date).toLocaleString('pt-BR') : ''}, ${selected.from} escreveu:\n${(selected.text || selected.preview || '').replace(/<[^>]*>/g, '')}`);
-    setReplyOpen(true);
+    setComposeSubject(subj);
+    setComposeBody(`\n\n---\nEm ${selected.date ? new Date(selected.date).toLocaleString('pt-BR') : ''}, ${selected.from} escreveu:\n${(selected.text || selected.preview || '').replace(/<[^>]*>/g, '')}`);
+    setComposeOpen(true);
   }
 
-  async function sendReply() {
-    if (!selected || !replyBody.trim()) {
-      showToast('err', 'Escreva uma resposta antes de enviar');
+  function openForward() {
+    if (!selected) return;
+    setComposeMode('forward');
+    setComposeTo('');
+    const subj = selected.subject.toLowerCase().startsWith('fwd:') ? selected.subject : `Fwd: ${selected.subject}`;
+    setComposeSubject(subj);
+    setComposeBody(`\n\n---------- Mensagem reenviada ----------\nDe: ${selected.from}\nData: ${selected.date ? new Date(selected.date).toLocaleString('pt-BR') : ''}\nAssunto: ${selected.subject}\n\n${(selected.text || selected.preview || '').replace(/<[^>]*>/g, '')}`);
+    setComposeOpen(true);
+  }
+
+  async function sendCompose() {
+    if (!composeTo.trim() || !composeSubject.trim() || !composeBody.trim()) {
+      showToast('err', 'Complete destinatário, assunto e mensagem');
       return;
     }
     setSending(true);
     try {
-      const res = await fetch(`/api/emails/reply`, {
+      let url = '/api/emails/compose';
+      let payload: Record<string, unknown> = { to: composeTo.trim(), subject: composeSubject, body: composeBody };
+      if (composeMode === 'reply' && selected) {
+        url = '/api/emails/reply';
+        payload = { messageId: selected.id, subject: composeSubject, body: composeBody };
+      } else if (composeMode === 'forward' && selected) {
+        url = '/api/emails/forward';
+        payload = { messageId: selected.id, to: composeTo.trim(), subject: composeSubject, body: composeBody };
+      }
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messageId: selected.id, subject: replySubject, body: replyBody })
+        body: JSON.stringify(payload)
       });
       const j = await res.json();
       if (res.ok && j.ok) {
-        showToast('ok', 'Resposta enviada com sucesso');
-        setReplyOpen(false);
-        setReplyBody('');
+        showToast('ok', composeMode === 'compose' ? 'Email enviado' : composeMode === 'reply' ? 'Resposta enviada' : 'Mensagem reenviada');
+        setComposeOpen(false);
+        setComposeBody('');
         if (folder === 'sent') reload();
       } else {
         showToast('err', `Erro: ${j.error || res.statusText}`);
@@ -161,11 +198,20 @@ export default function EmailsPage() {
     }
   }
 
+  const composeTitle = composeMode === 'reply' ? 'Responder' : composeMode === 'forward' ? 'Reenviar' : 'Novo email';
+  const showToField = composeMode !== 'reply';
+
   return (
     <PageLayout title="Emails">
       <div className="flex min-h-0" style={{ height: 'calc(100vh - 120px)', background: 'var(--bg)' }}>
         {/* Pastas */}
         <aside className="w-40 shrink-0 border-r border-gray-800 p-4 flex flex-col gap-1">
+          <button
+            onClick={openCompose}
+            className="mb-3 px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500"
+          >
+            ✏ Novo email
+          </button>
           <p className="text-xs text-gray-500 uppercase mb-2 font-semibold">Pastas</p>
           {FOLDERS.map((f) => (
             <button
@@ -188,15 +234,26 @@ export default function EmailsPage() {
 
         {/* Lista */}
         <div className="w-80 shrink-0 border-r border-gray-800 flex flex-col min-h-0">
-          <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-            <h1 className="text-sm font-semibold text-gray-200">{FOLDERS.find((f) => f.key === folder)?.label}</h1>
-            <span className="text-xs text-gray-500">{messages.length}</span>
+          <div className="p-3 border-b border-gray-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <h1 className="text-sm font-semibold text-gray-200">{FOLDERS.find((f) => f.key === folder)?.label}</h1>
+              <span className="text-xs text-gray-500">{filteredMessages.length}{search && `/${messages.length}`}</span>
+            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="🔍 Buscar..."
+              className="w-full px-3 py-1.5 rounded-md bg-gray-800 text-sm text-gray-200 placeholder-gray-500 border border-gray-700 focus:outline-none focus:border-indigo-500"
+            />
           </div>
           <div className="overflow-y-auto flex-1">
             {loading && <p className="p-4 text-sm text-gray-500">Carregando...</p>}
             {error && <p className="p-4 text-sm text-red-400">{error}</p>}
-            {!loading && !error && messages.length === 0 && <p className="p-4 text-sm text-gray-500">Sem mensagens</p>}
-            {messages.map((msg) => (
+            {!loading && !error && filteredMessages.length === 0 && (
+              <p className="p-4 text-sm text-gray-500">{search ? 'Nenhum resultado' : 'Sem mensagens'}</p>
+            )}
+            {filteredMessages.map((msg) => (
               <button
                 key={msg.uid}
                 onClick={() => openMessage(msg)}
@@ -228,26 +285,14 @@ export default function EmailsPage() {
             </div>
           ) : (
             <>
-              {/* Toolbar */}
               <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800 flex-wrap">
-                <button onClick={openReply} className="px-3 py-1.5 text-xs rounded-md bg-indigo-600 text-white hover:bg-indigo-500">
-                  ↩ Responder
-                </button>
-                <button onClick={markUnread} className="px-3 py-1.5 text-xs rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800">
-                  ◯ Marcar não lido
-                </button>
-                <button onClick={() => moveToFolder('important')} className="px-3 py-1.5 text-xs rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800">
-                  ★ Importante
-                </button>
-                <button onClick={() => moveToFolder('spam')} className="px-3 py-1.5 text-xs rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800">
-                  ⚠ Spam
-                </button>
-                <button onClick={deleteMessage} className="px-3 py-1.5 text-xs rounded-md border border-red-800 text-red-400 hover:bg-red-900/30">
-                  🗑 Eliminar
-                </button>
+                <button onClick={openReply} className="px-3 py-1.5 text-xs rounded-md bg-indigo-600 text-white hover:bg-indigo-500">↩ Responder</button>
+                <button onClick={openForward} className="px-3 py-1.5 text-xs rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800">↗ Reenviar</button>
+                <button onClick={markUnread} className="px-3 py-1.5 text-xs rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800">◯ Marcar não lido</button>
+                <button onClick={() => moveToFolder('important')} className="px-3 py-1.5 text-xs rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800">★ Importante</button>
+                <button onClick={() => moveToFolder('spam')} className="px-3 py-1.5 text-xs rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800">⚠ Spam</button>
+                <button onClick={deleteMessage} className="px-3 py-1.5 text-xs rounded-md border border-red-800 text-red-400 hover:bg-red-900/30">🗑 Eliminar</button>
               </div>
-
-              {/* Conteúdo */}
               <div className="flex-1 overflow-y-auto p-6">
                 <h2 className="text-lg font-semibold text-white mb-2">{selected.subject}</h2>
                 <div className="text-xs text-gray-400 mb-4 space-y-1">
@@ -268,40 +313,46 @@ export default function EmailsPage() {
         </div>
       </div>
 
-      {/* Modal de respuesta */}
-      {replyOpen && selected && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => !sending && setReplyOpen(false)}>
+      {/* Modal compose/reply/forward */}
+      {composeOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => !sending && setComposeOpen(false)}>
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl rounded-lg border border-gray-700 bg-gray-900 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Responder</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{composeTitle}</h3>
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-gray-500 block mb-1">Para</label>
-                <input type="text" disabled value={selected.fromEmail || ''} className="w-full px-3 py-2 rounded-md bg-gray-800 text-gray-400 text-sm border border-gray-700" />
+                <input
+                  type="email"
+                  value={composeTo}
+                  onChange={(e) => setComposeTo(e.target.value)}
+                  disabled={composeMode === 'reply'}
+                  placeholder="destinatario@exemplo.com"
+                  className={`w-full px-3 py-2 rounded-md text-sm border border-gray-700 focus:outline-none focus:border-indigo-500 ${showToField ? 'bg-gray-800 text-white' : 'bg-gray-800 text-gray-400'}`}
+                />
               </div>
               <div>
                 <label className="text-xs text-gray-500 block mb-1">Assunto</label>
                 <input
                   type="text"
-                  value={replySubject}
-                  onChange={(e) => setReplySubject(e.target.value)}
+                  value={composeSubject}
+                  onChange={(e) => setComposeSubject(e.target.value)}
                   className="w-full px-3 py-2 rounded-md bg-gray-800 text-white text-sm border border-gray-700 focus:outline-none focus:border-indigo-500"
                 />
               </div>
               <div>
                 <label className="text-xs text-gray-500 block mb-1">Mensagem</label>
                 <textarea
-                  value={replyBody}
-                  onChange={(e) => setReplyBody(e.target.value)}
+                  value={composeBody}
+                  onChange={(e) => setComposeBody(e.target.value)}
                   rows={10}
+                  placeholder="Escreva sua mensagem..."
                   className="w-full px-3 py-2 rounded-md bg-gray-800 text-white text-sm border border-gray-700 focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4">
-              <button onClick={() => setReplyOpen(false)} disabled={sending} className="px-4 py-2 text-sm rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-50">
-                Cancelar
-              </button>
-              <button onClick={sendReply} disabled={sending} className="px-4 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50">
+              <button onClick={() => setComposeOpen(false)} disabled={sending} className="px-4 py-2 text-sm rounded-md border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-50">Cancelar</button>
+              <button onClick={sendCompose} disabled={sending} className="px-4 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50">
                 {sending ? 'Enviando...' : '→ Enviar'}
               </button>
             </div>
