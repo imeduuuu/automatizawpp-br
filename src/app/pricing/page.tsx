@@ -366,7 +366,7 @@ export default function PricingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="mailto:contato@automatizawpp.com"
+              href="mailto:inbox@automatizawpp.com"
               className="px-6 py-3 rounded-xl bg-green-500 text-black font-600 hover:bg-green-400 transition"
             >
               Falar por e-mail

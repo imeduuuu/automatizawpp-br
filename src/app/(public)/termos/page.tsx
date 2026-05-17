@@ -62,7 +62,7 @@ export default function TermosPage() {
           </ul>
 
           <h2>5. Conta e acesso</h2>
-          <p>Você é responsável por manter a confidencialidade das suas credenciais. Notifique imediatamente a AutomatizaWPP sobre qualquer uso não autorizado da sua conta em <a href="mailto:contato@automatizawpp.com">contato@automatizawpp.com</a>.</p>
+          <p>Você é responsável por manter a confidencialidade das suas credenciais. Notifique imediatamente a AutomatizaWPP sobre qualquer uso não autorizado da sua conta em <a href="mailto:inbox@automatizawpp.com">inbox@automatizawpp.com</a>.</p>
 
           <h2>6. Planos e pagamento</h2>
           <ul>
@@ -94,7 +94,7 @@ export default function TermosPage() {
           <p>Estes termos são regidos pelas leis brasileiras, incluindo o Código de Defesa do Consumidor (Lei 8.078/1990) e a LGPD (Lei 13.709/2018). O foro competente é o da Comarca de São Paulo, SP.</p>
 
           <div className="highlight-box">
-            <p style={{ margin: 0 }}>Dúvidas sobre estes termos? Entre em contato pelo e-mail <a href="mailto:contato@automatizawpp.com">contato@automatizawpp.com</a>.</p>
+            <p style={{ margin: 0 }}>Dúvidas sobre estes termos? Entre em contato pelo e-mail <a href="mailto:inbox@automatizawpp.com">inbox@automatizawpp.com</a>.</p>
           </div>
         </div>
       </main>

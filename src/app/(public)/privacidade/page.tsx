@@ -79,7 +79,7 @@ export default function PrivacidadePage() {
           </ul>
 
           <div className="highlight-box">
-            <p style={{ margin: 0 }}>Para exercer seus direitos ou esclarecer dúvidas, entre em contato pelo e-mail <a href="mailto:contato@automatizawpp.com">contato@automatizawpp.com</a>. Respondemos em até 15 dias úteis.</p>
+            <p style={{ margin: 0 }}>Para exercer seus direitos ou esclarecer dúvidas, entre em contato pelo e-mail <a href="mailto:inbox@automatizawpp.com">inbox@automatizawpp.com</a>. Respondemos em até 15 dias úteis.</p>
           </div>
 
           <h2>8. Cookies</h2>
@@ -89,7 +89,7 @@ export default function PrivacidadePage() {
           <p>Podemos atualizar esta política periodicamente. Notificaremos sobre alterações relevantes por e-mail ou aviso na plataforma. O uso continuado após a notificação implica aceite das mudanças.</p>
 
           <h2>10. Contato</h2>
-          <p>AutomatizaWPP · <a href="mailto:contato@automatizawpp.com">contato@automatizawpp.com</a> · São Paulo, Brasil</p>
+          <p>AutomatizaWPP · <a href="mailto:inbox@automatizawpp.com">inbox@automatizawpp.com</a> · São Paulo, Brasil</p>
         </div>
       </main>
     </>

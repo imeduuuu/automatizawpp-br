@@ -198,7 +198,7 @@ export default function AutomacaoAtendimentoPage() {
           </p>
           <div className="hero-actions reveal" style={{ justifyContent: 'center' }}>
             <Link href="/automacao-whatsapp#diagnostico" className="btn-primary">Diagnóstico Gratuito</Link>
-            <a href="mailto:contato@automatizawpp.com" className="btn-secondary">Falar com time</a>
+            <a href="mailto:inbox@automatizawpp.com" className="btn-secondary">Falar com time</a>
           </div>
         </div>
       </section>

@@ -80,7 +80,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             contactPoint: {
               '@type': 'ContactPoint',
               contactType: 'Sales',
-              email: 'contato@automatizawpp.com',
+              email: 'inbox@automatizawpp.com',
             },
           }),
         }}
@@ -1029,8 +1029,8 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <p style={{ color: 'var(--text-soft)', fontSize: '0.875rem', lineHeight: 1.7, marginBottom: '1.5rem', maxWidth: '280px' }}>
               Plataforma de automação WhatsApp com IA para negócios brasileiros. Venda mais, atenda melhor e cresça no automático.
             </p>
-            <a href="mailto:contato@automatizawpp.com" style={{ color: 'var(--neon)', fontSize: '0.875rem', textDecoration: 'none' }}>
-              contato@automatizawpp.com
+            <a href="mailto:inbox@automatizawpp.com" style={{ color: 'var(--neon)', fontSize: '0.875rem', textDecoration: 'none' }}>
+              inbox@automatizawpp.com
             </a>
           </div>
 
@@ -1056,7 +1056,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
           <div className="footer-col">
             <h4>Contato</h4>
             <ul>
-              <li><a href="mailto:contato@automatizawpp.com">E-mail</a></li>
+              <li><a href="mailto:inbox@automatizawpp.com">E-mail</a></li>
               <li><a href="https://instagram.com/automatizawpp" target="_blank" rel="noopener noreferrer">Instagram</a></li>
               <li><a href="https://linkedin.com/company/automatizawpp" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
             </ul>
