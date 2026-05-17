@@ -1,4 +1,7 @@
-// mailbox.ts — Bird API v2 (canal email-sparkpost inbox@automatizawpp.com)
+// mailbox.ts — Lee emails de BD local (channel=EMAIL en tabla Message)
+// Bird/SparkPost sigue siendo el receiver via webhooks → guardan en BD.
+import { prisma } from '@/lib/db';
+
 
 export type MailFolderKey = 'inbox' | 'sent' | 'important' | 'spam' | 'archive';
 
@@ -101,52 +104,49 @@ function birdHeaders() {
   };
 }
 
+
+// Lee de la BD local (tabla Message con channel=EMAIL). Los emails se reciben vía
+// webhook de Bird/SparkPost (src/app/api/webhooks/email-received) y se guardan aquí.
+// Bird API solo conservaba conversas recientes; la BD tiene histórico completo.
 export async function fetchMessages(folder: MailFolderKey = 'inbox', limit = 30): Promise<MailMessage[]> {
-  const key = API_KEY();
-  const ws  = WORKSPACE();
-  if (!key || !ws) return [];
-
   try {
-    const ch       = CHANNEL_ID();
-    const chParam  = ch ? `&channelId=${ch}` : '';
-    const url      = `${BIRD_API}/workspaces/${ws}/conversations?pageSize=${Math.min(limit, 100)}${chParam}`;
-    const res      = await fetch(url, { headers: birdHeaders() });
-    if (!res.ok) return [];
+    const directionFilter =
+      folder === 'sent' ? { direction: 'OUTBOUND' as const } :
+      folder === 'inbox' ? { direction: 'INBOUND' as const } :
+      {}; // important/spam/archive: por ahora muestran todo
 
-    const json = await res.json() as { results?: BirdConversation[] };
-    if (!Array.isArray(json.results)) return [];
-
-    const messages: MailMessage[] = [];
-
-    json.results.forEach((conv, idx) => {
-      const last = conv.lastMessage;
-      if (!last) return;
-
-      const dir = last.direction;
-      if (folder === 'inbox' && dir === 'sent')     return;
-      if (folder === 'sent' && dir !== 'sent')      return;
-
-      const { subject, from, fromEmail, text } = parseBody(last);
-      const ce = contactEmail(conv.contact);
-
-      messages.push({
-        uid:       idx + 1,
-        id:        conv.id,
-        folder,
-        subject,
-        from:      from || conv.contact?.displayName || ce || 'Desconhecido',
-        fromEmail: fromEmail ?? ce,
-        to:        'inbox@automatizawpp.com',
-        date:      last.createdAt ?? conv.updatedAt ?? conv.createdAt ?? null,
-        preview:   (text ?? '').slice(0, 120),
-        html:      null,
-        text:      null,
-        read:      last.status === 'read' || last.status === 'delivered',
-      });
+    const rows = await prisma.message.findMany({
+      where: { channel: 'EMAIL', ...directionFilter },
+      include: { lead: { select: { fullName: true, email: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(limit, 100)
     });
 
-    return messages;
-  } catch {
+    return rows.map((m, idx): MailMessage => {
+      const meta = (m.metadata && typeof m.metadata === 'object' ? m.metadata : {}) as Record<string, unknown>;
+      const subject = (typeof meta.subject === 'string' && meta.subject) || '(Sem assunto)';
+      const fromEmail = (typeof meta.fromEmail === 'string' && meta.fromEmail) || m.lead?.email || null;
+      const fromName = m.lead?.fullName || (typeof meta.fromName === 'string' ? meta.fromName : '') || fromEmail || 'Desconhecido';
+      const html = typeof meta.html === 'string' ? meta.html : null;
+      const date = (m.receivedAt || m.sentAt || m.createdAt).toISOString();
+
+      return {
+        uid: idx + 1,
+        id: m.id,
+        folder,
+        subject,
+        from: fromEmail ? `${fromName} <${fromEmail}>` : fromName,
+        fromEmail,
+        to: 'inbox@automatizawpp.com',
+        date,
+        preview: m.body.replace(/<[^>]*>/g, '').trim().slice(0, 120),
+        html,
+        text: m.body,
+        read: true
+      };
+    });
+  } catch (e) {
+    console.error('[mailbox] Error leyendo emails de BD:', e);
     return [];
   }
 }
