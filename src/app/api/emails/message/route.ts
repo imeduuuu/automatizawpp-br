@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { getSession } from '@/lib/auth/session';
 import { validatePublicToken } from '@/lib/public-auth';
 import { fetchMessage } from '@/lib/email/mailbox';
 
 export async function GET(request: NextRequest) {
-  const session  = await auth();
+  const session  = await getSession();
   const temToken = validatePublicToken(request);
 
   if (!session && !temToken) {

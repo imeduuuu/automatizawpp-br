@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { getSession } from '@/lib/auth/session';
 
 // Endpoint de autenticação Zoho OAuth2
 const ZOHO_AUTH = 'https://accounts.zoho.eu/oauth/v2';
@@ -11,7 +11,7 @@ const ZOHO_AUTH = 'https://accounts.zoho.eu/oauth/v2';
  * via refresh_token. Substitui a verificação IMAP anterior.
  */
 export async function GET() {
-  const session = await auth();
+  const session = await getSession();
   if (!session) return NextResponse.json({ ok: false, erro: 'Não autorizado' }, { status: 401 });
 
   try {
