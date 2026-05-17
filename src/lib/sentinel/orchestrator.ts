@@ -8,6 +8,7 @@ import { scanPanelRoutes } from '@/lib/sentinel/scanner-panel';
 import { scanStripe } from '@/lib/sentinel/scanner-stripe';
 import { scanVapi } from '@/lib/sentinel/scanner-vapi';
 import { scanWebhooks } from '@/lib/sentinel/scanner-webhooks';
+import { scanInfra } from '@/lib/sentinel/scanner-infra';
 import { DetectedError } from '@/lib/sentinel/types';
 
 type Scanner = () => Promise<DetectedError[]>;
@@ -18,7 +19,8 @@ const SCANNERS: Record<string, Scanner> = {
   brevo: scanBrevo,
   panel: scanPanelRoutes,
   webhook: scanWebhooks,
-  stripe: scanStripe
+  stripe: scanStripe,
+  infra: scanInfra
 };
 
 function normalizeSources(value: unknown) {

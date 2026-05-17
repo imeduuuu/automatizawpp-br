@@ -3,7 +3,7 @@ import { DetectedError } from '@/lib/sentinel/types';
 export async function scanBrevo(): Promise<DetectedError[]> {
   const errors: DetectedError[] = [];
   const key = process.env.BREVO_API_KEY?.trim();
-  if (!key) return errors;
+  if (!key || key.startsWith("your-") || key === "changeme" || key.includes("placeholder") || key.startsWith("key_test_") || key.startsWith("key_dummy_") || key.startsWith("sk_test_") || key.startsWith("test_")) return errors;
 
   try {
     const res = await fetch('https://api.brevo.com/v3/smtp/statistics/events?limit=50&event=hardBounces', {

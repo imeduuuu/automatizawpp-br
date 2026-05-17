@@ -24,36 +24,43 @@ function normalizeSources(value: unknown): string[] {
 }
 
 export async function GET() {
-  const now = Date.now();
-  const h24 = new Date(now - 24 * 60 * 60 * 1000);
-  const h1 = new Date(now - 60 * 60 * 1000);
+  try {
+    const now = Date.now();
+    const h24 = new Date(now - 24 * 60 * 60 * 1000);
+    const h1 = new Date(now - 60 * 60 * 1000);
 
-  const [total, unresolved, critical, last24h, lastHour, autoFixed, recentScans, config] = await Promise.all([
-    prisma.sentinelError.count(),
-    prisma.sentinelError.count({ where: { resolved: false } }),
-    prisma.sentinelError.count({ where: { severity: 'critical', resolved: false } }),
-    prisma.sentinelError.count({ where: { createdAt: { gte: h24 } } }),
-    prisma.sentinelError.count({ where: { createdAt: { gte: h1 } } }),
-    prisma.sentinelError.count({ where: { autoFixed: true } }),
-    prisma.sentinelScan.findMany({ orderBy: { createdAt: 'desc' }, take: 10 }),
-    prisma.sentinelConfig.findUnique({ where: { id: 'singleton' } })
-  ]);
+    const [total, unresolved, critical, last24h, lastHour, autoFixed, recentScans, config] = await Promise.all([
+      prisma.sentinelError.count().catch(() => 0),
+      prisma.sentinelError.count({ where: { resolved: false } }).catch(() => 0),
+      prisma.sentinelError.count({ where: { severity: 'critical', resolved: false } }).catch(() => 0),
+      prisma.sentinelError.count({ where: { createdAt: { gte: h24 } } }).catch(() => 0),
+      prisma.sentinelError.count({ where: { createdAt: { gte: h1 } } }).catch(() => 0),
+      prisma.sentinelError.count({ where: { autoFixed: true } }).catch(() => 0),
+      prisma.sentinelScan.findMany({ orderBy: { createdAt: 'desc' }, take: 10 }).catch(() => []),
+      prisma.sentinelConfig.findUnique({ where: { id: 'singleton' } }).catch(() => null)
+    ]);
 
-  return sentinelJson({
-    total,
-    unresolved,
-    critical,
-    last24h,
-    lastHour,
-    autoFixed,
-    enabled: config?.enabled ?? true,
-    autoFixEnabled: config?.autoFix ?? true,
-    scanInterval: config?.scanInterval ?? 300,
-    model: config?.model ?? 'gpt-4o',
-    sources: normalizeSources(config?.sources),
-    reviewTypes: SENTINEL_REVIEW_TYPES,
-    recentScans
-  });
+    return sentinelJson({
+      total,
+      unresolved,
+      critical,
+      last24h,
+      lastHour,
+      autoFixed,
+      enabled: config?.enabled ?? true,
+      autoFixEnabled: config?.autoFix ?? true,
+      scanInterval: config?.scanInterval ?? 300,
+      model: config?.model ?? 'gpt-4o',
+      sources: normalizeSources(config?.sources),
+      reviewTypes: SENTINEL_REVIEW_TYPES,
+      recentScans
+    });
+  } catch (err) {
+    return sentinelJson(
+      { error: 'stats_unavailable', message: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
 }
 
 export async function OPTIONS() {
