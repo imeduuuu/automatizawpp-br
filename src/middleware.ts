@@ -28,7 +28,8 @@ const PUBLIC_PAGE_PATHS = [
   '/pricing',
   '/api-docs',
   '/privacidade',               // CRÍTICO: Obrigação legal LGPD
-  '/termos',                    // CRÍTICO: Obrigação legal LGPD
+  '/termos',
+  '/politica-de-cookies',                    // CRÍTICO: Obrigação legal LGPD
 ];
 
 // API que NO requieren autenticación (tienen su propia autenticación)

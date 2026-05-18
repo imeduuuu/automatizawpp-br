@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
+import { CookieBanner } from '@/components/CookieBanner';
 
 // Metadados SEO para todas as páginas públicas de marketing
 export const metadata: Metadata = {
@@ -1068,9 +1069,11 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
           <div className="footer-bottom-links">
             <Link href="/privacidade">Privacidade</Link>
             <Link href="/termos">Termos de Uso</Link>
+            <Link href="/politica-de-cookies">Política de Cookies</Link>
           </div>
         </div>
       </footer>
+      <CookieBanner />
 
       {/* Google Analytics */}
       <Script src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX" strategy="afterInteractive" />
