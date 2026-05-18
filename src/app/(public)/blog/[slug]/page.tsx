@@ -28,11 +28,21 @@ const postsGeradosMap: Record<string, BlogPost> = Object.fromEntries(
   ])
 );
 
+const MESES_PT = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+function formatDatePtBR(iso: string): string {
+  // Aceita ISO (2026-04-30) ou texto livre; se não for ISO retorna como veio.
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  const [, y, mo, d] = m;
+  return `${parseInt(d, 10)} de ${MESES_PT[parseInt(mo, 10)]} de ${y}`;
+}
+
 const BLOG_POSTS_ESTATICOS: Record<string, BlogPost> = {
   'como-automatizar-whatsapp-pequeno-negocio': {
     title: 'Como Automatizar WhatsApp para Pequeno Negócio — Guia Completo 2026',
     description: '7 passos práticos para implementar automação no WhatsApp sem precisar de programação ou time técnico. Do zero ao primeiro lead em 7 dias.',
-    date: '30 de Abril de 2026',
+    date: '2026-04-30',
     readTime: '8 min',
     tag: 'Guia',
     emoji: '🤖',
@@ -68,7 +78,7 @@ const BLOG_POSTS_ESTATICOS: Record<string, BlogPost> = {
   'ia-no-atendimento-ao-cliente-2026': {
     title: 'IA no Atendimento ao Cliente — O que Muda em 2026',
     description: 'Como a inteligência artificial está revolucionando o suporte ao cliente no Brasil. Melhore satisfação em 45% e reduza custos em 60%.',
-    date: '29 de Abril de 2026',
+    date: '2026-04-29',
     readTime: '6 min',
     tag: 'Tendências',
     emoji: '💬',
@@ -102,7 +112,7 @@ const BLOG_POSTS_ESTATICOS: Record<string, BlogPost> = {
   'aumento-vendas-whatsapp-automacao': {
     title: 'Como Empresas Brasileiras Aumentaram Vendas em 300% com Automação WhatsApp',
     description: 'Números reais de clientes que implementaram automação WhatsApp. Veja metodologia, resultados e o que você pode replicar.',
-    date: '28 de Abril de 2026',
+    date: '2026-04-28',
     readTime: '10 min',
     tag: 'Casos Reais',
     emoji: '📈',
@@ -130,7 +140,7 @@ const BLOG_POSTS_ESTATICOS: Record<string, BlogPost> = {
   'melhor-chatbot-whatsapp-brasil-2026': {
     title: 'Qual é o Melhor Chatbot WhatsApp do Brasil em 2026? Comparamos 8 Opções',
     description: 'Testamos as 8 principais plataformas de chatbot WhatsApp do mercado brasileiro.',
-    date: '27 de Abril de 2026',
+    date: '2026-04-27',
     readTime: '12 min',
     tag: 'Comparativo',
     emoji: '🏆',
@@ -161,7 +171,7 @@ const BLOG_POSTS_ESTATICOS: Record<string, BlogPost> = {
   'qualificacao-leads-whatsapp-automatica': {
     title: 'Qualificação de Leads no WhatsApp: Como a IA Separa os Prontos para Comprar',
     description: 'Descubra o método que usamos para qualificar leads com IA antes de passar para o vendedor. Taxa de conversão 3x maior.',
-    date: '26 de Abril de 2026',
+    date: '2026-04-26',
     readTime: '7 min',
     tag: 'Estratégia',
     emoji: '🎯',
@@ -192,7 +202,7 @@ const BLOG_POSTS_ESTATICOS: Record<string, BlogPost> = {
   'tendencias-automacao-negocios-2026': {
     title: 'Tendências de Automação para Negócios Brasileiros em 2026',
     description: 'O que esperar de IA, automação e WhatsApp nos próximos 12 meses. Prepare seu negócio agora.',
-    date: '25 de Abril de 2026',
+    date: '2026-04-25',
     readTime: '9 min',
     tag: 'Futuro',
     emoji: '🚀',
@@ -239,9 +249,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'article',
       title: post.title,
       description: post.description,
-      url: `https://automatizawpp.com/blog/${slug}`,
+      url: `https://www.automatizawpp.com/blog/${slug}`,
     },
-    alternates: { canonical: `https://automatizawpp.com/blog/${slug}` },
+    alternates: { canonical: `https://www.automatizawpp.com/blog/${slug}` },
   };
 }
 
@@ -265,6 +275,67 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.description,
+            datePublished: post.date,
+            dateModified: post.date,
+            author: {
+              '@type': 'Organization',
+              name: 'AutomatizaWPP',
+              url: 'https://www.automatizawpp.com',
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: 'AutomatizaWPP',
+              logo: {
+                '@type': 'ImageObject',
+                url: 'https://www.automatizawpp.com/logo.png',
+              },
+            },
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': `https://www.automatizawpp.com/blog/${slug}`,
+            },
+            articleSection: post.tag,
+            inLanguage: 'pt-BR',
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Início',
+                item: 'https://www.automatizawpp.com',
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Blog',
+                item: 'https://www.automatizawpp.com/blog',
+              },
+              {
+                '@type': 'ListItem',
+                position: 3,
+                name: post.title,
+                item: `https://www.automatizawpp.com/blog/${slug}`,
+              },
+            ],
+          }),
+        }}
+      />
       <style>{`
         .post-wrap { max-width: 760px; margin: 0 auto; padding: 100px 24px 80px; }
         .post-back { display: inline-flex; align-items: center; gap: 6px; color: #25D366; font-size: .88rem; text-decoration: none; margin-bottom: 32px; font-weight: 600; }
@@ -295,7 +366,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           <h1 className="post-title">{post.emoji} {post.title}</h1>
 
           <div className="post-meta">
-            <span>{post.date}</span>
+            <span>{formatDatePtBR(post.date)}</span>
             <span>·</span>
             <span>{post.readTime} de leitura</span>
             <span>·</span>

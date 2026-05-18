@@ -9,7 +9,7 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Páginas de servicios principales -->
+  <!-- Páginas de serviços principais -->
   <url>
     <loc>https://www.automatizawpp.com/automacao-whatsapp</loc>
     <lastmod>2026-05-18</lastmod>
@@ -29,7 +29,7 @@
     <priority>0.9</priority>
   </url>
 
-  <!-- Cases y blog -->
+  <!-- Cases e blog -->
   <url>
     <loc>https://www.automatizawpp.com/casos-sucesso</loc>
     <lastmod>2026-05-18</lastmod>
@@ -43,7 +43,45 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- Conversión -->
+  <!-- Blog posts (6 artigos publicados) -->
+  <url>
+    <loc>https://www.automatizawpp.com/blog/como-automatizar-whatsapp-pequeno-negocio</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.automatizawpp.com/blog/ia-no-atendimento-ao-cliente-2026</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.automatizawpp.com/blog/aumento-vendas-whatsapp-automacao</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.automatizawpp.com/blog/melhor-chatbot-whatsapp-brasil-2026</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.automatizawpp.com/blog/qualificacao-leads-whatsapp-automatica</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.automatizawpp.com/blog/tendencias-automacao-negocios-2026</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Conversão -->
   <url>
     <loc>https://www.automatizawpp.com/teste-gratis</loc>
     <lastmod>2026-05-18</lastmod>
@@ -57,7 +95,7 @@
     <priority>0.6</priority>
   </url>
 
-  <!-- Legales (necesarias para LGPD/compliance) -->
+  <!-- Legais (LGPD/compliance) -->
   <url>
     <loc>https://www.automatizawpp.com/privacidade</loc>
     <lastmod>2026-05-18</lastmod>

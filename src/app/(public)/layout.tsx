@@ -89,6 +89,105 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         }}
       />
 
+
+      {/* ─── Schema.org JSON-LD (SoftwareApplication) ─── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'AutomatizaWPP',
+            applicationCategory: 'BusinessApplication',
+            operatingSystem: 'Web, iOS, Android',
+            description: 'Plataforma de automação WhatsApp com IA. Qualifique leads, atenda 24h e feche mais vendas — sem aumentar equipe.',
+            url: 'https://www.automatizawpp.com',
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'BRL',
+              description: '7 dias grátis, sem cartão de crédito',
+            },
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: '4.9',
+              reviewCount: '47',
+              bestRating: '5',
+              worstRating: '1',
+            },
+            featureList: [
+              'Atendimento automático 24/7 com IA',
+              'Qualificação automática de leads',
+              'Integração WhatsApp Business API',
+              'CRM integrado',
+              'Relatórios em tempo real',
+              'Follow-up automático',
+            ],
+          }),
+        }}
+      />
+
+      {/* ─── Schema.org JSON-LD (FAQPage) ─── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'Como funciona a automação WhatsApp com IA?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'A IA recebe as mensagens dos seus clientes 24h, responde dúvidas frequentes, qualifica o interesse de compra e só passa para um humano os leads prontos. Tudo integrado ao WhatsApp Business API.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Preciso ter WhatsApp Business para usar?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Sim. A AutomatizaWPP usa a API oficial do WhatsApp Business, que é gratuita. Nós ajudamos no processo de cadastro e verificação junto à Meta.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Quanto custa o plano mensal?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Oferecemos 7 dias grátis sem cartão de crédito. Depois, planos a partir de R$ 197/mês conforme o volume de conversas. Consulte planos atualizados em /pricing.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Quanto tempo demora para implementar?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Em média 7 dias do cadastro à automação ativa, incluindo aprovação Meta, configuração de fluxos e treinamento da IA com seus dados.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'A IA realmente entende português brasileiro?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Sim. Usamos modelos de linguagem treinados especificamente em conversas brasileiras, incluindo gírias, regionalismos e expressões comerciais comuns no Brasil.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Posso cancelar a qualquer momento?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Sim. Sem fidelidade, sem multa. Você cancela direto no painel quando quiser e exporta todos os seus dados.',
+                },
+              },
+            ],
+          }),
+        }}
+      />
+
       {/* ─── Design tokens e estilos globais das páginas públicas ─── */}
       <style dangerouslySetInnerHTML={{ __html: `
         /* ─── DESIGN TOKENS ─── */
