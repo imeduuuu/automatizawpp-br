@@ -3,6 +3,14 @@ import Link from 'next/link';
 export const metadata = {
   title: 'Termos de Uso — AutomatizaWPP',
   description: 'Termos e condições de uso da plataforma AutomatizaWPP.',
+  alternates: { canonical: 'https://www.automatizawpp.com/termos' },
+  openGraph: {
+    title: 'Termos de Uso — AutomatizaWPP',
+    description: 'Termos e condições de uso da plataforma AutomatizaWPP.',
+    url: 'https://www.automatizawpp.com/termos',
+    type: 'website',
+    locale: 'pt_BR',
+  },
 };
 
 export default function TermosPage() {

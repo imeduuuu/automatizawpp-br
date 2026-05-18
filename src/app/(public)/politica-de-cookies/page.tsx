@@ -2,7 +2,15 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Política de Cookies — AutomatizaWPP',
-  description: 'Política de Cookies da AutomatizaWPP em conformidade com a LGPD (Lei 13.709/2018) e Resolução ANPD nº 4/2024.'
+  description: 'Política de Cookies da AutomatizaWPP em conformidade com a LGPD (Lei 13.709/2018) e Resolução ANPD nº 4/2024.',
+  alternates: { canonical: 'https://www.automatizawpp.com/politica-de-cookies' },
+  openGraph: {
+    title: 'Política de Cookies — AutomatizaWPP',
+    description: 'Política de Cookies da AutomatizaWPP em conformidade com a LGPD.',
+    url: 'https://www.automatizawpp.com/politica-de-cookies',
+    type: 'website',
+    locale: 'pt_BR',
+  },
 };
 
 export default function PoliticaCookiesPage() {

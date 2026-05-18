@@ -13,7 +13,6 @@ Disallow: /settings
 Disallow: /agents
 Disallow: /calls
 Disallow: /conversations
-Disallow: /contatos
 Disallow: /contatos-publico
 Disallow: /client-dashboard
 Disallow: /crm

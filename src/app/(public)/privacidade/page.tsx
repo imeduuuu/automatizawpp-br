@@ -3,6 +3,14 @@ import Link from 'next/link';
 export const metadata = {
   title: 'Política de Privacidade — AutomatizaWPP',
   description: 'Como a AutomatizaWPP coleta, usa e protege seus dados pessoais.',
+  alternates: { canonical: 'https://www.automatizawpp.com/privacidade' },
+  openGraph: {
+    title: 'Política de Privacidade — AutomatizaWPP',
+    description: 'Como a AutomatizaWPP coleta, usa e protege seus dados pessoais.',
+    url: 'https://www.automatizawpp.com/privacidade',
+    type: 'website',
+    locale: 'pt_BR',
+  },
 };
 
 export default function PrivacidadePage() {

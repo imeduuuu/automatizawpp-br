@@ -6,12 +6,13 @@ import { CookieBanner } from '@/components/CookieBanner';
 
 // Metadados SEO para todas as páginas públicas de marketing
 export const metadata: Metadata = {
-  title: 'AutomatizaWPP - Automação WhatsApp com IA para Vendas Brasil',
-  description: 'Plataforma de automação WhatsApp com IA. Aumente vendas, qualifique leads e automatize atendimento. Teste grátis por 7 dias!',
+  title: 'AutomatizaWPP — Automação WhatsApp com IA para Vendas',
+  description: 'Plataforma de automação WhatsApp com IA para negócios brasileiros. Qualifique leads, atenda 24h e feche mais vendas — sem aumentar equipe.',
   keywords: 'automação WhatsApp, chatbot WhatsApp, bot IA, automação vendas, automação atendimento',
+  metadataBase: new URL('https://www.automatizawpp.com'),
   openGraph: {
-    title: 'AutomatizaWPP - Automação WhatsApp com IA',
-    description: 'Plataforma de automação WhatsApp com IA. Aumente vendas, qualifique leads e automatize atendimento. Teste grátis!',
+    title: 'AutomatizaWPP — Automação WhatsApp com IA para Vendas',
+    description: 'Plataforma de automação WhatsApp com IA para negócios brasileiros. Qualifique leads, atenda 24h e feche mais vendas.',
     type: 'website',
     url: 'https://www.automatizawpp.com',
     images: [
@@ -26,12 +27,13 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AutomatizaWPP - Automação WhatsApp com IA',
-    description: 'Plataforma de automação WhatsApp com IA. Aumente vendas, qualifique leads e automatize atendimento.',
+    title: 'AutomatizaWPP — Automação WhatsApp com IA para Vendas',
+    description: 'Plataforma de automação WhatsApp com IA para negócios brasileiros. Qualifique leads, atenda 24h e feche mais vendas.',
     images: ['https://www.automatizawpp.com/og-image-1200x630.jpg'],
   },
   robots: 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1',
   alternates: {
+    canonical: 'https://www.automatizawpp.com',
     languages: {
       'pt-BR': 'https://www.automatizawpp.com',
       'x-default': 'https://www.automatizawpp.com',
