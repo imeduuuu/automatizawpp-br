@@ -1,22 +1,63 @@
-# AutomatizaWPP robots.txt
+# AutomatizaWPP — robots.txt
+# Permitir crawling completo del sitio público
+# Bloquear áreas privadas, dashboard y APIs internas
 
 User-agent: *
 Allow: /
+
+# Áreas privadas (dashboard del cliente, gestión)
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /account
+Disallow: /settings
+Disallow: /agents
+Disallow: /calls
+Disallow: /conversations
+Disallow: /contatos
+Disallow: /contatos-publico
+Disallow: /client-dashboard
+Disallow: /crm
+Disallow: /emails
+Disallow: /follow-ups
+Disallow: /leads
+Disallow: /monitoring
+Disallow: /onboarding
+Disallow: /sales-os
+Disallow: /sentinel
+Disallow: /seo-dashboard
+Disallow: /sequences
+Disallow: /services
+
+# Auth flows (no aportan al SEO)
+Disallow: /login
+Disallow: /signup
+Disallow: /register
+Disallow: /force-login
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# API privadas
+Disallow: /api/
+
+# Permitir APIs públicas explícitas
+Allow: /api/public/
+
+# Páginas públicas indexables explícitas (refuerzo)
 Allow: /automacao-whatsapp
 Allow: /automacao-vendas
 Allow: /automacao-atendimento
 Allow: /casos-sucesso
 Allow: /blog
-Allow: /dashboard.html
-Allow: /api/public/
+Allow: /blog/
+Allow: /privacidade
+Allow: /termos
+Allow: /politica-de-cookies
+Allow: /pricing
+Allow: /teste-gratis
+Allow: /contatos
 
-Disallow: /admin
-Disallow: /settings
-Disallow: /auth
-Disallow: /login
-Disallow: /signup
-Disallow: /reset-password
-Disallow: /api/private
+# Crawl-delay razonable para no saturar el server
+Crawl-delay: 1
 
-# Sitemap reference
+# Sitemap
 Sitemap: https://www.automatizawpp.com/sitemap.xml

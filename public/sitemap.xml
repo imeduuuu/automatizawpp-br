@@ -1,41 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Páginas públicas em português -->
+
+  <!-- Página inicial -->
+  <url>
+    <loc>https://www.automatizawpp.com/</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Páginas de servicios principales -->
   <url>
     <loc>https://www.automatizawpp.com/automacao-whatsapp</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://www.automatizawpp.com/automacao-vendas</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.automatizawpp.com/automacao-atendimento</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+
+  <!-- Cases y blog -->
   <url>
     <loc>https://www.automatizawpp.com/casos-sucesso</loc>
-    <lastmod>2026-04-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.automatizawpp.com/blog</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- Dashboard pública -->
   <url>
-    <loc>https://www.automatizawpp.com/dashboard.html</loc>
-    <lastmod>2026-04-30</lastmod>
+    <loc>https://www.automatizawpp.com/blog</loc>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
+
+  <!-- Conversión -->
+  <url>
+    <loc>https://www.automatizawpp.com/teste-gratis</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.automatizawpp.com/contatos</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Legales (necesarias para LGPD/compliance) -->
+  <url>
+    <loc>https://www.automatizawpp.com/privacidade</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.automatizawpp.com/termos</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.automatizawpp.com/politica-de-cookies</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
 </urlset>
