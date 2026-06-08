@@ -8,13 +8,13 @@ export const metadata: Metadata = {
   keywords:
     'automatización WhatsApp, IA WhatsApp, chatbot IA, cualificar leads, ventas automáticas, atención 24h, WhatsApp Business España',
   metadataBase: new URL('https://www.automatizawpp.com'),
-  alternates: { canonical: 'https://www.automatizawpp.com/landing' },
+  alternates: { canonical: 'https://www.automatizawpp.com' },
   openGraph: {
     title: 'AutomatizaWPP — Vende más, atiende mejor y crece en automático',
     description:
       'IA dentro de tu WhatsApp: responde 24/7, cualifica leads y cierra más ventas sin ampliar tu equipo.',
     type: 'website',
-    url: 'https://www.automatizawpp.com/landing',
+    url: 'https://www.automatizawpp.com',
     locale: 'es_ES',
   },
   twitter: {
@@ -49,7 +49,7 @@ export default function LandingLayout({ children }: { children: ReactNode }) {
             operatingSystem: 'Web',
             description:
               'Plataforma de automatización de WhatsApp con IA para empresas en España. Responde 24/7, cualifica leads y cierra más ventas.',
-            url: 'https://www.automatizawpp.com/landing',
+            url: 'https://www.automatizawpp.com',
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR', description: 'Diagnóstico gratuito + prueba de 15 días' },
           }),
         }}
