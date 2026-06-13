@@ -38,15 +38,10 @@ export class SitemapGenerator {
     // Páginas estáticas principais
     const staticPages = [
       { path: '/', priority: 1, changeFrequency: 'weekly' as const },
-      { path: '/automacao-whatsapp', priority: 1, changeFrequency: 'weekly' as const },
-      { path: '/automacao-vendas', priority: 1, changeFrequency: 'weekly' as const },
-      { path: '/automacao-atendimento', priority: 0.9, changeFrequency: 'weekly' as const },
-      { path: '/casos-sucesso', priority: 0.9, changeFrequency: 'monthly' as const },
-      { path: '/blog', priority: 0.8, changeFrequency: 'daily' as const },
-      { path: '/dashboard', priority: 0.7, changeFrequency: 'daily' as const },
-      { path: '/politica-privacidade', priority: 0.5, changeFrequency: 'yearly' as const },
-      { path: '/termos-servico', priority: 0.5, changeFrequency: 'yearly' as const },
-      { path: '/contato', priority: 0.6, changeFrequency: 'monthly' as const },
+      { path: '/pricing', priority: 0.8, changeFrequency: 'monthly' as const },
+      { path: '/privacidad', priority: 0.4, changeFrequency: 'yearly' as const },
+      { path: '/terminos', priority: 0.4, changeFrequency: 'yearly' as const },
+      { path: '/cookies', priority: 0.4, changeFrequency: 'yearly' as const },
     ];
 
     for (const page of staticPages) {
@@ -55,28 +50,6 @@ export class SitemapGenerator {
         lastModified: this.today,
         changeFrequency: page.changeFrequency,
         priority: page.priority,
-      });
-    }
-
-    // Blog posts dinâmicos (seria obtido do DB em produção)
-    const blogPosts = await this.getBlogPosts();
-    for (const post of blogPosts) {
-      entries.push({
-        url: `${this.baseUrl}/blog/${post.slug}`,
-        lastModified: post.lastModified || this.today,
-        changeFrequency: 'monthly',
-        priority: 0.7,
-      });
-    }
-
-    // Páginas de categorias/tags
-    const categories = ['automatizar-vendas', 'whatsapp-marketing', 'crm', 'email-automation'];
-    for (const category of categories) {
-      entries.push({
-        url: `${this.baseUrl}/blog/categoria/${category}`,
-        lastModified: this.today,
-        changeFrequency: 'weekly',
-        priority: 0.6,
       });
     }
 
@@ -92,15 +65,10 @@ export class SitemapGenerator {
     // Páginas estáticas principais
     const staticPages = [
       { path: '/', priority: 1, changeFrequency: 'weekly' as const },
-      { path: '/automacao-whatsapp', priority: 1, changeFrequency: 'weekly' as const },
-      { path: '/automacao-vendas', priority: 1, changeFrequency: 'weekly' as const },
-      { path: '/automacao-atendimento', priority: 0.9, changeFrequency: 'weekly' as const },
-      { path: '/casos-sucesso', priority: 0.9, changeFrequency: 'monthly' as const },
-      { path: '/blog', priority: 0.8, changeFrequency: 'daily' as const },
-      { path: '/dashboard', priority: 0.7, changeFrequency: 'daily' as const },
-      { path: '/politica-privacidade', priority: 0.5, changeFrequency: 'yearly' as const },
-      { path: '/termos-servico', priority: 0.5, changeFrequency: 'yearly' as const },
-      { path: '/contato', priority: 0.6, changeFrequency: 'monthly' as const },
+      { path: '/pricing', priority: 0.8, changeFrequency: 'monthly' as const },
+      { path: '/privacidad', priority: 0.4, changeFrequency: 'yearly' as const },
+      { path: '/terminos', priority: 0.4, changeFrequency: 'yearly' as const },
+      { path: '/cookies', priority: 0.4, changeFrequency: 'yearly' as const },
     ];
 
     for (const page of staticPages) {
@@ -112,48 +80,7 @@ export class SitemapGenerator {
       });
     }
 
-    // Blog posts dinâmicos (seria obtido do DB em produção)
-    const blogPosts = await this.getBlogPosts();
-    for (const post of blogPosts) {
-      entries.push({
-        url: `${this.baseUrl}/blog/${post.slug}`,
-        lastModified: post.lastModified || this.today,
-        changeFrequency: 'monthly',
-        priority: 0.7,
-      });
-    }
-
-    // Páginas de categorias/tags
-    const categories = ['automatizar-vendas', 'whatsapp-marketing', 'crm', 'email-automation'];
-    for (const category of categories) {
-      entries.push({
-        url: `${this.baseUrl}/blog/categoria/${category}`,
-        lastModified: this.today,
-        changeFrequency: 'weekly',
-        priority: 0.6,
-      });
-    }
-
     return entries;
-  }
-
-  /**
-   * Retorna lista de blog posts (em produção, seria do DB)
-   */
-  private async getBlogPosts(): Promise<
-    Array<{
-      slug: string;
-      lastModified?: string;
-    }>
-  > {
-    // Em produção, buscar do DB via Prisma
-    // Para agora, retornar posts de exemplo
-    return [
-      { slug: 'como-automatizar-whatsapp', lastModified: this.today },
-      { slug: 'guia-automacao-vendas', lastModified: this.today },
-      { slug: 'email-marketing-automatizado', lastModified: this.today },
-      { slug: '10-dicas-crm', lastModified: this.today },
-    ];
   }
 
   /**

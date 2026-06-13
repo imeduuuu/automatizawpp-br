@@ -17,19 +17,13 @@ const PUBLIC_PAGE_PATHS = [
   '/register',
   '/forgot-password',
   '/force-login',
-  '/automacao-whatsapp',
-  '/automacao-vendas',
-  '/automacao-atendimento',
-  '/casos-sucesso',
-  '/blog',
-  '/teste-gratis',
   '/contatos',
   '/contatos-publico',
   '/pricing',
   '/api-docs',
-  '/privacidade',               // CRÍTICO: Obrigação legal LGPD
-  '/termos',
-  '/politica-de-cookies',                    // CRÍTICO: Obrigação legal LGPD
+  '/privacidad',                // CRÍTICO: obligación legal RGPD/LOPDGDD
+  '/terminos',
+  '/cookies',                   // CRÍTICO: obligación legal RGPD/LSSI-CE
 ];
 
 // API que NO requieren autenticación (tienen su propia autenticación)
@@ -79,7 +73,7 @@ function isPublicPage(pathname: string): boolean {
   return (
     PUBLIC_PAGE_PATHS.includes(pathname) ||
     isResetPasswordPath(pathname) ||
-    pathname.startsWith('/blog/')
+    pathname.startsWith('/contatos/')
   );
 }
 

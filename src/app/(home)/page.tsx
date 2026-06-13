@@ -398,8 +398,9 @@ export default function LandingPage() {
             </a>
             <p>© {new Date().getFullYear()} AutomatizaWPP · IA para WhatsApp · España</p>
             <div className="lp-footer-links">
-              <a href="/privacidade">Privacidad</a>
-              <a href="/termos">Términos</a>
+              <a href="/privacidad">Privacidad</a>
+              <a href="/terminos">Términos</a>
+              <a href="/cookies">Cookies</a>
               <a href="/login">Entrar</a>
             </div>
           </div>

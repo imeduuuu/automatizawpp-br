@@ -145,8 +145,8 @@ export function CookieBanner() {
             <p id="awpp-cookie-text" className="awpp-cookie-text">
               Utilizamos cookies necessários para o funcionamento do site e, com seu consentimento, cookies de análise e marketing.
               Você pode aceitar todos, rejeitar todos ou personalizar suas preferências. Saiba mais na nossa{' '}
-              <a href="/politica-de-cookies">Política de Cookies</a> e{' '}
-              <a href="/privacidade">Política de Privacidade</a>.
+              <a href="/cookies">Política de Cookies</a> e{' '}
+              <a href="/privacidad">Política de Privacidade</a>.
               Esta escolha está em conformidade com a <strong>LGPD (Lei 13.709/2018)</strong>.
             </p>
             <div className="awpp-cookie-buttons">
@@ -168,7 +168,7 @@ export function CookieBanner() {
             <h2 className="awpp-cookie-title">Preferências de cookies</h2>
             <p className="awpp-cookie-text">
               Escolha quais categorias de cookies deseja permitir. Pode alterar essas preferências a qualquer momento na nossa{' '}
-              <a href="/politica-de-cookies">Política de Cookies</a>.
+              <a href="/cookies">Política de Cookies</a>.
             </p>
 
             <div className="awpp-cookie-prefs">

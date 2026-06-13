@@ -65,7 +65,7 @@ export default function PricingPage() {
       ],
       cta: 'Começar grátis',
       highlighted: false,
-      link: '/automacao-whatsapp#diagnostico'
+      link: '/#cta'
     },
     {
       name: 'Pro',
@@ -83,7 +83,7 @@ export default function PricingPage() {
       ],
       cta: 'Ativar Pro',
       highlighted: true,
-      link: '/automacao-whatsapp#diagnostico'
+      link: '/#cta'
     },
     {
       name: 'Scale',
@@ -102,7 +102,7 @@ export default function PricingPage() {
       ],
       cta: 'Ativar Scale',
       highlighted: false,
-      link: '/automacao-whatsapp#diagnostico'
+      link: '/#cta'
     }
   ];
 
@@ -372,7 +372,7 @@ export default function PricingPage() {
               Falar por e-mail
             </a>
             <Link
-              href="/automacao-whatsapp#diagnostico"
+              href="/#cta"
               className="px-6 py-3 rounded-xl border border-gray-700 text-white hover:border-gray-600 transition"
             >
               Agendar demo grátis

@@ -277,6 +277,18 @@ body::before, body::after { display: none !important; }
 .lp-footer-links a { color: var(--text-soft); font-size: 0.85rem; text-decoration: none; transition: color .2s; }
 .lp-footer-links a:hover { color: var(--blue); }
 
+/* ── Páginas legales ── */
+.lp-legal { max-width: 820px; }
+.lp-legal-updated { color: var(--text-soft); font-size: 0.9rem; margin-bottom: 2rem; }
+.lp-legal-note { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1rem 1.2rem; color: var(--text-soft); font-size: 0.9rem; margin-bottom: 2.2rem; }
+.lp-legal h2 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.7rem; color: var(--text); }
+.lp-legal p { color: var(--text-soft); margin-bottom: 0.9rem; line-height: 1.75; }
+.lp-legal ul { color: var(--text-soft); line-height: 1.75; margin: 0 0 1rem 1.1rem; }
+.lp-legal li { margin-bottom: 0.45rem; }
+.lp-legal a { color: var(--blue); text-decoration: none; }
+.lp-legal a:hover { text-decoration: underline; }
+.lp-legal strong { color: var(--text); font-weight: 600; }
+
 /* ── Reveal on scroll ── */
 .lp-reveal { opacity: 0; transform: translateY(34px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); }
 .lp-reveal.in { opacity: 1; transform: none; }
