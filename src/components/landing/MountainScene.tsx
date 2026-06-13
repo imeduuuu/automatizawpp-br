@@ -112,7 +112,7 @@ export default function MountainScene({ scrollRef }: Props) {
     renderer.setSize(w, h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 0.96;
     mount.appendChild(renderer.domElement);
 
     // ── Escena y cámara ──
@@ -330,7 +330,7 @@ export default function MountainScene({ scrollRef }: Props) {
       composer.addPass(new RenderPass(scene, camera));
       bokeh = new BokehPass(scene, camera, { focus: 95.0, aperture: 0.0009, maxblur: 0.011 });
       composer.addPass(bokeh);
-      bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.7, 0.55, 0.62);
+      bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.5, 0.72);
       composer.addPass(bloom);
       composer.addPass(new OutputPass());
       composer.setPixelRatio(renderer.getPixelRatio());

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Lenis from 'lenis';
 import {
@@ -16,6 +16,8 @@ const MountainScene = dynamic(() => import('@/components/landing/MountainScene')
 export default function LandingPage() {
   // Estado de scroll compartido con la escena WebGL (progreso 0..1 + velocidad).
   const scrollRef = useRef<ScrollState>({ progress: 0, velocity: 0 });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
 
   // ── Lenis: scroll suave que mueve la cámara ──
   useEffect(() => {
@@ -108,7 +110,7 @@ export default function LandingPage() {
 
       {/* ── Header ── */}
       <header className="lp-header">
-        <a href="#top" className="lp-logo">
+        <a href="#top" className="lp-logo" onClick={closeMenu}>
           <span className="lp-dot"><MessageCircle strokeWidth={2.4} /></span>
           AutomatizaWPP
         </a>
@@ -118,8 +120,27 @@ export default function LandingPage() {
           <a href="#proceso">Proceso</a>
           <a href="#casos">Casos de uso</a>
         </nav>
-        <a href="#cta" className="lp-btn lp-btn-primary lp-btn-sm">Diagnóstico gratuito</a>
+        <a href="#cta" className="lp-btn lp-btn-primary lp-btn-sm lp-header-cta">Diagnóstico gratuito</a>
+        <button
+          type="button"
+          className={`lp-burger${menuOpen ? ' open' : ''}`}
+          aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={menuOpen}
+          aria-controls="lp-mobile-menu"
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <span /><span /><span />
+        </button>
       </header>
+
+      {/* ── Menú móvil ── */}
+      <nav id="lp-mobile-menu" className={`lp-mobile${menuOpen ? ' open' : ''}`} aria-hidden={!menuOpen}>
+        <a href="#solucion" onClick={closeMenu}>Solución</a>
+        <a href="#producto" onClick={closeMenu}>Producto</a>
+        <a href="#proceso" onClick={closeMenu}>Proceso</a>
+        <a href="#casos" onClick={closeMenu}>Casos de uso</a>
+        <a href="#cta" className="lp-btn lp-btn-primary" onClick={closeMenu}>Diagnóstico gratuito</a>
+      </nav>
 
       <main className="lp-content" id="top">
         {/* ── 1. HERO ── */}
