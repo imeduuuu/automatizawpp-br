@@ -1,8 +1,10 @@
 /* Service worker de ComfyMobile.
-   Cachea SOLO el shell de la app (para instalarla y abrirla sin conexión).
-   Nunca cachea peticiones a la GPU: esas van siempre a la red. */
+   Precachea SOLO el shell de la app (para instalarla y abrirla sin conexión).
+   NO hace caching en tiempo de ejecución: cualquier petición que no sea el shell
+   (en particular las llamadas a la GPU: /prompt, /history, /view, etc.) va SIEMPRE
+   a la red y nunca se almacena. Así nunca se sirve una respuesta de la API cacheada. */
 
-const CACHE = 'comfymobile-v1';
+const CACHE = 'comfymobile-v2';
 const SHELL = ['./', './index.html', './app.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (e) => {
@@ -18,13 +20,14 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;
-  // Solo gestionamos GET del mismo origen (el shell). Todo lo demás (GPU) pasa directo.
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
   e.respondWith(
-    caches.match(req).then((hit) => hit || fetch(req).then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-      return res;
-    }).catch(() => caches.match('./index.html')))
+    caches.match(req).then((hit) => {
+      if (hit) return hit;                 // shell precacheado
+      if (req.mode === 'navigate') {       // navegación: red, con fallback offline al shell
+        return fetch(req).catch(() => caches.match('./index.html'));
+      }
+      return fetch(req);                    // todo lo demás (incluida la API): red, SIN cachear
+    })
   );
 });
