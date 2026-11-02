@@ -84,7 +84,11 @@ services:
       AUTH_SECRET: ${NEXTAUTH_SECRET}
       AUTH_URL: ${NEXTAUTH_URL:-https://automatizawpp.com}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-https://automatizawpp.com}
-      
+
+      # Cron secrets (healthcheck interno, blog, system tick, sentinel)
+      CRON_SECRET: ${CRON_SECRET}
+      BLOG_CRON_SECRET: ${BLOG_CRON_SECRET}
+
       # Compliance
       MAX_TOUCHES_PER_DAY: ${MAX_TOUCHES_PER_DAY:-5}
       QUIET_HOURS_START: ${QUIET_HOURS_START:-21}

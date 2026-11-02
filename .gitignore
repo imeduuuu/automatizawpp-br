@@ -1,6 +1,14 @@
 .next
 node_modules
 .env
+.env.local
+.env.*.local
+.env.production
+.env.production.*
+!.env.production.example
+.env.deploy
+.env.deploy.*
+!.env.deploy.example
 dist
 coverage
 *.log
